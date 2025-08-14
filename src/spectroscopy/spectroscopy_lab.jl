@@ -1,6 +1,13 @@
 ### A Pluto.jl notebook ###
 # v0.20.15
 
+#> [frontmatter]
+#> image = "https://www.seti.org/media/jtinir2n/unistellar-spectroscopy-lab-2024_1.png"
+#> title = "Spectroscopy Lab"
+#> date = "2025-08-01"
+#> tags = ["spectroscopy", "wavelength calibration"]
+#> description = "Collect and analyze the spectra of bright stars."
+
 using Markdown
 using InteractiveUtils
 
@@ -604,8 +611,8 @@ gray.(gray_dog)
 
 # ╔═╡ f5dfab17-a789-46dd-ae4f-d3707d0a4573
 md"""
-`rows:` $(@bind row_range_dog RangeSlider(1:size(gray_dog, 1); default=1:1))
-`columns`: $(@bind col_range_dog RangeSlider(1:size(gray_dog, 2); default=1:1))
+`rows:` $(@bind row_range_dog RangeSlider(1:size(gray_dog, 1); default=437:655))
+`columns`: $(@bind col_range_dog RangeSlider(1:size(gray_dog, 2); default=165:661))
 """
 
 # ╔═╡ bb008a9b-8538-418d-9e70-50d9983c2074
