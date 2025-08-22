@@ -40,29 +40,29 @@ What's in an image? Turns out just a nice, orderly set of numbers. In this brief
 
 # ╔═╡ d23819bc-ddae-4de7-83b1-58453848d266
 md"""
-## 1. Software tools
+## 1. Software tools 💻
 
 Julia, Python, IDL. Pluto! https://computationalthinking.mit.edu/Fall24/installation/
 """
 
 # ╔═╡ af1b84fc-cc08-45e0-a849-fa11c1267b91
 md"""
-## 1. Image formats 📚
+## 2. Image formats 📚
 """
 
 # ╔═╡ d47ae19a-9b82-41a2-ba38-6087623f5de8
 md"""
-## 2. Array representations 🔢
+## 3. Array representations 🔢
 """
 
 # ╔═╡ ea73493c-8076-4823-9129-83dea64f8e9f
 md"""
-## 3. Color maps and color scales 🌈
+## 4. Color maps and color scales 🌈
 """
 
 # ╔═╡ c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
 md"""
-## 4. Image stacking 🥞
+## 5. Image stacking 🥞
 
 _Examples taken from [`JuliaAstro > AstroImages.jl > Converting to RGB`](https://juliaastro.org/AstroImages/stable/manual/converting-to-rgb/)_.
 """
@@ -112,7 +112,7 @@ rgb6 = composecolors(
 
 # ╔═╡ 98e95070-f5a9-4d5a-b2c2-14d1b489febe
 md"""
-# Further reading
+# 📖 Further reading
 
 https://science.nasa.gov/ems/04_energytoimage/
 
@@ -121,7 +121,7 @@ https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made
 
 # ╔═╡ ef1945ce-84be-4ed9-ba0e-25b7be69400a
 md"""
-## 🔧 Notebook setup
+# 🔧 Notebook setup
 """
 
 # ╔═╡ 1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
@@ -1146,7 +1146,7 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╟─8e324690-373d-4139-8350-add89a86c9b0
-# ╟─d23819bc-ddae-4de7-83b1-58453848d266
+# ╠═d23819bc-ddae-4de7-83b1-58453848d266
 # ╠═af1b84fc-cc08-45e0-a849-fa11c1267b91
 # ╠═d47ae19a-9b82-41a2-ba38-6087623f5de8
 # ╠═ea73493c-8076-4823-9129-83dea64f8e9f
@@ -1159,8 +1159,8 @@ version = "17.4.0+2"
 # ╟─fbecb5d2-2892-4e04-8bcb-59f4c29b08cf
 # ╠═8bd7e1b6-a146-4ece-ad95-a097c6387705
 # ╠═bbe0c915-9a64-4234-8b51-d14e170c3c90
-# ╟─98e95070-f5a9-4d5a-b2c2-14d1b489febe
-# ╟─ef1945ce-84be-4ed9-ba0e-25b7be69400a
+# ╠═98e95070-f5a9-4d5a-b2c2-14d1b489febe
+# ╠═ef1945ce-84be-4ed9-ba0e-25b7be69400a
 # ╠═1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
 # ╠═926ae0c8-5dd2-11f0-3c63-e540d51a756c
 # ╟─00000000-0000-0000-0000-000000000001
