@@ -25,12 +25,21 @@ end
 
 # ╔═╡ 926ae0c8-5dd2-11f0-3c63-e540d51a756c
 begin
-	using PlutoUI, AstroImages, ImageFiltering, Statistics
+	using PlutoUI
 
-	using AstroImages: RGB, Gray, red, green, blue, gray
+	using AstroImages
+	
+	# Re-exported from ColorTypes.jl for convenience
+	using AstroImages: RGB, Gray, red, green, blue, gray 
 	
 	AstroImages.set_cmap!(nothing)
 end
+
+# ╔═╡ 22d2fa56-a505-43af-9bc5-034045e13dd9
+md"""
+!!! note "Coffee? ☕"
+	The first time this notebook runs might take a while (~ couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
+"""
 
 # ╔═╡ 8e324690-373d-4139-8350-add89a86c9b0
 md"""
@@ -204,18 +213,14 @@ In other words, instead of three numbers representing each pixel, we now have a 
 """
 
 # ╔═╡ 79184229-63fa-44e8-a79e-8e6ac6ce485f
-gray.(img_gray)
+img_data = gray.(img_gray)
 
 # ╔═╡ fc10e422-b881-4b40-8d33-e5f53008045c
 md"""
 This "box of numbers" format is how image data is represented in FITS files.
-"""
 
-# ╔═╡ 3fd5490d-ccb3-4d55-9936-68cc626399b6
-md"""
-#### Exercise
-
-Try repeating the above analysis with you own PNG image!
+!!! tip "Exercise"
+	Try repeating the above analysis with you own PNG image!
 """
 
 # ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
@@ -245,11 +250,116 @@ Later in this workshop, we will explore working with real FITS data taken by you
 # ╔═╡ d47ae19a-9b82-41a2-ba38-6087623f5de8
 md"""
 ## 3. Array representations 🔢
+
+Now that we have this mathematical representation of our image, let's explore a few key operations that we can perform on it:
+
+1. Indexing
+2. Slicing
+3. Reducing
+"""
+
+# ╔═╡ a353587e-9c79-455f-a00c-f58b8eb86b4d
+md"""
+#### 3.1 Indexing
+
+We actually saw this earlier already when looking at individual pixels in our image. Indexing is just another way of saying selecting a subset of our image. For example:
+"""
+
+# ╔═╡ 0923a1b3-2ccb-4fd5-b00f-a0a5eec660c9
+img_data[1, 1]
+
+# ╔═╡ 070fbd79-830e-46c9-aeed-dcad3a5836f9
+md"""
+selects the element in the first row and first column of our image. We can also use generic keywords like `begin` and `end` to select the first or last element of our matrix, respectively.
+"""
+
+# ╔═╡ 9d8ef8cb-300a-4872-9220-f70988a38154
+md"""
+!!! tip "Question"
+	What does indexing with only a single number, e.g., `img_data[10]` return? Why is this?
+"""
+
+# ╔═╡ 87cc25a5-c3fa-436a-aa1a-9c2a670433f1
+md"""
+👉 Your notes here
+"""
+
+# ╔═╡ e43c8196-d6fd-4b77-8e07-122567b7f30d
+md"""
+#### 3.2 Slicing
+
+Selecting multiple elements that are next to each other (contiguous) is known as slicing. For example,
+"""
+
+# ╔═╡ 348599bf-cda8-4ebb-8e3d-83ce0171c7f8
+img_data[1, :]
+
+# ╔═╡ 6bb683f6-c237-4e31-963e-fb1135670cbf
+md"""
+selects every column in the first row of `img_data` while,
+"""
+
+# ╔═╡ 17b7c5fa-8360-41ca-86c7-686e05375886
+img_data[1:200, 1:200]
+
+# ╔═╡ 167a81cd-26fa-4500-9b90-6b6b449ba87a
+md"""
+returns the first 200 rows and first 200 columns, i.e., the top-left corner.
+"""
+
+# ╔═╡ 5b303ede-1726-46f5-8ba4-8fdbfec3211e
+md"""
+!!! tip "Question"
+	Try going back to your original color image `img`. Using slices, try to produce the following image:
+"""
+
+# ╔═╡ 88bbd6c2-896d-4c14-8c59-7e4720ab69a4
+img[1, :]
+
+# ╔═╡ 34404369-9a2c-461d-a281-702fe208cd8a
+md"""
+👉 Your notes here
+
+
+"""
+
+# ╔═╡ 869491d6-660a-4bfc-94db-1ed87b547085
+md"""
+#### 3.3 Reducing
+
+Often, we would like to know summary statistics about a given region in our image. Applying functions that boil down our box of numbers to a smaller representative set is known as reduction. For example, to get the total pixel value in each column of our above slice, we could do the following:
+"""
+
+# ╔═╡ 4a43a5ef-db43-46c6-85c7-e87a74349bae
+sum(img_data[1, :]; dims=2)
+
+# ╔═╡ 120d584b-9f8b-48e8-866a-21a01be34fe8
+md"""
+!!! tip "Question"
+	What does the `dims` keyword do? Try it out on a simpler matrix like:
+
+	```julia
+	arr = [
+		1 2
+		3 4
+	]
+	```
+
+	Note: You can pull up the documentation for any function by selecting the `Live Docs` button in the bottom right corner of this notebook.
+"""
+
+# ╔═╡ 258e42cb-4f72-4400-8954-30ab72be4c5f
+md"""
+👉 Your notes here
+
+
 """
 
 # ╔═╡ ea73493c-8076-4823-9129-83dea64f8e9f
 md"""
 ## 4. Color maps and color scales 🌈
+
+!!! todo
 """
 
 # ╔═╡ c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
@@ -257,6 +367,9 @@ md"""
 ## 5. Image stacking 🥞
 
 _Examples taken from [`JuliaAstro > AstroImages.jl > Converting to RGB`](https://juliaastro.org/AstroImages/stable/manual/converting-to-rgb/)_.
+
+!!! todo
+	Fill out
 """
 
 # ╔═╡ f947c8a9-861e-404d-8dab-d4a88b913fe8
@@ -306,11 +419,14 @@ rgb6 = composecolors(
 md"""
 # 📖 Further reading
 
-https://science.nasa.gov/ems/04_energytoimage/
+!!! todo
+	Clean up
 
-https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made
+<https://science.nasa.gov/ems/04_energytoimage/>
 
-https://computationalthinking.mit.edu/Fall24/images_abstractions/images/
+<https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made>
+
+<https://computationalthinking.mit.edu/Fall24/images_abstractions/images/>
 """
 
 # ╔═╡ ef1945ce-84be-4ed9-ba0e-25b7be69400a
@@ -319,7 +435,7 @@ md"""
 """
 
 # ╔═╡ 1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
-TableOfContents()
+TableOfContents(depth = 4)
 
 # ╔═╡ c2816617-5cb1-4e51-948e-60efdaa7db1c
 msg(x) = details("Details", x)
@@ -334,13 +450,10 @@ md"""
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AstroImages = "fe3fc30c-9b16-11e9-1c73-17dabf39f4ad"
-ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 AstroImages = "~0.5.1"
-ImageFiltering = "~0.7.10"
 PlutoUI = "~0.7.68"
 """
 
@@ -350,7 +463,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "d399ac1e02955b7b2fe80f703386944063ffcfd1"
+project_hash = "7a0c16e8adb06eb12ad62741682e2c740c55dbcf"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -377,11 +490,14 @@ deps = ["LinearAlgebra", "Requires"]
 git-tree-sha1 = "f7817e2e585aa6d924fd714df1e2a84be7896c60"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "4.3.0"
-weakdeps = ["SparseArrays", "StaticArrays"]
 
     [deps.Adapt.extensions]
     AdaptSparseArraysExt = "SparseArrays"
     AdaptStaticArraysExt = "StaticArrays"
+
+    [deps.Adapt.weakdeps]
+    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -467,12 +583,6 @@ git-tree-sha1 = "15e80be798d7711411f4ac4273144cdb2a89eb2f"
 uuid = "b3e40c51-02ae-5482-8a39-3ace5868dcf4"
 version = "4.6.2+0"
 
-[[deps.CatIndices]]
-deps = ["CustomUnitRanges", "OffsetArrays"]
-git-tree-sha1 = "a0f80a09780eed9b1d106a1bf62041c2efc995bc"
-uuid = "aafaddc9-749c-510e-ac4f-586e18779b91"
-version = "0.2.2"
-
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
 git-tree-sha1 = "a656525c8b46aa6a1c76891552ed5381bb32ae7b"
@@ -507,11 +617,6 @@ git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
 
-[[deps.CommonWorldInvalidations]]
-git-tree-sha1 = "ae52d1c52048455e85a387fbee9be553ec2b68d0"
-uuid = "f70d9fcc-98c5-4d4a-abd7-e4cdeebd8ca8"
-version = "1.0.0"
-
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
 git-tree-sha1 = "3a3dfb30697e96a440e4149c8c51bf32f818c0f3"
@@ -527,26 +632,20 @@ deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.1.1+0"
 
-[[deps.ComputationalResources]]
-git-tree-sha1 = "52cb3ec90e8a8bea0e62e275ba577ad0f74821f7"
-uuid = "ed09eef8-17a6-5b46-8889-db040fac31e3"
-version = "0.3.2"
-
 [[deps.ConstructionBase]]
 git-tree-sha1 = "b4b092499347b18a015186eae3042f72267106cb"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
 version = "1.6.0"
-weakdeps = ["IntervalSets", "LinearAlgebra", "StaticArrays"]
 
     [deps.ConstructionBase.extensions]
     ConstructionBaseIntervalSetsExt = "IntervalSets"
     ConstructionBaseLinearAlgebraExt = "LinearAlgebra"
     ConstructionBaseStaticArraysExt = "StaticArrays"
 
-[[deps.CustomUnitRanges]]
-git-tree-sha1 = "1a3f97f907e6dd8983b744d2642651bb162a3f7a"
-uuid = "dc8bdbbb-1ca9-579f-8c36-e416f6a65cce"
-version = "1.0.2"
+    [deps.ConstructionBase.weakdeps]
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+    LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
@@ -613,24 +712,6 @@ git-tree-sha1 = "b309b36a9e02fe7be71270dd8c0fd873625332b4"
 uuid = "411431e0-e8b7-467b-b5e0-f676ba4f2910"
 version = "0.1.6"
 
-[[deps.FFTViews]]
-deps = ["CustomUnitRanges", "FFTW"]
-git-tree-sha1 = "cbdf14d1e8c7c8aacbe8b19862e0179fd08321c2"
-uuid = "4f61f5a4-77b1-5117-aa51-3ab5ef4ef0cd"
-version = "0.3.2"
-
-[[deps.FFTW]]
-deps = ["AbstractFFTs", "FFTW_jll", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
-git-tree-sha1 = "797762812ed063b9b94f6cc7742bc8883bb5e69e"
-uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-version = "1.9.0"
-
-[[deps.FFTW_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "6d6219a004b8cf1e0b4dbe27a2860b8e04eba0be"
-uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
-version = "3.3.11+0"
-
 [[deps.FITSIO]]
 deps = ["CFITSIO", "Printf", "Reexport", "Tables"]
 git-tree-sha1 = "f57de3f533590c785210893030736dc11c4a4afb"
@@ -683,11 +764,6 @@ git-tree-sha1 = "b6d6bfdd7ce25b0f9b2f6b3dd56b2673a66c8770"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "0.2.5"
 
-[[deps.IfElse]]
-git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
-uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
-version = "0.1.1"
-
 [[deps.ImageAxes]]
 deps = ["AxisArrays", "ImageBase", "ImageCore", "Reexport", "SimpleTraits"]
 git-tree-sha1 = "e12629406c6c4442539436581041d372d69c55ba"
@@ -705,12 +781,6 @@ deps = ["ColorVectorSpace", "Colors", "FixedPointNumbers", "MappedArrays", "Mosa
 git-tree-sha1 = "8c193230235bbcee22c8066b0374f63b5683c2d3"
 uuid = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 version = "0.10.5"
-
-[[deps.ImageFiltering]]
-deps = ["CatIndices", "ComputationalResources", "DataStructures", "FFTViews", "FFTW", "ImageBase", "ImageCore", "LinearAlgebra", "OffsetArrays", "PrecompileTools", "Reexport", "SparseArrays", "StaticArrays", "Statistics", "TiledIteration"]
-git-tree-sha1 = "eea3a5095c0c5f143e62773164ab11f67e43c4bb"
-uuid = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
-version = "0.7.10"
 
 [[deps.ImageIO]]
 deps = ["FileIO", "IndirectArrays", "JpegTurbo", "LazyModules", "Netpbm", "OpenEXR", "PNGFiles", "QOI", "Sixel", "TiffImages", "UUIDs", "WebP"]
@@ -745,12 +815,6 @@ version = "1.0.0"
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.5"
-
-[[deps.IntelOpenMP_jll]]
-deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
-git-tree-sha1 = "0f14a5456bdc6b9731a5682f439a672750a09e48"
-uuid = "1d5cc7b8-4909-519e-a0f8-d0f5ad9712d0"
-version = "2025.0.4+0"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -818,11 +882,6 @@ git-tree-sha1 = "aaafe88dccbd957a8d82f7d05be9b69172e0cee3"
 uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
 version = "4.0.1+0"
 
-[[deps.LazyArtifacts]]
-deps = ["Artifacts", "Pkg"]
-uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
-version = "1.11.0"
-
 [[deps.LazyModules]]
 git-tree-sha1 = "a560dd966b386ac9ae60bdd3a3d3a326062d3c3e"
 uuid = "8cdb02fc-e678-4876-92c5-9defec4f444e"
@@ -882,12 +941,6 @@ version = "1.11.0"
 git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
 version = "1.1.0"
-
-[[deps.MKL_jll]]
-deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
-git-tree-sha1 = "5de60bc6cb3899cd318d80d627560fae2e2d99ae"
-uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
-version = "2025.0.1+1"
 
 [[deps.MacroTools]]
 git-tree-sha1 = "1e0228a030642014fe5cfe68c2c0a818f9e3f522"
@@ -1117,42 +1170,6 @@ git-tree-sha1 = "be1cf4eb0ac528d96f5115b4ed80c26a8d8ae621"
 uuid = "cae243ae-269e-4f55-b966-ac2d0dc13c15"
 version = "0.1.2"
 
-[[deps.Static]]
-deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools"]
-git-tree-sha1 = "f737d444cb0ad07e61b3c1bef8eb91203c321eff"
-uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "1.2.0"
-
-[[deps.StaticArrayInterface]]
-deps = ["ArrayInterface", "Compat", "IfElse", "LinearAlgebra", "PrecompileTools", "Static"]
-git-tree-sha1 = "96381d50f1ce85f2663584c8e886a6ca97e60554"
-uuid = "0d7ed370-da01-4f52-bd93-41d350b8b718"
-version = "1.8.0"
-weakdeps = ["OffsetArrays", "StaticArrays"]
-
-    [deps.StaticArrayInterface.extensions]
-    StaticArrayInterfaceOffsetArraysExt = "OffsetArrays"
-    StaticArrayInterfaceStaticArraysExt = "StaticArrays"
-
-[[deps.StaticArrays]]
-deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "0feb6b9031bd5c51f9072393eb5ab3efd31bf9e4"
-uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.13"
-
-    [deps.StaticArrays.extensions]
-    StaticArraysChainRulesCoreExt = "ChainRulesCore"
-    StaticArraysStatisticsExt = "Statistics"
-
-    [deps.StaticArrays.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-
-[[deps.StaticArraysCore]]
-git-tree-sha1 = "192954ef1208c7019899fbf8049e717f92959682"
-uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-version = "1.4.3"
-
 [[deps.Statistics]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "ae3bb1eb3bba077cd276bc5cfc337cc65c3075c0"
@@ -1210,12 +1227,6 @@ deps = ["ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedP
 git-tree-sha1 = "02aca429c9885d1109e58f400c333521c13d48a0"
 uuid = "731e570b-9d59-4bfa-96dc-6df516fadf69"
 version = "0.11.4"
-
-[[deps.TiledIteration]]
-deps = ["OffsetArrays", "StaticArrayInterface"]
-git-tree-sha1 = "1176cc31e867217b06928e2f140c90bd1bc88283"
-uuid = "06e1c1a7-607b-532d-9fad-de7d9aa2abac"
-version = "0.5.0"
 
 [[deps.Tricks]]
 git-tree-sha1 = "6cae795a5a9313bbb4f60683f7263318fc7d1505"
@@ -1335,12 +1346,6 @@ deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
 version = "1.59.0+0"
 
-[[deps.oneTBB_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d5a767a3bb77135a99e433afe0eb14cd7f6914c3"
-uuid = "1317d2d5-d96f-522e-a858-c73665f53c3e"
-version = "2022.0.0+0"
-
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
@@ -1348,6 +1353,7 @@ version = "17.4.0+2"
 """
 
 # ╔═╡ Cell order:
+# ╟─22d2fa56-a505-43af-9bc5-034045e13dd9
 # ╟─8e324690-373d-4139-8350-add89a86c9b0
 # ╟─d23819bc-ddae-4de7-83b1-58453848d266
 # ╟─1a9ae0d8-9da7-4c60-a088-e242565b4534
@@ -1373,13 +1379,29 @@ version = "17.4.0+2"
 # ╟─90960427-7433-4528-8cba-03444212d2c0
 # ╠═79184229-63fa-44e8-a79e-8e6ac6ce485f
 # ╟─fc10e422-b881-4b40-8d33-e5f53008045c
-# ╟─3fd5490d-ccb3-4d55-9936-68cc626399b6
 # ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
 # ╟─9cda2b8c-ed17-4a16-92bc-f6b334d24208
 # ╟─94dae9e9-9eb5-406d-b777-976db28d6631
-# ╠═d47ae19a-9b82-41a2-ba38-6087623f5de8
-# ╠═ea73493c-8076-4823-9129-83dea64f8e9f
-# ╠═c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
+# ╟─d47ae19a-9b82-41a2-ba38-6087623f5de8
+# ╟─a353587e-9c79-455f-a00c-f58b8eb86b4d
+# ╠═0923a1b3-2ccb-4fd5-b00f-a0a5eec660c9
+# ╟─070fbd79-830e-46c9-aeed-dcad3a5836f9
+# ╟─9d8ef8cb-300a-4872-9220-f70988a38154
+# ╠═87cc25a5-c3fa-436a-aa1a-9c2a670433f1
+# ╟─e43c8196-d6fd-4b77-8e07-122567b7f30d
+# ╠═348599bf-cda8-4ebb-8e3d-83ce0171c7f8
+# ╟─6bb683f6-c237-4e31-963e-fb1135670cbf
+# ╠═17b7c5fa-8360-41ca-86c7-686e05375886
+# ╟─167a81cd-26fa-4500-9b90-6b6b449ba87a
+# ╟─5b303ede-1726-46f5-8ba4-8fdbfec3211e
+# ╟─88bbd6c2-896d-4c14-8c59-7e4720ab69a4
+# ╠═34404369-9a2c-461d-a281-702fe208cd8a
+# ╟─869491d6-660a-4bfc-94db-1ed87b547085
+# ╠═4a43a5ef-db43-46c6-85c7-e87a74349bae
+# ╟─120d584b-9f8b-48e8-866a-21a01be34fe8
+# ╠═258e42cb-4f72-4400-8954-30ab72be4c5f
+# ╟─ea73493c-8076-4823-9129-83dea64f8e9f
+# ╟─c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
 # ╟─f947c8a9-861e-404d-8dab-d4a88b913fe8
 # ╠═f11c4c56-101c-42fb-9fa4-bf6b91c30ad1
 # ╠═688a41ca-5652-43c3-83a6-b4ab03301867
@@ -1388,8 +1410,8 @@ version = "17.4.0+2"
 # ╟─fbecb5d2-2892-4e04-8bcb-59f4c29b08cf
 # ╠═8bd7e1b6-a146-4ece-ad95-a097c6387705
 # ╠═bbe0c915-9a64-4234-8b51-d14e170c3c90
-# ╠═98e95070-f5a9-4d5a-b2c2-14d1b489febe
-# ╠═ef1945ce-84be-4ed9-ba0e-25b7be69400a
+# ╟─98e95070-f5a9-4d5a-b2c2-14d1b489febe
+# ╟─ef1945ce-84be-4ed9-ba0e-25b7be69400a
 # ╠═1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
 # ╠═c2816617-5cb1-4e51-948e-60efdaa7db1c
 # ╠═926ae0c8-5dd2-11f0-3c63-e540d51a756c
