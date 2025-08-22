@@ -42,12 +42,37 @@ What's in an image? Turns out just a nice, orderly set of numbers. In this brief
 md"""
 ## 1. Software tools 💻
 
-Julia, Python, IDL. Pluto! https://computationalthinking.mit.edu/Fall24/installation/
+Today, there are a wide range of tools to select from when doing astronomical research. For this workshop series we will use [Julia](https://julialang.org/), a modern programming language geared towards [science and engineering applications](https://juliahub.com/industries/case-studies). A growing list of astronomy and astrophysics applications can be found on the [JuliaAstro case studies page](https://juliaastro.org/home/case_studies/).
+
+To promote best practices in modern science software developement (e.g., reproducibility, maintainability, and literacy), we will be using the [Pluto.jl](https://plutojl.org/) notebook environment (also written in Julia) to share and work with real code used by professional astronomers throughout this workshop. This notebook you are currently reading is also a Pluto.jl notebook!
+
+!!! tip
+	* For folks approaching programming for the first time: [What is a notebook?](https://en.wikipedia.org/wiki/Notebook_interface)
+
+	* For folks coming from a Python background: Julia is to Python as Pluto.jl is to Jupyter
+"""
+
+# ╔═╡ 1a9ae0d8-9da7-4c60-a088-e242565b4534
+md"""
+### Quickstart
+
+To get started, please follow the instructions in the following two steps below:
+
+1. [Install Julia](https://julialang.org/install/) 
+1. [Install Pluto.jl](https://plutojl.org/#install) 
+
+Additional resources:
+
+* Learn Julia: [Julia website](https://julialang.org/learning/)
+* Noteworthy Differences from other Languages: [Julia manual](https://docs.julialang.org/en/v1/manual/noteworthy-differences/)
+* Handy cheatsheets: [JuliaDocs](https://cheatsheet.juliadocs.org/), [MATLAB--Python--Julia](https://cheatsheets.quantecon.org/)
 """
 
 # ╔═╡ af1b84fc-cc08-45e0-a849-fa11c1267b91
 md"""
 ## 2. Image formats 📚
+
+PNG, JPEG, FITS
 """
 
 # ╔═╡ d47ae19a-9b82-41a2-ba38-6087623f5de8
@@ -117,6 +142,8 @@ md"""
 https://science.nasa.gov/ems/04_energytoimage/
 
 https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made
+
+https://computationalthinking.mit.edu/Fall24/images_abstractions/images/
 """
 
 # ╔═╡ ef1945ce-84be-4ed9-ba0e-25b7be69400a
@@ -1146,7 +1173,8 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╟─8e324690-373d-4139-8350-add89a86c9b0
-# ╠═d23819bc-ddae-4de7-83b1-58453848d266
+# ╟─d23819bc-ddae-4de7-83b1-58453848d266
+# ╟─1a9ae0d8-9da7-4c60-a088-e242565b4534
 # ╠═af1b84fc-cc08-45e0-a849-fa11c1267b91
 # ╠═d47ae19a-9b82-41a2-ba38-6087623f5de8
 # ╠═ea73493c-8076-4823-9129-83dea64f8e9f
