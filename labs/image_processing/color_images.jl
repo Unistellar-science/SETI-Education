@@ -27,7 +27,7 @@ end
 begin
 	using PlutoUI, AstroImages, ImageFiltering, Statistics
 
-	using AstroImages: RGB, Gray, red, green, blue
+	using AstroImages: RGB, Gray, red, green, blue, gray
 	
 	AstroImages.set_cmap!(nothing)
 end
@@ -105,23 +105,6 @@ md"""
 _Image credit: NASA, ESA, CSA, STScI_
 """
 
-# ╔═╡ 4edbc2fc-94d8-4a8f-a562-7f7448853fee
-md"""
-You can also load a PNG file from your own device into the variable named `img_local` by selecting the `Browse...` button below:
-"""
-
-# ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
-@bind img_local FilePicker([MIME("image/png")])
-
-# ╔═╡ 9cda2b8c-ed17-4a16-92bc-f6b334d24208
-my_img = if !isnothing(img_local)
-	path = tempname() * img_local["name"]
-	write(path, img_local["data"])
-	load(path)
-else
-	nothing
-end
-
 # ╔═╡ 8769ad1c-9de8-4ee4-b030-a2805f28353f
 md"""
 We now have an image that we can analyze. For starters, let's display some key characteristics about `img`
@@ -185,7 +168,7 @@ end
 md"""
 Below our selected pixel, we map these (R, G, B) values to their corresponding sub-pixel, where 0 represents black (or no brightness), and 1 represents the peak brightness for the given color channel. The resulting color is then the [additive combination](https://en.wikipedia.org/wiki/RGB_color_model#Additive_colors) of these individual subpixels.
 
-We are now one step closer to building a spectrum of our image. Astronomers typically work with [black and white](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color) (or [grayscale](https://en.wikipedia.org/wiki/Grayscale)) images, so we will next see how we can convert our image to this form using the information we have above. Later, we will see why this is a beneficial form to have our image in when we explore the FITS file format.
+Astronomers typically work with [black and white](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color) (or [grayscale](https://en.wikipedia.org/wiki/Grayscale)) images, so we will next see how we can convert our image to this form using the information we have above. Later, we will see why this is a beneficial form to have our image in when we explore the FITS file format.
 """
 
 # ╔═╡ b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
@@ -202,39 +185,61 @@ This is [already implemented for us](https://juliaimages.org/latest/examples/col
 """
 
 # ╔═╡ 57a70e86-625e-4ab4-9309-d618c5edba1b
-gray_img = Gray.(img)
-
-# ╔═╡ 4ba5c57b-0e22-4555-bf7c-4373186fe27e
-img_info(gray_dog);
+img_gray = Gray.(img)
 
 # ╔═╡ 807485a1-aae1-4e4f-9787-14254fb8a005
 md"""
-Taking a look at the properties of our new image, we see that now instead of being a matrix composed of `RGB{N0f8}` types, it is composed of `Gray{N0f8}`s.
+Taking a look at the properties of our new image, we see that now instead of being a matrix composed of `RGB{N0f8}` types, it is composed of `Gray{N0f8}`s:
 """
+
+# ╔═╡ 92314a4b-3e05-42bf-a221-7dcf96c015fe
+eltype(img_gray)
 
 # ╔═╡ 90960427-7433-4528-8cba-03444212d2c0
 md"""
 !!! note
 	We omit the package names for brevity.
-"""
 
-# ╔═╡ 7726d9f9-d8b8-4fd4-b8b7-eef4fa4de0e2
-md"""
 In other words, instead of three numbers representing each pixel, we now have a single number for each, which we can view directly:
 """
 
 # ╔═╡ 79184229-63fa-44e8-a79e-8e6ac6ce485f
-gray.(gray_dog)
+gray.(img_gray)
 
-# ╔═╡ 0801af3c-ee1c-4ffc-9429-9266564a088c
+# ╔═╡ fc10e422-b881-4b40-8d33-e5f53008045c
 md"""
-We are now ready to build our spectrum by working directly with this matrix.
+This "box of numbers" format is how image data is represented in FITS files.
 """
 
-# ╔═╡ bc056820-1c14-44c9-8bff-f8fdac0718e9
+# ╔═╡ 3fd5490d-ccb3-4d55-9936-68cc626399b6
 md"""
-!!! tip
-	For more on image analysis and other modern math/science computation tools, see this fantastic resource from [Computational Thinking](https://computationalthinking.mit.edu/Fall23/images_abstractions/images/).
+#### Exercise
+
+Try repeating the above analysis with you own PNG image!
+"""
+
+# ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
+@bind img_local FilePicker([MIME("image/png")])
+
+# ╔═╡ 9cda2b8c-ed17-4a16-92bc-f6b334d24208
+my_img = if !isnothing(img_local)
+	path = tempname() * img_local["name"]
+	write(path, img_local["data"])
+	load(path)
+else
+	nothing
+end
+
+# ╔═╡ 94dae9e9-9eb5-406d-b777-976db28d6631
+md"""
+### FITS
+
+[FITS](https://en.wikipedia.org/wiki/FITS) images are already in grayscale and can come packaged with additional metadata (known as *headers*) and data tables that inform us about the observing conditions (e.g., longitude, latitude, gain, exposure time) that our data were taken in. Together these are known as Headers + Data Units (or [*HDUs*](https://heasarc.gsfc.nasa.gov/docs/heasarc/fits_overview.html)), and they can help us reduce systematics from the instrument and environment. Additionally, individual science images can be stacked together to increase the overall signal-to-noise ratio (SNR) of our observations.
+
+!!! note "But why grayscale?"
+	FITS images give us a direct correspondence between the location of the pixel that a particular photon of light falls on in our array, and how strong that signal will be. Images taken at specific wavelengths can then be stacked together to create [full color composite images](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color). The downside for our particular usecase is that these images taken by our eVscope sensor have not been [debayered](https://en.wikipedia.org/wiki/Bayer_filter), which complicates this correspondance. We will explore some of the imaging artifacts that are introduced by this, and potential techniques that we can use to mitigate them.
+
+Later in this workshop, we will explore working with real FITS data taken by your eVscope. For now, we will continue working with the underlying "box of numbers" array representation to build intuition for processing this kind of data.
 """
 
 # ╔═╡ d47ae19a-9b82-41a2-ba38-6087623f5de8
@@ -1346,13 +1351,10 @@ version = "17.4.0+2"
 # ╟─8e324690-373d-4139-8350-add89a86c9b0
 # ╟─d23819bc-ddae-4de7-83b1-58453848d266
 # ╟─1a9ae0d8-9da7-4c60-a088-e242565b4534
-# ╠═af1b84fc-cc08-45e0-a849-fa11c1267b91
+# ╟─af1b84fc-cc08-45e0-a849-fa11c1267b91
 # ╟─e054ca6a-d276-47d5-b8ee-eb63d7d770fa
 # ╠═563781c1-5046-413b-8846-6514cba58d77
 # ╟─1bc51ec7-5dbf-43f7-b158-dc90992a48fe
-# ╟─4edbc2fc-94d8-4a8f-a562-7f7448853fee
-# ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
-# ╟─9cda2b8c-ed17-4a16-92bc-f6b334d24208
 # ╟─8769ad1c-9de8-4ee4-b030-a2805f28353f
 # ╠═8eb994d7-c74d-481a-9e75-9c834d23bd18
 # ╠═49ca1b81-2eed-40da-afca-d9d2d51438f6
@@ -1365,14 +1367,16 @@ version = "17.4.0+2"
 # ╟─5e185421-f0f1-4337-b59f-1752addbbe09
 # ╟─b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
 # ╠═57a70e86-625e-4ab4-9309-d618c5edba1b
-# ╠═4ba5c57b-0e22-4555-bf7c-4373186fe27e
-# ╠═4c0dd0c1-b446-46c2-a190-10eac40d1cc4
-# ╠═807485a1-aae1-4e4f-9787-14254fb8a005
-# ╠═90960427-7433-4528-8cba-03444212d2c0
-# ╠═7726d9f9-d8b8-4fd4-b8b7-eef4fa4de0e2
+# ╟─4c0dd0c1-b446-46c2-a190-10eac40d1cc4
+# ╟─807485a1-aae1-4e4f-9787-14254fb8a005
+# ╠═92314a4b-3e05-42bf-a221-7dcf96c015fe
+# ╟─90960427-7433-4528-8cba-03444212d2c0
 # ╠═79184229-63fa-44e8-a79e-8e6ac6ce485f
-# ╠═0801af3c-ee1c-4ffc-9429-9266564a088c
-# ╠═bc056820-1c14-44c9-8bff-f8fdac0718e9
+# ╟─fc10e422-b881-4b40-8d33-e5f53008045c
+# ╟─3fd5490d-ccb3-4d55-9936-68cc626399b6
+# ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
+# ╟─9cda2b8c-ed17-4a16-92bc-f6b334d24208
+# ╟─94dae9e9-9eb5-406d-b777-976db28d6631
 # ╠═d47ae19a-9b82-41a2-ba38-6087623f5de8
 # ╠═ea73493c-8076-4823-9129-83dea64f8e9f
 # ╠═c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
