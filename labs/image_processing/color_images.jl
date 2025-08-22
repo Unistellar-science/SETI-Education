@@ -11,6 +11,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 926ae0c8-5dd2-11f0-3c63-e540d51a756c
 begin
 	using PlutoUI, AstroImages, ImageFiltering, Statistics
@@ -66,13 +78,163 @@ Additional resources:
 * Learn Julia: [Julia website](https://julialang.org/learning/)
 * Noteworthy Differences from other Languages: [Julia manual](https://docs.julialang.org/en/v1/manual/noteworthy-differences/)
 * Handy cheatsheets: [JuliaDocs](https://cheatsheet.juliadocs.org/), [MATLAB--Python--Julia](https://cheatsheets.quantecon.org/)
+* [Featured Pluto.jl notebooks](https://featured.plutojl.org/)
 """
 
 # ╔═╡ af1b84fc-cc08-45e0-a849-fa11c1267b91
 md"""
 ## 2. Image formats 📚
 
-PNG, JPEG, FITS
+Astronomical images start their lives as a box of numbers. This box can be represented in a variety of different formats, the most popular currently being the [Flexible Image Transport System](https://en.wikipedia.org/wiki/FITS) (FITS) format. We will explore FITS files shortly, but let's start with another common format that you might use every day, [Portable Network Graphics](https://en.wikipedia.org/wiki/PNG) (PNG), to get an idea of how image data is represented and how these different formats relate to each other.
+"""
+
+# ╔═╡ e054ca6a-d276-47d5-b8ee-eb63d7d770fa
+md"""
+### PNG
+
+We can use an image of anything, really. Below, we download a PNG image of NGC 3324 in the Carina Nebula from JWST and store it in a variable named `img`:
+"""
+
+# ╔═╡ 563781c1-5046-413b-8846-6514cba58d77
+img = load(download("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png"))
+
+# ╔═╡ 4edbc2fc-94d8-4a8f-a562-7f7448853fee
+md"""
+You can also load a PNG file from your own device into the variable named `img_local` by selecting the `Browse...` button below:
+"""
+
+# ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
+@bind img_local FilePicker([MIME("image/png")])
+
+# ╔═╡ 9cda2b8c-ed17-4a16-92bc-f6b334d24208
+my_img = if !isnothing(img_local)
+	path = tempname() * img_local["name"]
+	write(path, img_local["data"])
+	load(path)
+else
+	nothing
+end
+
+# ╔═╡ 8769ad1c-9de8-4ee4-b030-a2805f28353f
+md"""
+We now have an image that we can analyze. For starters, let's display some key characteristics about `img`
+"""
+
+# ╔═╡ 8eb994d7-c74d-481a-9e75-9c834d23bd18
+nrows, ncols = size(img)
+
+# ╔═╡ 49ca1b81-2eed-40da-afca-d9d2d51438f6
+pixel_type = eltype(img)
+
+# ╔═╡ 100d8b5b-9fb3-4008-89cf-b94a9ecd67b3
+md"""
+We see here that our image is $(nrows) rows by $(ncols) columns wide, and each cell (or pixel) of this image is represented by a $(pixel_type) type.
+
+Even though this part is Julia specific, the underlying information is general enough to apply to most image processing libraries. Let's break down what each piece means: 
+
+* [`ColorTypes`](https://github.com/JuliaGraphics/ColorTypes.jl): The name of the package where a type called `RGB` is defined.
+
+* [`RGB`](https://github.com/JuliaGraphics/ColorTypes.jl#rgb-plus-bgr-xrgb-rgbx-and-rgb24-the-abstractrgb-group): A type that stores the red, green, and blue intensity values of a pixel. These can be thought of as [sub-pixels](https://en.wikipedia.org/wiki/Pixel#Subpixels)
+
+* [`FixedPointNumbers`](https://github.com/JuliaMath/FixedPointNumbers.jl): The name of the package where a type called `N0f8` is defined.
+
+* [`N0f8`](https://github.com/JuliaMath/FixedPointNumbers.jl#type-hierarchy-and-interpretation): A type that represents a number in memory. This essentially defines the specific number type used for each red, green, and blue value in each pixel. More on [`N0f8` and other number formats](https://juliaimages.org/latest/tutorials/quickstart/#The-0-to-1-intensity-scale).
+
+To summarize, our image is just a matrix of pixels, where each pixel value is represented by a triple of RGB values stored in a memory efficient format. Let's explore next how these numbers connect to how we perceive color.
+"""
+
+# ╔═╡ c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
+begin
+	N_sampled_pixels = 5
+	resample
+	sample_px_dog = rand(img_dog, N_sampled_pixels)
+end
+
+# ╔═╡ 95ec6394-da53-4f3a-861d-86f8779fe2dd
+md"""
+We have $(N_sampled_pixels) pixels above sampled from our image. Based on how colorful and varied the image is, these pixels can have a range of different colors between them. Pull the slider to look at each of these pixels one by one and/or click the `Resample` button to select $(N_sampled_pixels) new pixels at random. For convenience, we also display the individual (R, G, B) values next to our slider.
+"""
+
+# ╔═╡ 1f95d2e2-33f4-4016-84a6-b983ede688b2
+@bind px_dog Slider(sample_px_dog; show_value=true)
+
+# ╔═╡ f73c7298-cd97-4539-b85f-25cf69508466
+let
+	r, g, b = px_dog .|> (red, green, blue)
+	
+	md"""
+	**Selected pixel:** $(px_dog)
+	
+	``\Longrightarrow`` R $(RGB(r, 0, 0)), G $(RGB(0, g, 0)), B $(RGB(0, 0, b))
+	"""
+end
+
+# ╔═╡ 5e185421-f0f1-4337-b59f-1752addbbe09
+md"""
+Below our selected pixel, we map these (R, G, B) values to their corresponding sub-pixel, where 0 represents black (or no brightness), and 1 represents the peak brightness for the given color channel. The resulting color is then the [additive combination](https://en.wikipedia.org/wiki/RGB_color_model#Additive_colors) of these individual subpixels.
+"""
+
+# ╔═╡ fd180e2e-0470-4a38-bb37-c2948dee8c34
+md"""
+We are now one step closer to building a spectrum of our image. Astronomers typically work with [black and white](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color) (or [grayscale](https://en.wikipedia.org/wiki/Grayscale)) images, so we will next see how we can convert our image to this form using the information we have above. Later, we will see why this is a beneficial form to have our image in when we explore the FITS file format.
+"""
+
+# ╔═╡ b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
+md"""
+### Grayscale images
+"""
+
+# ╔═╡ f39bf649-3ed1-4649-be38-f211d34a2ebf
+md"""
+The converversion process from ``RGB`` to Grayscale for a given pixel is achieved by taking a weighted average of its channel values according to an [international standard](https://en.wikipedia.org/wiki/Luma_%28video%29#Rec._601_luma_versus_Rec._709_luma_coefficients) established to emulate how the [human eye perceives relative brightnesses](https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale):
+
+```math
+0.299 R + 0.587 G + 0.114 B \quad.
+```
+
+This is [already implemented for us](https://juliaimages.org/latest/examples/color_channels/rgb_grayscale/) in the `ColorTypes` package, which we apply below to each pixel of our image to produce the following grayscale version:
+"""
+
+# ╔═╡ 57a70e86-625e-4ab4-9309-d618c5edba1b
+gray_dog = Gray.(img_dog)
+
+# ╔═╡ 4ba5c57b-0e22-4555-bf7c-4373186fe27e
+img_info(gray_dog);
+
+# ╔═╡ 4c0dd0c1-b446-46c2-a190-10eac40d1cc4
+md"""
+!!! note
+	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
+""" |> msg
+
+# ╔═╡ 807485a1-aae1-4e4f-9787-14254fb8a005
+md"""
+Taking a look at the properties of our new image, we see that now instead of being a matrix composed of `RGB{N0f8}` types, it is composed of `Gray{N0f8}`s.
+"""
+
+# ╔═╡ 90960427-7433-4528-8cba-03444212d2c0
+md"""
+!!! note
+	We omit the package names for brevity.
+"""
+
+# ╔═╡ 7726d9f9-d8b8-4fd4-b8b7-eef4fa4de0e2
+md"""
+In other words, instead of three numbers representing each pixel, we now have a single number for each, which we can view directly:
+"""
+
+# ╔═╡ 79184229-63fa-44e8-a79e-8e6ac6ce485f
+gray.(gray_dog)
+
+# ╔═╡ 0801af3c-ee1c-4ffc-9429-9266564a088c
+md"""
+We are now ready to build our spectrum by working directly with this matrix.
+"""
+
+# ╔═╡ bc056820-1c14-44c9-8bff-f8fdac0718e9
+md"""
+!!! tip
+	For more on image analysis and other modern math/science computation tools, see this fantastic resource from [Computational Thinking](https://computationalthinking.mit.edu/Fall23/images_abstractions/images/).
 """
 
 # ╔═╡ d47ae19a-9b82-41a2-ba38-6087623f5de8
@@ -1176,6 +1338,32 @@ version = "17.4.0+2"
 # ╟─d23819bc-ddae-4de7-83b1-58453848d266
 # ╟─1a9ae0d8-9da7-4c60-a088-e242565b4534
 # ╠═af1b84fc-cc08-45e0-a849-fa11c1267b91
+# ╟─e054ca6a-d276-47d5-b8ee-eb63d7d770fa
+# ╠═563781c1-5046-413b-8846-6514cba58d77
+# ╟─4edbc2fc-94d8-4a8f-a562-7f7448853fee
+# ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
+# ╟─9cda2b8c-ed17-4a16-92bc-f6b334d24208
+# ╟─8769ad1c-9de8-4ee4-b030-a2805f28353f
+# ╠═8eb994d7-c74d-481a-9e75-9c834d23bd18
+# ╠═49ca1b81-2eed-40da-afca-d9d2d51438f6
+# ╟─100d8b5b-9fb3-4008-89cf-b94a9ecd67b3
+# ╠═c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
+# ╠═95ec6394-da53-4f3a-861d-86f8779fe2dd
+# ╠═1f95d2e2-33f4-4016-84a6-b983ede688b2
+# ╠═f73c7298-cd97-4539-b85f-25cf69508466
+# ╠═5e185421-f0f1-4337-b59f-1752addbbe09
+# ╠═fd180e2e-0470-4a38-bb37-c2948dee8c34
+# ╠═b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
+# ╠═f39bf649-3ed1-4649-be38-f211d34a2ebf
+# ╠═57a70e86-625e-4ab4-9309-d618c5edba1b
+# ╠═4ba5c57b-0e22-4555-bf7c-4373186fe27e
+# ╠═4c0dd0c1-b446-46c2-a190-10eac40d1cc4
+# ╠═807485a1-aae1-4e4f-9787-14254fb8a005
+# ╠═90960427-7433-4528-8cba-03444212d2c0
+# ╠═7726d9f9-d8b8-4fd4-b8b7-eef4fa4de0e2
+# ╠═79184229-63fa-44e8-a79e-8e6ac6ce485f
+# ╠═0801af3c-ee1c-4ffc-9429-9266564a088c
+# ╠═bc056820-1c14-44c9-8bff-f8fdac0718e9
 # ╠═d47ae19a-9b82-41a2-ba38-6087623f5de8
 # ╠═ea73493c-8076-4823-9129-83dea64f8e9f
 # ╠═c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
