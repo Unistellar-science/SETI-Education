@@ -26,6 +26,8 @@ end
 # ╔═╡ 926ae0c8-5dd2-11f0-3c63-e540d51a756c
 begin
 	using PlutoUI, AstroImages, ImageFiltering, Statistics
+
+	using AstroImages: RGB, Gray, red, green, blue
 	
 	AstroImages.set_cmap!(nothing)
 end
@@ -92,11 +94,16 @@ Astronomical images start their lives as a box of numbers. This box can be repre
 md"""
 ### PNG
 
-We can use an image of anything, really. Below, we download a PNG image of NGC 3324 in the Carina Nebula from JWST and store it in a variable named `img`:
+We can use an image of anything, really. Below, we download a PNG of the famous ["Cosmic Cliffs"](https://webbtelescope.org/contents/media/images/2022/031/01G77PKB8NKR7S8Z6HBXMYATGJ) image taken from JWST and store it in a variable named `img`:
 """
 
 # ╔═╡ 563781c1-5046-413b-8846-6514cba58d77
 img = load(download("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png"))
+
+# ╔═╡ 1bc51ec7-5dbf-43f7-b158-dc90992a48fe
+md"""
+_Image credit: NASA, ESA, CSA, STScI_
+"""
 
 # ╔═╡ 4edbc2fc-94d8-4a8f-a562-7f7448853fee
 md"""
@@ -124,11 +131,11 @@ We now have an image that we can analyze. For starters, let's display some key c
 nrows, ncols = size(img)
 
 # ╔═╡ 49ca1b81-2eed-40da-afca-d9d2d51438f6
-pixel_type = eltype(img)
+px_type = eltype(img)
 
 # ╔═╡ 100d8b5b-9fb3-4008-89cf-b94a9ecd67b3
 md"""
-We see here that our image is $(nrows) rows by $(ncols) columns wide, and each cell (or pixel) of this image is represented by a $(pixel_type) type.
+We see here that our image is $(nrows) rows by $(ncols) columns wide, and each cell (or pixel) of this image is represented by a $(px_type) type.
 
 Even though this part is Julia specific, the underlying information is general enough to apply to most image processing libraries. Let's break down what each piece means: 
 
@@ -143,27 +150,32 @@ Even though this part is Julia specific, the underlying information is general e
 To summarize, our image is just a matrix of pixels, where each pixel value is represented by a triple of RGB values stored in a memory efficient format. Let's explore next how these numbers connect to how we perceive color.
 """
 
+# ╔═╡ d8cd4c83-9b02-43d2-947c-354ec7c51637
+@bind resample Button("Resample")
+
 # ╔═╡ c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
 begin
-	N_sampled_pixels = 5
+	N_sampled_px = 5
 	resample
-	sample_px_dog = rand(img_dog, N_sampled_pixels)
+	sample_px = rand(img, N_sampled_px)
 end
 
-# ╔═╡ 95ec6394-da53-4f3a-861d-86f8779fe2dd
+# ╔═╡ 9cac3e33-c68a-4f6b-8021-003ba876b4e9
 md"""
-We have $(N_sampled_pixels) pixels above sampled from our image. Based on how colorful and varied the image is, these pixels can have a range of different colors between them. Pull the slider to look at each of these pixels one by one and/or click the `Resample` button to select $(N_sampled_pixels) new pixels at random. For convenience, we also display the individual (R, G, B) values next to our slider.
+### Pixel colors
+
+Below, we sample $(N_sampled_px) random pixels from `img`. Based on how colorful and varied the image is, these pixels can have a range of different colors between them. Pull the slider to look at each of these pixels one by one and/or click the `Resample` button to select $(N_sampled_px) new pixels at random. For convenience, we also display the individual (R, G, B) values next to our slider.
 """
 
 # ╔═╡ 1f95d2e2-33f4-4016-84a6-b983ede688b2
-@bind px_dog Slider(sample_px_dog; show_value=true)
+@bind px_img Slider(sample_px; show_value=true)
 
 # ╔═╡ f73c7298-cd97-4539-b85f-25cf69508466
 let
-	r, g, b = px_dog .|> (red, green, blue)
+	r, g, b = px_img .|> (red, green, blue)
 	
 	md"""
-	**Selected pixel:** $(px_dog)
+	**Selected pixel:** $(px_img)
 	
 	``\Longrightarrow`` R $(RGB(r, 0, 0)), G $(RGB(0, g, 0)), B $(RGB(0, 0, b))
 	"""
@@ -172,20 +184,14 @@ end
 # ╔═╡ 5e185421-f0f1-4337-b59f-1752addbbe09
 md"""
 Below our selected pixel, we map these (R, G, B) values to their corresponding sub-pixel, where 0 represents black (or no brightness), and 1 represents the peak brightness for the given color channel. The resulting color is then the [additive combination](https://en.wikipedia.org/wiki/RGB_color_model#Additive_colors) of these individual subpixels.
-"""
 
-# ╔═╡ fd180e2e-0470-4a38-bb37-c2948dee8c34
-md"""
 We are now one step closer to building a spectrum of our image. Astronomers typically work with [black and white](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color) (or [grayscale](https://en.wikipedia.org/wiki/Grayscale)) images, so we will next see how we can convert our image to this form using the information we have above. Later, we will see why this is a beneficial form to have our image in when we explore the FITS file format.
 """
 
 # ╔═╡ b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
 md"""
-### Grayscale images
-"""
+### Grayscale
 
-# ╔═╡ f39bf649-3ed1-4649-be38-f211d34a2ebf
-md"""
 The converversion process from ``RGB`` to Grayscale for a given pixel is achieved by taking a weighted average of its channel values according to an [international standard](https://en.wikipedia.org/wiki/Luma_%28video%29#Rec._601_luma_versus_Rec._709_luma_coefficients) established to emulate how the [human eye perceives relative brightnesses](https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale):
 
 ```math
@@ -196,16 +202,10 @@ This is [already implemented for us](https://juliaimages.org/latest/examples/col
 """
 
 # ╔═╡ 57a70e86-625e-4ab4-9309-d618c5edba1b
-gray_dog = Gray.(img_dog)
+gray_img = Gray.(img)
 
 # ╔═╡ 4ba5c57b-0e22-4555-bf7c-4373186fe27e
 img_info(gray_dog);
-
-# ╔═╡ 4c0dd0c1-b446-46c2-a190-10eac40d1cc4
-md"""
-!!! note
-	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
-""" |> msg
 
 # ╔═╡ 807485a1-aae1-4e4f-9787-14254fb8a005
 md"""
@@ -315,6 +315,15 @@ md"""
 
 # ╔═╡ 1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
 TableOfContents()
+
+# ╔═╡ c2816617-5cb1-4e51-948e-60efdaa7db1c
+msg(x) = details("Details", x)
+
+# ╔═╡ 4c0dd0c1-b446-46c2-a190-10eac40d1cc4
+md"""
+!!! note
+	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
+""" |> msg
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1340,6 +1349,7 @@ version = "17.4.0+2"
 # ╠═af1b84fc-cc08-45e0-a849-fa11c1267b91
 # ╟─e054ca6a-d276-47d5-b8ee-eb63d7d770fa
 # ╠═563781c1-5046-413b-8846-6514cba58d77
+# ╟─1bc51ec7-5dbf-43f7-b158-dc90992a48fe
 # ╟─4edbc2fc-94d8-4a8f-a562-7f7448853fee
 # ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
 # ╟─9cda2b8c-ed17-4a16-92bc-f6b334d24208
@@ -1347,14 +1357,13 @@ version = "17.4.0+2"
 # ╠═8eb994d7-c74d-481a-9e75-9c834d23bd18
 # ╠═49ca1b81-2eed-40da-afca-d9d2d51438f6
 # ╟─100d8b5b-9fb3-4008-89cf-b94a9ecd67b3
-# ╠═c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
-# ╠═95ec6394-da53-4f3a-861d-86f8779fe2dd
-# ╠═1f95d2e2-33f4-4016-84a6-b983ede688b2
-# ╠═f73c7298-cd97-4539-b85f-25cf69508466
-# ╠═5e185421-f0f1-4337-b59f-1752addbbe09
-# ╠═fd180e2e-0470-4a38-bb37-c2948dee8c34
-# ╠═b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
-# ╠═f39bf649-3ed1-4649-be38-f211d34a2ebf
+# ╟─9cac3e33-c68a-4f6b-8021-003ba876b4e9
+# ╟─d8cd4c83-9b02-43d2-947c-354ec7c51637
+# ╟─c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
+# ╟─1f95d2e2-33f4-4016-84a6-b983ede688b2
+# ╟─f73c7298-cd97-4539-b85f-25cf69508466
+# ╟─5e185421-f0f1-4337-b59f-1752addbbe09
+# ╟─b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
 # ╠═57a70e86-625e-4ab4-9309-d618c5edba1b
 # ╠═4ba5c57b-0e22-4555-bf7c-4373186fe27e
 # ╠═4c0dd0c1-b446-46c2-a190-10eac40d1cc4
@@ -1378,6 +1387,7 @@ version = "17.4.0+2"
 # ╠═98e95070-f5a9-4d5a-b2c2-14d1b489febe
 # ╠═ef1945ce-84be-4ed9-ba0e-25b7be69400a
 # ╠═1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
+# ╠═c2816617-5cb1-4e51-948e-60efdaa7db1c
 # ╠═926ae0c8-5dd2-11f0-3c63-e540d51a756c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
