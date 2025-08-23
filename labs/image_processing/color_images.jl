@@ -197,6 +197,12 @@ This is [already implemented for us](https://juliaimages.org/latest/examples/col
 # ╔═╡ 57a70e86-625e-4ab4-9309-d618c5edba1b
 img_gray = Gray.(img)
 
+# ╔═╡ 4c0dd0c1-b446-46c2-a190-10eac40d1cc4
+details("Details", md"""
+!!! note " "
+	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
+""")
+
 # ╔═╡ 807485a1-aae1-4e4f-9787-14254fb8a005
 md"""
 Taking a look at the properties of our new image, we see that now instead of being a matrix composed of `RGB{N0f8}` types, it is composed of `Gray{N0f8}`s:
@@ -283,6 +289,7 @@ md"""
 # ╔═╡ 87cc25a5-c3fa-436a-aa1a-9c2a670433f1
 md"""
 👉 Your notes here
+
 
 """
 
@@ -452,71 +459,111 @@ md"""
 
 """
 
+# ╔═╡ 140f340f-1330-4bb1-be9d-802d17a807aa
+md"""
+Now that we have a handle on working with AstroImages.jl data, let's turn next to combining some real FITS data to make a full color image.
+"""
+
 # ╔═╡ c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
 md"""
 ## 5. Image stacking 🥞
 
-_Examples taken from [`JuliaAstro > AstroImages.jl > Converting to RGB`](https://juliaastro.org/AstroImages/stable/manual/converting-to-rgb/)_.
-
-!!! todo
-	Fill out
+Let's start by pulling in some data. We'll use an example from the [AstroImages.jl documentation](https://juliaastro.org/AstroImages/stable/manual/converting-to-rgb/), which uses images of the colliding [Antennae galaxies](https://www.nasa.gov/image-article/antennae-galaxies/) provided by NASA/ESA.
 """
 
 # ╔═╡ f947c8a9-861e-404d-8dab-d4a88b913fe8
 md"""
 ### RGB
+
+Below are images taken in the visible portion of the spectrum in red, green, and blue light, respectively. Data product information [here](https://esahubble.org/projects/fits_liberator/antennaedata/).
 """
 
 # ╔═╡ f11c4c56-101c-42fb-9fa4-bf6b91c30ad1
-# We crop some of the images a bit to help align them with the other color channels
-antred = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/red.fits"))[:, begin+14:end]
+antred = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/red.fits"))[:, begin+14:end];
 
 # ╔═╡ 688a41ca-5652-43c3-83a6-b4ab03301867
-antgreen = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/green.fits"))
+antgreen = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/green.fits"));
 
 # ╔═╡ 0d8df701-596a-4200-bf88-adf4adb9f168
-antblue = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/blue.fits"))[:, begin+14:end]
+antblue = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/blue.fits"))[:, begin+14:end];
+
+# ╔═╡ a5e2d49c-4fa5-4564-8ca9-5ede1e64a807
+img_channels = antred, antgreen, antblue
+
+# ╔═╡ d4dc20f3-a246-4ec8-82c0-f16f82df1403
+md"""
+!!! note
+	We array slice some of the images to help line things up before stacking. We'll dicuss more methodical ways for aligning astronomical images later in the workshop.
+"""
+
+# ╔═╡ a6f005d7-63a5-4a84-b6b5-ba7820413cb0
+md"""
+We next call the `composecolors` function from AstroImages.jl to combine these three different color channels:
+"""
 
 # ╔═╡ 3fffe0f3-e332-4016-9c9c-0be1c2694e63
-rgb = composecolors([antred, antgreen, antblue];
-	clims = Percent(97),
-	stretch = asinhstretch,
-    multiplier = [1, 1.7, 1],
+img_rgb = composecolors(img_channels;
+	stretch = [
+		asinhstretch,
+		asinhstretch,
+		asinhstretch,
+	],
+	multiplier = [1, 1.7, 1],
 )
+
+# ╔═╡ c4db8544-a8bb-47e7-b2d1-4bfdf8d99279
+md"""
+!!! tip "Question"
+	Explore the documentation for `composecolors`. What keywords can be passed to it? Try adding your own modified version of the above image using these keywords.
+"""
+
+# ╔═╡ 7a68b578-0d4d-4b69-ab35-4320402b9cf5
+md"""
+👉 Your notes here
+
+
+"""
 
 # ╔═╡ fbecb5d2-2892-4e04-8bcb-59f4c29b08cf
 md"""
 ### H-alpha
+
+We aren't limited to just the light that we can see though. Now that we know about colormaps, we can apply arbitrary color assingments to the underlying data to help us gain insight. For example, let's overlay another image of the Antennae galaxy taken with a Hydrogen filter to highlight active star-forming regions that glow brightly in the H-alpha portion of the spectrum. We'll assign this activity to the color maroon:
 """
 
 # ╔═╡ 8bd7e1b6-a146-4ece-ad95-a097c6387705
-anthalph = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/hydrogen.fits"))[:, begin+14:end]
+anthalph = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/hydrogen.fits"))[:, begin+14:end];
 
 # ╔═╡ bbe0c915-9a64-4234-8b51-d14e170c3c90
-rgb6 = composecolors(
+img_rgbh = composecolors(
     [antred, antgreen, antblue, anthalph],
     ["red", "green", "blue", "maroon1"],
-    stretch=[
+    stretch = [
         asinhstretch,
         asinhstretch,
         asinhstretch,
         identity,
     ],
-    multiplier=[1,1.7,1,0.8]
+    multiplier = [1, 1.7, 1, 0.8],
 )
+
+# ╔═╡ 435d1357-e206-45a8-a468-e8083cf65714
+md"""
+And with that, we now have a scientific image that we can use for future analysis.
+"""
 
 # ╔═╡ 98e95070-f5a9-4d5a-b2c2-14d1b489febe
 md"""
 # 📖 Further reading
 
-!!! todo
-	Clean up
+Here are some additional resources that may be of interest for taking a deeper dive into color theory and data representation of images.
 
-<https://science.nasa.gov/ems/04_energytoimage/>
-
-<https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made>
-
-<https://computationalthinking.mit.edu/Fall24/images_abstractions/images/>
+!!! note ""
+	[Visualization: From Energy to Image](https://science.nasa.gov/ems/04_energytoimage/) _-- NASA_
+	
+	[How Are Webb’s Full-Color Images Made?](https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made) _-- JWST_
+	
+	[Images as Data and Arrays](https://computationalthinking.mit.edu/Fall24/images_abstractions/images/) _-- Julia / MIT_
 """
 
 # ╔═╡ ef1945ce-84be-4ed9-ba0e-25b7be69400a
@@ -527,16 +574,8 @@ md"""
 # ╔═╡ 1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
 TableOfContents(depth = 4)
 
-# ╔═╡ c2816617-5cb1-4e51-948e-60efdaa7db1c
-msg(x) = details("Details", x)
-
-# ╔═╡ 4c0dd0c1-b446-46c2-a190-10eac40d1cc4
-md"""
-!!! note
-	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
-""" |> msg
-
 # ╔═╡ 3e9f7a17-b6cb-4c50-b38b-e39f437a5c30
+# Align html tables to the left side of the page by default
 html"""
 <style>
 	table { float: left }
@@ -1509,19 +1548,25 @@ version = "17.4.0+2"
 # ╠═9c3bfa7d-b324-4a04-bcaf-3a3a549ca356
 # ╟─8827b121-279d-42a2-9a74-098bec267318
 # ╠═9afd404b-5bed-4edd-859d-a07250860d28
+# ╟─140f340f-1330-4bb1-be9d-802d17a807aa
 # ╟─c47504a5-60d2-4ef6-a75a-2e5e2e1dc984
 # ╟─f947c8a9-861e-404d-8dab-d4a88b913fe8
 # ╠═f11c4c56-101c-42fb-9fa4-bf6b91c30ad1
 # ╠═688a41ca-5652-43c3-83a6-b4ab03301867
 # ╠═0d8df701-596a-4200-bf88-adf4adb9f168
+# ╠═a5e2d49c-4fa5-4564-8ca9-5ede1e64a807
+# ╟─d4dc20f3-a246-4ec8-82c0-f16f82df1403
+# ╟─a6f005d7-63a5-4a84-b6b5-ba7820413cb0
 # ╠═3fffe0f3-e332-4016-9c9c-0be1c2694e63
+# ╟─c4db8544-a8bb-47e7-b2d1-4bfdf8d99279
+# ╠═7a68b578-0d4d-4b69-ab35-4320402b9cf5
 # ╟─fbecb5d2-2892-4e04-8bcb-59f4c29b08cf
 # ╠═8bd7e1b6-a146-4ece-ad95-a097c6387705
 # ╠═bbe0c915-9a64-4234-8b51-d14e170c3c90
+# ╟─435d1357-e206-45a8-a468-e8083cf65714
 # ╟─98e95070-f5a9-4d5a-b2c2-14d1b489febe
 # ╟─ef1945ce-84be-4ed9-ba0e-25b7be69400a
 # ╠═1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
-# ╠═c2816617-5cb1-4e51-948e-60efdaa7db1c
 # ╠═3e9f7a17-b6cb-4c50-b38b-e39f437a5c30
 # ╠═a2044d4d-77de-446b-b7e1-b7a32c65266c
 # ╠═926ae0c8-5dd2-11f0-3c63-e540d51a756c
