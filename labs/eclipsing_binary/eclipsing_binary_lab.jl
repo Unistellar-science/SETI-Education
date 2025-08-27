@@ -51,7 +51,7 @@ end
 
 # ╔═╡ 3d8a4c43-1a17-4a36-84e8-47a98493ca99
 md"""
-# ⚪ ⚫ Unistellar Eclipsing Binary Lab
+# ⚪ ⚫ Eclipsing Binary Lab
 In this lab we will observe an eclipsing binary in real time and explore how to produce a light curve for it.
 
 Having some familiarity in high-level programming languages like Julia or Python will be useful, but not necessary, for following along with the topics covered. At the end of this notebook, you will hopefully have the tools to build your own analysis pipelines for processing astronomical data, as well as understand the principles behind other astronomical software at a broader level.
