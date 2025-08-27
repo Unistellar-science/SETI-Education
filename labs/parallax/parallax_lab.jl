@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.15
+# v0.20.17
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/mrlmn0lr/image_2-parallax.png"
@@ -40,48 +40,70 @@ begin
 	
 	# Analysis
 	using CoordinateTransformations, DataDeps, ImageTransformations
-
-	# Use DataDeps.jl for dataset management
-	# Auto-download data to current directory by default
-	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
-	ENV["DATADEPS_LOAD_PATH"] = @__DIR__
-	DataDep(
-		"data",
-		"""
-		UCAN Data Files
-		Website: https://www.seti.org/education/ucan/unistellar-education-materials/
-		""",
-		["https://www.dropbox.com/scl/fo/k57vx9xnqyc1honkn2avc/APka1AAqVQ2sWnnZvZQw1CU?rlkey=1l5thuixednvx7adc8dyy5ayu&st=d5db4neq&dl=1"],
-		["792583d090588277b00e3133167a163774cf37935b68dd993b67fe678e2de73a"],
-		post_fetch_method = unpack,
-	) |> register
-end;
+end
 
 # ╔═╡ 75d03ef4-d8b2-11ef-076a-058846f3b6ba
 md"""
-# Parallax Lab 👥
+# 👥 Parallax Lab
 
 In this lab we will estimate the distance to a near-Earth object (NEO) based on its measured parallax. For more on taking these types of science observations, see our [Unistellar Planetary Defense page](https://science.unistellar.com/planetary-defense/).
 
-Having some familiarity in high-level programming languages like Julia or Python will be useful, but not necessary, for following along with the topics covered. At the end of this notebook, you will hopefully have the tools to build your own analysis pipelines for processing general parallax observations, as well as understand the principles behind other astronomical software at a broad level.
+Having some familiarity in high-level programming languages like Julia or Python will be useful, but not necessary, for following along with the topics covered. At the end of this notebook, you will hopefully have the tools to build your own analysis pipelines for processing astronomical data, as well as understand the principles behind other astronomical software at a broader level.
 
 !!! note "Coffee? ☕"
-	The first time this notebook runs might take a while (~ couple minutes) because it will download and compile everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
+	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
 """
 
-# ╔═╡ 4cc6fb84-cefe-4571-850c-762643ff4ffc
+# ╔═╡ 74472b02-f1d6-4751-8797-1d0ab4cbc097
 md"""
-## Using the notebook
-
-This lab uses [Pluto.jl](https://plutojl.org/) to share data analysis in a reproducible format. For more information on useage, see the [documentation here](https://plutojl.org/en/docs/). Some of our other [past Unistellar labs](https://www.seti.org/unistellar-education-materials) may also be useful for additional usage examples:
-
-* [Unistellar Spectroscopy Lab](https://www.seti.org/unistellar-education-materials#Spectroscopy-Lab)
-* [Unistellar Eclipsing Binary Lab](https://www.seti.org/unistellar-education-materials#Eclipsing-Binary-Lab)
-* [Unistellar Asteroid Occultation Lab](https://www.seti.org/unistellar-education-materials#Asteroid-Occultation-Lab)
-
-!!! tip "Interactivity"
-	For full interactivity, please click on the `Edit or run this notebook` button in the top right corner. We recommend using the `On your computer` option to download a local copy of this lab. Pluto.jl will handle installation automatically on most platforms (e.g., MacOS, Windows, Linux, ChromeOS).
+With this requisite information out of the way, let's get started!
 """
+
+# ╔═╡ 0ecd42d3-6316-4c3b-a39b-3f05fffc88ae
+msg_adding_colors = md"""
+##### Adding colors in Julia 🎨
+This makes magenta!
+
+```julia
+using AstroImages: RGB
+
+RGB(1, 0, 0) + RGB(0, 0, 1)
+```
+
+$(AstroImages.RGB(1, 0, 0) + AstroImages.RGB(0, 0, 1))
+"""; md"---"
+
+# ╔═╡ a9eff328-1082-45a6-b167-dc62e56d3871
+details("Using this notebook 🌱", md"""
+!!! note "First time running"
+	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
+	
+	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
+
+!!! tip "Advanced: bring your own editor"
+	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+
+	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
+
+	```julia-repl
+	julia> using Pluto
+	
+	julia> Pluto.run(auto_reload_from_file=true)
+	
+	# This will be on by default in an upcoming release =]
+	```
+
+	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
+
+
+!!! warning "Diving deeper"
+	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
+
+$(details("Details", msg_adding_colors))
+
+!!! warning " "
+	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
+""")
 
 # ╔═╡ 7d10737f-1691-43e5-891f-118e41cd771a
 md"""
@@ -479,6 +501,24 @@ plot_pair(OBSERVATORIES)
 
 # ╔═╡ 84c11014-8890-4348-96b6-8e701e458de4
 plot_pair((img1 => "eVscope West", img2w => "eVscope East (stacked)"))
+
+# ╔═╡ d7db8d25-f0c8-44a4-8bcd-c2b63673b4eb
+begin
+	# Use DataDeps.jl for dataset management
+	# Auto-download data to current directory by default
+	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
+	ENV["DATADEPS_LOAD_PATH"] = @__DIR__
+	DataDep(
+		"data",
+		"""
+		UCAN Data Files
+		Website: https://www.seti.org/education/ucan/unistellar-education-materials/
+		""",
+		["https://www.dropbox.com/scl/fo/k57vx9xnqyc1honkn2avc/APka1AAqVQ2sWnnZvZQw1CU?rlkey=1l5thuixednvx7adc8dyy5ayu&st=d5db4neq&dl=1"],
+		["792583d090588277b00e3133167a163774cf37935b68dd993b67fe678e2de73a"],
+		post_fetch_method = unpack,
+	) |> register
+end;
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1898,7 +1938,9 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╟─75d03ef4-d8b2-11ef-076a-058846f3b6ba
-# ╟─4cc6fb84-cefe-4571-850c-762643ff4ffc
+# ╟─a9eff328-1082-45a6-b167-dc62e56d3871
+# ╟─74472b02-f1d6-4751-8797-1d0ab4cbc097
+# ╟─0ecd42d3-6316-4c3b-a39b-3f05fffc88ae
 # ╟─7d10737f-1691-43e5-891f-118e41cd771a
 # ╟─99b35d47-8560-4efb-a35c-0d5805dfe8b6
 # ╟─65d2286a-2786-4f96-8193-d0c4fe77d57a
@@ -1954,6 +1996,7 @@ version = "17.4.0+2"
 # ╟─e99ae23f-c998-4e09-8d24-5df55b4385ee
 # ╠═a23c40dc-0af3-4c3a-8172-203f58603bbb
 # ╠═05b2f9fe-61d2-4640-bbae-78d6d7465597
+# ╠═d7db8d25-f0c8-44a4-8bcd-c2b63673b4eb
 # ╠═db72ee5e-070b-4dff-b3b6-8b9915ed7b3e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

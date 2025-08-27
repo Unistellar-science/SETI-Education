@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.16
+# v0.20.17
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/jtinir2n/unistellar-spectroscopy-lab-2024_1.png"
@@ -35,7 +35,7 @@ end
 
 # ╔═╡ bdf98bfb-ad09-4c02-9ef5-c02552b70ad5
 md"""
-# 🌈 Unistellar Spectroscopy Lab
+# 🌈 Spectroscopy Lab
 
 This notebook provides a short methods introduction to the field of [spectroscopy](https://en.wikipedia.org/wiki/Astronomical_spectroscopy) in astronomy. As a companion to the *[RSpec Unistellar Manual](https://www.rspec-astro.com/download/Unistellar%20Spectra.pdf)*, we will walk through some of the techniques behind the core concepts used there to produce and analyze astronomical spectra. Over the course of the notebook, we will introduce and use interactive tools and hands-on live code examples to investigate the following concepts:
 
@@ -43,42 +43,62 @@ This notebook provides a short methods introduction to the field of [spectroscop
 * Array/matrix operations
 * Wavelength calibration
 
-Having some familiarity in high-level programming languages like Julia or Python will be useful, but not necessary, for following along with the topics covered above. At the end of this notebook, you will hopefully have the tools to build your own analysis pipelines for processing astronomical spectra, as well as understand the principles behind other astronomical software at a broad level.
+Having some familiarity in high-level programming languages like Julia or Python will be useful, but not necessary, for following along with the topics covered. At the end of this notebook, you will hopefully have the tools to build your own analysis pipelines for processing astronomical data, as well as understand the principles behind other astronomical software at a broader level.
+
+!!! note "Coffee? ☕"
+	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
 """
 
-# ╔═╡ 0968d0d2-7a53-47c5-be13-9c941c0fba0b
+# ╔═╡ 89a603c0-c3fe-479d-8857-a0d4295376d5
 md"""
-!!! note "Using this notebook"
-	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page, or [click on this direct link](https://computationalthinking.mit.edu/Fall24/installation/) which includes a video and written instructions for getting started with Julia and Pluto 🌱.
+With this requisite information out of the way, let's get started!
+"""
 
-	!!! tip "First time running"
-		**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
+# ╔═╡ 920a4545-1426-40f0-bb6a-9c8c7f4b2962
+msg_adding_colors = md"""
+##### Adding colors in Julia 🎨
+This makes magenta!
 
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/icweaver/UCAN/blob/main/spectroscopy/spectroscopy_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+```julia
+using AstroImages: RGB
 
-	!!! tip "Advanced: bring your own editor"
-		This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
+RGB(1, 0, 0) + RGB(0, 0, 1)
+```
 
-		```julia-repl
-		julia> using Pluto
-		
-		julia> Pluto.run(auto_reload_from_file=true)
-		
-		# This will be on by default in an upcoming release =]
-		```
+$(AstroImages.RGB(1, 0, 0) + AstroImages.RGB(0, 0, 1))
+"""; md"---"
 
-		The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
+# ╔═╡ 7e3421b2-1c61-45bb-99d8-222d48036900
+details("Using this notebook 🌱", md"""
+!!! note "First time running"
+	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
+	
+	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
 
+!!! tip "Advanced: bring your own editor"
+	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+
+	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
+
+	```julia-repl
+	julia> using Pluto
+	
+	julia> Pluto.run(auto_reload_from_file=true)
+	
+	# This will be on by default in an upcoming release =]
+	```
+
+	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
+
+
+!!! warning "Diving deeper"
 	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
-"""
 
-# ╔═╡ 1e2dc809-1614-487e-b0fe-f058188555ee
-md"""
-!!! note " "
+$(details("Details", msg_adding_colors))
+
+!!! warning " "
 	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
-
-With this requisite information out of the way, let's get our hands on some real data!
-"""
+""")
 
 # ╔═╡ 127ca8df-46c7-4d02-8f9b-e27983978441
 md"""
@@ -392,22 +412,6 @@ end
 
 # ╔═╡ e1ae334d-548b-4259-af7c-e13b773f7b3e
 msg(x) = details("Details", x)
-
-# ╔═╡ 8ce7b236-4a61-4bd6-b76d-b02f31277e9f
-md"""
-#### Adding colors in Julia 🎨
-
-This makes magenta!
-	
-```julia
-using Colors
-
-# Also accessible from AstroImages.Colors
-RGB(1, 0, 0) + RGB(0, 0, 1)
-```
-
-$(AstroImages.Colors.RGB(1, 0, 0) + AstroImages.Colors.RGB(0, 0, 1))
-""" |> msg
 
 # ╔═╡ bed3c1a0-aa13-4c61-a074-9b38f9a4d306
 md"""
@@ -2355,9 +2359,9 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╟─bdf98bfb-ad09-4c02-9ef5-c02552b70ad5
-# ╟─0968d0d2-7a53-47c5-be13-9c941c0fba0b
-# ╟─8ce7b236-4a61-4bd6-b76d-b02f31277e9f
-# ╟─1e2dc809-1614-487e-b0fe-f058188555ee
+# ╟─7e3421b2-1c61-45bb-99d8-222d48036900
+# ╟─89a603c0-c3fe-479d-8857-a0d4295376d5
+# ╟─920a4545-1426-40f0-bb6a-9c8c7f4b2962
 # ╟─127ca8df-46c7-4d02-8f9b-e27983978441
 # ╟─30585bee-7751-47ca-bcf8-2b57af2b1394
 # ╟─249dd9ce-239e-45a9-9f59-c8991ecd299f
