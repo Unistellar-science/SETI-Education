@@ -151,7 +151,7 @@ end
 
 # ╔═╡ 9cac3e33-c68a-4f6b-8021-003ba876b4e9
 md"""
-### Pixel colors
+#### Pixel colors
 
 Below, we sample $(N_sampled_px) random pixels from `img`. Based on how colorful and varied the image is, these pixels can have a range of different colors between them. Pull the slider to look at each of these pixels one by one and/or click the `Resample` button to select $(N_sampled_px) new pixels at random. For convenience, we also display the individual (R, G, B) values next to our slider.
 """
@@ -174,12 +174,32 @@ end
 md"""
 Below our selected pixel, we map these (R, G, B) values to their corresponding sub-pixel, where 0 represents black (or no brightness), and 1 represents the peak brightness for the given color channel. The resulting color is then the [additive combination](https://en.wikipedia.org/wiki/RGB_color_model#Additive_colors) of these individual subpixels.
 
+Try exploring different pixel regions in the following sample eVscope image below:
+"""
+
+# ╔═╡ c880a5b6-b4e7-4f3f-910c-0ca17de0e905
+img_evscope = load(download("https://www.unistellar.com/wp-content/uploads/2024/12/Eagle-Nebula-Joe-Asencio.png"))
+
+# ╔═╡ dca30b52-031a-4ba8-a630-b0e22b634e61
+md"""
+_Image credit: Joé Asencio (France) | Shot with ODYSSEY PRO_
+"""
+
+# ╔═╡ 74f5cfda-1513-474a-b23d-7c561db34660
+# Modify the indices below
+img_evscope[500:700, 500:700]
+
+# ╔═╡ d3caebde-443a-45d8-802d-fa7f10f4a85e
+md"""
+!!! tip " "
+	See our [Unistellar image gallery](https://www.unistellar.com/gallery/) or browse the `#images_pretty` channel on our [Unistellar citizen science workspace](https://help.unistellar.com/hc/en-us/articles/4405646109842-How-do-I-join-the-Unistellar-Citizen-Science-Community) for more!
+
 Astronomers typically work with [black and white](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color) (or [grayscale](https://en.wikipedia.org/wiki/Grayscale)) images, so we will next see how we can convert our image to this form using the information we have above. Later, we will see why this is a beneficial form to have our image in when we explore the FITS file format.
 """
 
 # ╔═╡ b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
 md"""
-### Grayscale
+#### Grayscale
 
 The converversion process from ``RGB`` to grayscale for a given pixel is achieved by taking a weighted average of its channel values according to an [international standard](https://en.wikipedia.org/wiki/Luma_%28video%29#Rec._601_luma_versus_Rec._709_luma_coefficients) established to emulate how the [human eye perceives relative brightnesses](https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale):
 
@@ -1502,6 +1522,10 @@ version = "17.4.0+2"
 # ╟─1f95d2e2-33f4-4016-84a6-b983ede688b2
 # ╟─f73c7298-cd97-4539-b85f-25cf69508466
 # ╟─5e185421-f0f1-4337-b59f-1752addbbe09
+# ╟─c880a5b6-b4e7-4f3f-910c-0ca17de0e905
+# ╟─dca30b52-031a-4ba8-a630-b0e22b634e61
+# ╠═74f5cfda-1513-474a-b23d-7c561db34660
+# ╟─d3caebde-443a-45d8-802d-fa7f10f4a85e
 # ╟─b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
 # ╠═57a70e86-625e-4ab4-9309-d618c5edba1b
 # ╟─4c0dd0c1-b446-46c2-a190-10eac40d1cc4
