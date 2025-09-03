@@ -58,6 +58,57 @@ What's in an image? Turns out just a nice, orderly set of numbers. In this brief
 	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
 """
 
+# ╔═╡ 13204b29-8bb9-42cc-b828-074fdf716087
+md"""
+With this requisite information out of the way, let's get started!
+"""
+
+# ╔═╡ c1885a59-367e-46dc-a954-4507a4278e5e
+msg_adding_colors = md"""
+##### Adding colors in Julia 🎨
+This makes magenta!
+
+```julia
+using AstroImages: RGB
+
+RGB(1, 0, 0) + RGB(0, 0, 1)
+```
+
+$(AstroImages.RGB(1, 0, 0) + AstroImages.RGB(0, 0, 1))
+"""; md"---"
+
+# ╔═╡ 03eb2bc6-0ff0-46f1-880b-eb702bfe9f70
+details("Using this notebook 🌱", md"""
+!!! note "First time running"
+	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
+	
+	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
+
+!!! tip "Advanced: bring your own editor"
+	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+
+	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
+
+	```julia-repl
+	julia> using Pluto
+	
+	julia> Pluto.run(auto_reload_from_file=true)
+	
+	# This will be on by default in an upcoming release =]
+	```
+
+	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
+
+
+!!! warning "Diving deeper"
+	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
+
+$(details("Details", msg_adding_colors))
+
+!!! warning " "
+	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
+""")
+
 # ╔═╡ d23819bc-ddae-4de7-83b1-58453848d266
 md"""
 ## 1. Software tools 💻
@@ -1506,6 +1557,9 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╟─8e324690-373d-4139-8350-add89a86c9b0
+# ╟─03eb2bc6-0ff0-46f1-880b-eb702bfe9f70
+# ╟─13204b29-8bb9-42cc-b828-074fdf716087
+# ╟─c1885a59-367e-46dc-a954-4507a4278e5e
 # ╟─d23819bc-ddae-4de7-83b1-58453848d266
 # ╟─1a9ae0d8-9da7-4c60-a088-e242565b4534
 # ╟─af1b84fc-cc08-45e0-a849-fa11c1267b91
