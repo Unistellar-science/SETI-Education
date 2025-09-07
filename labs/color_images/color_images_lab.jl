@@ -22,16 +22,15 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ a2044d4d-77de-446b-b7e1-b7a32c65266c
-using AstroImages
-
 # ╔═╡ 926ae0c8-5dd2-11f0-3c63-e540d51a756c
 begin
+	# Notebook widgets
 	using PlutoUI
+
+	# Analysis tools
+	using AstroImages, ColorTypes
 	
-	# Re-exported from ColorTypes.jl for convenience
-	using AstroImages: RGB, Gray, red, green, blue, gray 
-	
+	# Colormap default settings
 	AstroImages.set_cmap!(nothing)
 end
 
@@ -69,23 +68,29 @@ msg_adding_colors = md"""
 This makes magenta!
 
 ```julia
-using AstroImages: RGB
+using ColorTypes
 
 RGB(1, 0, 0) + RGB(0, 0, 1)
 ```
 
-$(AstroImages.RGB(1, 0, 0) + AstroImages.RGB(0, 0, 1))
+$(RGB(1, 0, 0) + RGB(0, 0, 1))
 """; md"---"
 
 # ╔═╡ 03eb2bc6-0ff0-46f1-880b-eb702bfe9f70
 details("Using this notebook 🌱", md"""
 !!! note "First time running"
 	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
+
+	If you have a Pluto session running already, you can also just paste the url for this notebook into the **Open a notebook** section of your Pluto landing page:
+
+	```
+	https://github.com/Unistellar-science/SETI-Education/blob/main/labs/color_images/color_images_lab.jl
+	```
 	
 	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
 
 !!! tip "Advanced: bring your own editor"
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/color_images/color_images_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
 
 	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
 
@@ -653,10 +658,12 @@ html"""
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AstroImages = "fe3fc30c-9b16-11e9-1c73-17dabf39f4ad"
+ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 AstroImages = "~0.5.1"
+ColorTypes = "~0.12.1"
 PlutoUI = "~0.7.68"
 """
 
@@ -666,7 +673,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "7a0c16e8adb06eb12ad62741682e2c740c55dbcf"
+project_hash = "3452c919da41a7c37a41eb5d05ddd908a98de1e3"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1641,7 +1648,6 @@ version = "17.4.0+2"
 # ╟─ef1945ce-84be-4ed9-ba0e-25b7be69400a
 # ╠═1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
 # ╠═3e9f7a17-b6cb-4c50-b38b-e39f437a5c30
-# ╠═a2044d4d-77de-446b-b7e1-b7a32c65266c
 # ╠═926ae0c8-5dd2-11f0-3c63-e540d51a756c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
