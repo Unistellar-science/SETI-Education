@@ -140,6 +140,7 @@ To get started, please follow the instructions in the following two steps below:
 Additional resources:
 
 * Learn Julia: [Julia website](https://julialang.org/learning/)
+* Learn Pluto: [Pluto.jl manual](https://plutojl.org/en/docs/)
 * Noteworthy Differences from other Languages: [Julia manual](https://docs.julialang.org/en/v1/manual/noteworthy-differences/)
 * Handy cheatsheets: [JuliaDocs](https://cheatsheet.juliadocs.org/), [MATLAB--Python--Julia](https://cheatsheets.quantecon.org/)
 * [Featured Pluto.jl notebooks](https://featured.plutojl.org/)
