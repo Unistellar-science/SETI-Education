@@ -2,10 +2,10 @@
 # v0.20.18
 
 #> [frontmatter]
-#> title = "Color Images"
-#> date = "2025-08-01"
-#> tags = ["images", "rgb", "image processing"]
-#> description = "Create color images from FITS file data."
+#> title = "I - Introduction to Astronomical Images"
+#> date = "2025-09-19"
+#> tags = ["images", "rgb", "image processing", "FITS"]
+#> description = "Learn how to install the software needed to interpret astronomical images."
 
 using Markdown
 using InteractiveUtils
@@ -37,7 +37,7 @@ end;
 # ╔═╡ 8e324690-373d-4139-8350-add89a86c9b0
 md"""
 
-# 🎨 I - Introduction to Astronomical Images
+# I - Introduction to Astronomical Images
 
 *Modified from [Unistellar Color Images Lab](https://unistellar-science.github.io/SETI-Education/labs/color_images/color_images_lab.html)*
 
@@ -49,14 +49,14 @@ _Image credit: [xkcd](https://xkcd.com/2537/). Alt text: "This year, our team to
 
 What's in an image? Turns out just a nice, orderly set of numbers. In this series of notebooks, we will explore how astronomers use scientific programming to interpret these numbers. Along the way, we will cover the following key concepts in astronomical imaging:
 
-**I - Introduction to Astronomical Images**
+**[I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)**
 1. Software tools
 1. Image formats
-**II - Introduction to Image Processing**
+**[II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)**
 1. Array representations
 1. Color maps and color scales
 1. Image stacking
-**III - Introduction to Photometry**
+**[III - Introduction to Photometry](https://unistellar-science.github.io/SETI-Education/labs/intro/iii_photometry.html)**
 1. Aperture photometry
 **IV - Introduction to Differential Photometry and Light Curves (to be released)**
 
@@ -333,6 +333,11 @@ Here are some additional resources that may be of interest for taking a deeper d
 	[How Are Webb’s Full-Color Images Made?](https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made) _-- JWST_
 	
 	[Images as Data and Arrays](https://computationalthinking.mit.edu/Fall24/images_abstractions/images/) _-- Julia / MIT_
+"""
+
+# ╔═╡ f3484593-1c01-4b6d-91bd-151be7874863
+md"""
+**➡️ Next lab: [II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)**
 """
 
 # ╔═╡ 1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
@@ -1274,6 +1279,7 @@ version = "17.4.0+2"
 # ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
 # ╟─94dae9e9-9eb5-406d-b777-976db28d6631
 # ╟─98e95070-f5a9-4d5a-b2c2-14d1b489febe
+# ╟─f3484593-1c01-4b6d-91bd-151be7874863
 # ╟─926ae0c8-5dd2-11f0-3c63-e540d51a756c
 # ╟─1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
 # ╟─3e9f7a17-b6cb-4c50-b38b-e39f437a5c30

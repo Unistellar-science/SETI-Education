@@ -1,6 +1,12 @@
 ### A Pluto.jl notebook ###
 # v0.20.18
 
+#> [frontmatter]
+#> title = "III - Introduction to Photometry"
+#> date = "2025-09-19"
+#> tags = ["image processing", "arrays", "FITS", "photometry"]
+#> description = "Learn how to perform simple aperture photometry on an astronomical image."
+
 using Markdown
 using InteractiveUtils
 
@@ -32,16 +38,16 @@ end;
 md"""
 # III - Introduction to Photometry
 
-*Continued from [II - Introduction to Image Processing]()*
+*Continued from [II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)*
 
-**I - Introduction to Astronomical Images**
+**[I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)**
 1. Software tools
 1. Image formats
-**II - Introduction to Image Processing**
+**[II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)**
 1. Array representations
 1. Color maps and color scales
 1. Image stacking
-**III - Introduction to Photometry**
+**[III - Introduction to Photometry](https://unistellar-science.github.io/SETI-Education/labs/intro/iii_photometry.html)**
 1. Aperture photometry
 **IV - Introduction to Differential Photometry and Light Curves (to be released)**
 
@@ -80,9 +86,11 @@ md"""
 We now have one of the major fundamental tools in our roadmap to producing science products from our Unistellar science campaigns: Photometry. For those interested, the relevant programming commands are shown below:
 """
 
-# ╔═╡ b7250631-d9d8-4424-bd3c-45fc066f8218
+# ╔═╡ 1fc2bcc5-f3c7-41e6-9886-0b5af606e60a
 md"""
-**Helper functions for plotting**
+**⬅️ Previous lab: [II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)**
+
+**➡️ Next lab: IV - Introduction to Differential Photometry and Light Curves**
 """
 
 # ╔═╡ 6d2c1121-2547-4125-8709-cd4d11480726
@@ -94,7 +102,7 @@ function tiny(img)
 	end
 
 	return imgv
-end
+end;
 
 # ╔═╡ d388fd60-3884-4944-b30b-61cc8edf544d
 # Julia photometry aperture object --> plotly shape object
@@ -106,7 +114,7 @@ function circ(ap; line_color=:lightgreen)
 		ap.y + ap.r; # y_max
 		line_color,
 	)
-end
+end;
 
 # ╔═╡ 829636f7-3d2b-4a30-8c92-523427335fc9
 # Plotly heatmap trace of img
@@ -132,7 +140,7 @@ function htrace(img;
 		colorbar = attr(; title),
 		colorscale = "Cividis",
 	)
-end
+end;
 
 # ╔═╡ 10e72b6f-8261-4093-af4c-c3bd698db7d2
 # Combines plotly trace and layout into a plot object
@@ -152,7 +160,7 @@ function plot_img(img; zlims=Percent(99.5)(img), restrict = true)
 	)
 
 	plot(hm, l)
-end
+end;
 
 # ╔═╡ eb63b8dc-644d-4b91-85a2-72e927fd1f1d
 img_sci = if isnothing(img_local)
@@ -1826,7 +1834,7 @@ version = "17.4.0+2"
 # ╟─8eb8326f-b226-42fd-9582-de0744cdc0f1
 # ╠═4583909c-7171-49c2-aff6-71d45860072d
 # ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
-# ╟─b7250631-d9d8-4424-bd3c-45fc066f8218
+# ╟─1fc2bcc5-f3c7-41e6-9886-0b5af606e60a
 # ╟─6d2c1121-2547-4125-8709-cd4d11480726
 # ╟─d388fd60-3884-4944-b30b-61cc8edf544d
 # ╟─829636f7-3d2b-4a30-8c92-523427335fc9

@@ -1,6 +1,12 @@
 ### A Pluto.jl notebook ###
 # v0.20.18
 
+#> [frontmatter]
+#> title = "II - Introduction to Image Processing"
+#> date = "2025-09-19"
+#> tags = ["images", "image processing", "arrays"]
+#> description = "Learn how to interpret and process images as an array of numbers."
+
 using Markdown
 using InteractiveUtils
 
@@ -20,16 +26,16 @@ end;
 md"""
 # II - Introduction to Image Processing
 
-*Continued from [I - Introduction to Astronomical Images]()*
+*Continued from [I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)*
 
-**I - Introduction to Astronomical Images**
+**[I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)**
 1. Software tools
 1. Image formats
-**II - Introduction to Image Processing**
+**[II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)**
 1. Array representations
 1. Color maps and color scales
 1. Image stacking
-**III - Introduction to Photometry**
+**[III - Introduction to Photometry](https://unistellar-science.github.io/SETI-Education/labs/intro/iii_photometry.html)**
 1. Aperture photometry
 **IV - Introduction to Differential Photometry and Light Curves (to be released)**
 
@@ -353,6 +359,16 @@ img_rgbh = composecolors(
 md"""
 And with that, we now have a scientific image that we can use for future analysis.
 """
+
+# ╔═╡ 823a1552-3084-4efe-8620-8cfc50eaa367
+md"""
+**⬅️ Previous lab: [I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)**
+
+**➡️ Next lab: [III - Introduction to Photometry](https://unistellar-science.github.io/SETI-Education/labs/intro/iii_photometry.html)**
+"""
+
+# ╔═╡ 9d69e2c0-fa7e-46f6-ba9c-9467eb271524
+TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1272,7 +1288,7 @@ version = "17.4.0+2"
 # ╟─850418f5-a286-4e78-929f-01247eb34c50
 # ╟─a65e988a-84e2-4f99-b350-1866163062d5
 # ╟─012ff98b-b211-43be-95af-33bc56f6bf7a
-# ╠═1a4e2100-9253-45a5-bc98-4d69d2a5834a
+# ╟─1a4e2100-9253-45a5-bc98-4d69d2a5834a
 # ╠═5a8e80e1-8e59-487b-872e-f85a1600ad1a
 # ╟─b5b063c8-d575-4574-b1cd-fea7ae04ddfb
 # ╟─bf33e9ce-159c-4367-b462-c966c88f9adf
@@ -1305,6 +1321,8 @@ version = "17.4.0+2"
 # ╠═a676032f-9b71-4ba7-8855-85504e7e28da
 # ╠═ae89b95c-a0ea-4422-afb9-f3d4359c63d2
 # ╟─ea3bf49a-4c43-4581-9313-813b6dd7281e
-# ╠═48d0a70b-62dc-426e-93c4-b21aa20acbfd
+# ╟─823a1552-3084-4efe-8620-8cfc50eaa367
+# ╟─9d69e2c0-fa7e-46f6-ba9c-9467eb271524
+# ╟─48d0a70b-62dc-426e-93c4-b21aa20acbfd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
