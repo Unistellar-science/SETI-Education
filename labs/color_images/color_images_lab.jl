@@ -39,6 +39,8 @@ md"""
 
 # 🎨 Color Images Lab
 
+*Access 1st Workshop notebook here: [I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)*
+
 $(Resource("https://imgs.xkcd.com/comics/painbow_award.png"))
 
 _Image credit: [xkcd](https://xkcd.com/2537/). Alt text: "This year, our team took home the dark blue ribbon, better than the midnight blue we got last year but still short of the winning navy blue."_
