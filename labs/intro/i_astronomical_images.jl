@@ -169,7 +169,7 @@ We can use an image of anything, really. Below, we download a PNG of the famous 
 
 # ╔═╡ 1bc51ec7-5dbf-43f7-b158-dc90992a48fe
 md"""
-_Image credit: NASA, ESA, CSA, STScI_
+_Image credit: NASA, ESA, CSA, STScI_ | $(@bind reset Button("Reset"))
 """
 
 # ╔═╡ 8769ad1c-9de8-4ee4-b030-a2805f28353f
@@ -234,7 +234,10 @@ This "box of numbers" format is how image data is represented in FITS files.
 """
 
 # ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
-@bind img_local FilePicker([MIME("image/png")])
+begin
+	reset
+	@bind img_local FilePicker([MIME("image/png")])
+end
 
 # ╔═╡ 563781c1-5046-413b-8846-6514cba58d77
 img = if isnothing(img_local)

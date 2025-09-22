@@ -66,13 +66,19 @@ A typical example would be placing a circular aperture around an imaged star, an
 Let's explore this in the sample science image below:
 """
 
+# ╔═╡ 2172fb04-0eb2-4270-8d13-611803e10d21
+@bind reset Button("Reset")
+
 # ╔═╡ 34c5da42-4d8f-4cc4-8c6b-5aad9703b3f7
 md"""
 What are some things that you notice? Try doing the same analysis on one of your own FITS images on your computer by clicking the `Browse...` button below:
 """
 
 # ╔═╡ b4e9e785-892f-4065-89eb-c353967396d1
-@bind img_local FilePicker([MIME("image/fits")])
+begin
+	reset
+	@bind img_local FilePicker([MIME("image/fits")])
+end
 
 # ╔═╡ 4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
 md"""
@@ -1826,6 +1832,7 @@ version = "17.4.0+2"
 # ╟─0c0aebab-c9c2-41a0-931d-c687e2a961f1
 # ╟─59f8b374-4db2-416c-bedc-652f5de7ca7e
 # ╟─01de070f-9672-47e1-b4c0-cfefe711decb
+# ╟─2172fb04-0eb2-4270-8d13-611803e10d21
 # ╟─01f950ec-fb20-4b6f-837c-a8cfaeada5de
 # ╟─f29af2e3-05f7-4e06-b917-ca50e337da13
 # ╟─34c5da42-4d8f-4cc4-8c6b-5aad9703b3f7
