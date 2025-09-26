@@ -221,7 +221,7 @@ phot = photometry(ap, img_sci)
 # ╔═╡ f29af2e3-05f7-4e06-b917-ca50e337da13
 """
 !!! note "Aperture sum"
-	$(round(Int, phot.aperture_sum)) total counts
+	### $(round(Int, phot.aperture_sum)) total counts
 """ |> Markdown.parse
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
