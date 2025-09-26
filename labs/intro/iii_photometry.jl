@@ -192,7 +192,7 @@ let
 		
 		| X (pixels) | Y (pixels) | radius (pixels)
 		| :-: | :-: | :-:
-		|$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:50; default = X_mid ÷ 4)))
+		|$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:1000; default = X_mid ÷ 4)))
 		"""
 	end
 end
