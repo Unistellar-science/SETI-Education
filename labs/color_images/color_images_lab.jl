@@ -164,7 +164,7 @@ We can use an image of anything, really. Below, we download a PNG of the famous 
 
 # ╔═╡ 1bc51ec7-5dbf-43f7-b158-dc90992a48fe
 md"""
-_Image credit: NASA, ESA, CSA, STScI_
+_Image credit: NASA, ESA, CSA, STScI_ | $(@bind reset_img_color_local Button("Reset"))
 """
 
 # ╔═╡ 8769ad1c-9de8-4ee4-b030-a2805f28353f
@@ -226,15 +226,18 @@ This "box of numbers" format is how image data is represented in FITS files.
 """
 
 # ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
-@bind img_local FilePicker([MIME("image/png")])
+begin
+	reset_img_color_local
+	@bind img_color_local FilePicker([MIME("image/png")])
+end
 
 # ╔═╡ 563781c1-5046-413b-8846-6514cba58d77
-img = if isnothing(img_local)
+img = if isnothing(img_color_local)
 	load(download("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png"))
 else
 	let
-		path = tempname() * img_local["name"]
-		write(path, img_local["data"])
+		path = tempname() * img_color_local["name"]
+		write(path, img_color_local["data"])
 		load(path)
 	end
 end
@@ -631,13 +634,19 @@ A typical example would be placing a circular aperture around an imaged star, an
 Let's explore this in the sample science image below:
 """
 
+# ╔═╡ 413b7253-7f0c-45d0-9c18-7ee52a149974
+@bind reset_img_sci_local Button("Reset")
+
 # ╔═╡ 45195391-1e8d-4d9d-8508-3e6a301a6589
 md"""
 What are some things that you notice? Try doing the same analysis on one of your own FITS images on your computer by clicking the `Browse...` button below:
 """
 
 # ╔═╡ 3fd6ee2c-5d54-4b8b-b572-5e0a4e475eb5
-@bind img_sci_local FilePicker([MIME("image/fits")])
+begin
+	reset_img_sci_local
+	@bind img_sci_local FilePicker([MIME("image/fits")])
+end
 
 # ╔═╡ 6683732a-fb17-4e2c-9cea-aeee098658c7
 md"""
@@ -651,15 +660,13 @@ md"""
 We now have one of the major fundamental tools in our roadmap to producing science products from our Unistellar science campaigns: Photometry. For those interested, the relevant programming commands are shown below:
 """
 
-# ╔═╡ 6f117b7d-0ea3-47ec-8975-b098d4a0316f
-img_sci = if isnothing(img_local)
+# ╔═╡ f1c7799a-d6e5-4b27-861d-35d39f597659
+img_sci = if isnothing(img_sci_local)
 	img_astro_gray
 else
-	let
-		path = tempname() * img_local["name"]
-		write(path, img_local["data"])
-		load(path)
-	end
+	path = tempname() * img_sci_local["name"]
+	write(path, img_sci_local["data"])
+	load(path)
 end;
 
 # ╔═╡ d6b6cc07-6573-43d4-93d0-98b0b6a2003f
@@ -674,7 +681,7 @@ let
 		
 		| X (pixels) | Y (pixels) | radius (pixels)
 		| :-: | :-: | :-:
-		|$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:50; default = X_mid ÷ 4)))
+		|$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:1000; default = X_mid ÷ 4)))
 		"""
 	end
 end
@@ -690,7 +697,7 @@ phot = photometry(ap, img_sci)
 # ╔═╡ 9fcba884-d7df-4489-a7b0-ea6c101f8901
 """
 !!! note "Aperture sum"
-	$(round(Int, phot.aperture_sum)) total counts
+	### $(round(Int, phot.aperture_sum)) total counts
 """ |> Markdown.parse
 
 # ╔═╡ 98e95070-f5a9-4d5a-b2c2-14d1b489febe
@@ -2491,6 +2498,7 @@ version = "17.4.0+2"
 # ╟─cdf9d1da-9d34-46c3-9862-f18ed160459c
 # ╟─7ffd0e00-c9d2-4f29-aaaf-81a8db5fbbdd
 # ╟─6c2415d8-b3bf-4e4a-9654-fd9bd9244044
+# ╟─413b7253-7f0c-45d0-9c18-7ee52a149974
 # ╟─d6b6cc07-6573-43d4-93d0-98b0b6a2003f
 # ╟─9fcba884-d7df-4489-a7b0-ea6c101f8901
 # ╟─45195391-1e8d-4d9d-8508-3e6a301a6589
@@ -2499,7 +2507,7 @@ version = "17.4.0+2"
 # ╟─88aeb0ae-676d-4c9e-b9fe-19613eda683d
 # ╠═30ad98cb-33ab-424d-a7ce-995935f19182
 # ╠═9ed133c0-308d-473a-96d2-fac9c369d66f
-# ╟─6f117b7d-0ea3-47ec-8975-b098d4a0316f
+# ╟─f1c7799a-d6e5-4b27-861d-35d39f597659
 # ╟─98e95070-f5a9-4d5a-b2c2-14d1b489febe
 # ╟─ef1945ce-84be-4ed9-ba0e-25b7be69400a
 # ╠═1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
