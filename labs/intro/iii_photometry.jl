@@ -61,7 +61,7 @@ md"""
 
 Now that we have a handle on working with [FITS files](#FITS) and treating images as [arrays of numbers](#3.-Array-representations-%F0%9F%94%A2), let's turn next to one of the fundamental steps of producing a science product from one of our Unistellar science campaigns, [aperture photometry](https://lco.global/spacebook/telescopes/what-is-photometry/). Photometry is the the measurement of the amount of light that falls on our sensor. The aperture is the shape of the imaginary boundary that we are measuring the light within.
 
-A typical example would be placing a circular aperture around an imaged star, and then counting up the total flux within that circle. Brighter stars have more flux, and dimmer stars have less flux. For our purposes, each number in our "box-of-numbers" model will be a proxy for our flux measurement at that particular pixel.
+A typical example would be placing an aperture around an imaged star or background part of the sky, and then counting up the total flux within that region. Brighter stars have more flux, and dimmer stars have less flux. For our purposes, each number in our "box-of-numbers" model will be a proxy for our flux measurement at that particular pixel.
 
 Let's explore this in the sample science image below:
 """
@@ -112,12 +112,12 @@ end;
 
 # ╔═╡ d388fd60-3884-4944-b30b-61cc8edf544d
 # Julia photometry aperture object --> plotly shape object
-function circ(ap; line_color=:lightgreen)
+function circ(ap, r=ap.r; line_color=:lightgreen)
 	circle(
-		ap.x - ap.r, # x_min
-		ap.x + ap.r, # x_max
-		ap.y - ap.r, # y_min
-		ap.y + ap.r; # y_max
+		ap.x - r, # x_min
+		ap.x + r, # x_max
+		ap.y - r, # y_min
+		ap.y + r; # y_max
 		line_color,
 	)
 end;
@@ -181,18 +181,19 @@ else
 end;
 
 # ╔═╡ 01f950ec-fb20-4b6f-837c-a8cfaeada5de
-let
+begin
 	img_size = size(img_sci)
 	X_max, Y_max = img_size
 	X_mid, Y_mid = img_size .÷ 2
 	@bind coords PlutoUI.combine() do Child
 		md"""
 		!!! tip ""
-			Try changing the values below to choose where our circular aperture should be placed. The resulting aperture sum displayed will update automatically.
+			Try changing the values below to choose where our circular aperture and circular annulus aperture should be placed. The resulting aperture sums displayed below will update automatically.
 		
-		| X (pixels) | Y (pixels) | radius (pixels)
-		| :-: | :-: | :-:
-		|$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:1000; default = X_mid ÷ 4)))
+		| | X (pixels) | Y (pixels) | radius -- inner (pixels) | radius -- outer (pixels)
+		| :-: | :-: | :-: | :-: | :-:
+		| target |$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:1000; default = X_mid ÷ 4))) | ----
+		| background |$(Child("x_bg", NumberField(1:X_max; default = X_mid))) | $(Child("y_bg", NumberField(1:Y_max; default = Y_mid))) | $(Child("r_in", NumberField(1:1000; default = 1.4 * (X_mid ÷ 4)))) | $(Child("r_out", NumberField(1:1000; default = 1.7 * (X_mid ÷ 4))))
 		"""
 	end
 end
@@ -201,12 +202,22 @@ end
 # Define the aperture based on `coords` specified in the above table
 ap = CircularAperture(coords.x, coords.y, coords.r);
 
+# ╔═╡ 63187c16-c3b8-47a5-9086-02c1aad6b812
+ap_bg = CircularAnnulus(
+	coords.x_bg,
+	coords.y_bg,
+	coords.r_in,
+	coords.r_out,
+);
+
 # ╔═╡ 01de070f-9672-47e1-b4c0-cfefe711decb
 let
 	p = plot_img(img_sci)
 
 	shapes = [
-		circ(ap),
+		circ(ap; line_color = :red),
+		circ(ap_bg, ap_bg.r_in; line_color = :cyan),
+		circ(ap_bg, ap_bg.r_out; line_color = :cyan),
 	]
 	
 	relayout!(p; shapes)
@@ -215,13 +226,15 @@ let
 end
 
 # ╔═╡ a67b9093-e47f-423e-9bac-7c16d4b4d2eb
-# Compute photometry in that aperture
-phot = photometry(ap, img_sci)
+# Compute photometry in each aperture
+phot = photometry([ap, ap_bg], img_sci)
 
 # ╔═╡ f29af2e3-05f7-4e06-b917-ca50e337da13
 """
-!!! note "Aperture sum"
-	### $(round(Int, phot.aperture_sum)) total counts
+!!! note "Photometry"
+	### $(round(Int, first(phot).aperture_sum)) total counts in circular aperture
+
+	### $(round(Int, last(phot).aperture_sum)) total counts in circular annulus aperture
 """ |> Markdown.parse
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1840,6 +1853,7 @@ version = "17.4.0+2"
 # ╠═4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
 # ╟─8eb8326f-b226-42fd-9582-de0744cdc0f1
 # ╠═4583909c-7171-49c2-aff6-71d45860072d
+# ╠═63187c16-c3b8-47a5-9086-02c1aad6b812
 # ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
 # ╟─1fc2bcc5-f3c7-41e6-9886-0b5af606e60a
 # ╟─6d2c1121-2547-4125-8709-cd4d11480726
