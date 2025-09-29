@@ -160,6 +160,14 @@ md"""
 
 """
 
+# ╔═╡ e4131b85-bb1d-4055-ae6d-49a9e457f235
+md"""
+👇 Your code here
+"""
+
+# ╔═╡ 390ecfb7-cb91-45cc-9284-c7089098fe18
+
+
 # ╔═╡ b5b063c8-d575-4574-b1cd-fea7ae04ddfb
 md"""
 ### Reducing
@@ -328,9 +336,15 @@ md"""
 # ╔═╡ 676ba2d0-d543-49f1-acc7-4bb9b2d2ebac
 md"""
 👉 Your notes here
-
-
 """
+
+# ╔═╡ 82082413-ed77-4da5-89f9-503e021a2e8e
+md"""
+👇 Your code here
+"""
+
+# ╔═╡ 9299b703-39bf-456e-a4d6-dca649d55b10
+
 
 # ╔═╡ 1f3ef930-d1e7-459c-b4d7-53d43211db3d
 md"""
@@ -1290,6 +1304,8 @@ version = "17.4.0+2"
 # ╟─012ff98b-b211-43be-95af-33bc56f6bf7a
 # ╟─1a4e2100-9253-45a5-bc98-4d69d2a5834a
 # ╠═5a8e80e1-8e59-487b-872e-f85a1600ad1a
+# ╟─e4131b85-bb1d-4055-ae6d-49a9e457f235
+# ╠═390ecfb7-cb91-45cc-9284-c7089098fe18
 # ╟─b5b063c8-d575-4574-b1cd-fea7ae04ddfb
 # ╟─bf33e9ce-159c-4367-b462-c966c88f9adf
 # ╟─99e846f2-f139-4b69-91c2-9d170201da90
@@ -1317,6 +1333,8 @@ version = "17.4.0+2"
 # ╠═91f63c0e-fed1-460a-8309-6bd728872a07
 # ╟─a7201a02-ec80-47b1-ab60-daa483cca97d
 # ╠═676ba2d0-d543-49f1-acc7-4bb9b2d2ebac
+# ╟─82082413-ed77-4da5-89f9-503e021a2e8e
+# ╠═9299b703-39bf-456e-a4d6-dca649d55b10
 # ╟─1f3ef930-d1e7-459c-b4d7-53d43211db3d
 # ╠═a676032f-9b71-4ba7-8855-85504e7e28da
 # ╠═ae89b95c-a0ea-4422-afb9-f3d4359c63d2
