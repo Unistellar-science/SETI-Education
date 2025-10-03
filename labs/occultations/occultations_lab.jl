@@ -83,7 +83,7 @@ details("Using this notebook 🌱", md"""
 	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
 
 !!! tip "Advanced: bring your own editor"
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occultations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
 
 	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
 

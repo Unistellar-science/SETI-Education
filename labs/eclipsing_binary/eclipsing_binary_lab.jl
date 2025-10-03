@@ -102,7 +102,7 @@ details("Using this notebook 🌱", md"""
 	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
 
 !!! tip "Advanced: bring your own editor"
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/eclipsing_binary/eclipsing_binary_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
 
 	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
 
@@ -150,7 +150,7 @@ md"""
 
 [W Ursae Majoris (W UMa)](https://www.aavso.org/vsots_wuma) is an eclipsing binary system located in the [Ursa Major](https://en.wikipedia.org/wiki/Ursa_Major) constellation, and can be seen being chased across the sky by the Big Dipper throughout the night:
 
-$(Resource("https://github.com/icweaver/UCAN/blob/main/EBs/data/constellation_WUMa.png?raw=true"))
+$(Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/labs/eclipsing_binary/assets/constellation_WUMa.png?raw=true"))
 
 *W UMa is marked by the larger, red dot to the right of the Big Dipper*
 """
@@ -256,7 +256,7 @@ and compare it to our corresponding [finder chart](https://astro.swarthmore.edu/
 """
 
 # ╔═╡ 74197e45-3b80-44ad-b940-f2544f2f9b54
-Resource("https://github.com/icweaver/UCAN/blob/main/EBs/data/finder_WUMa.jpg?raw=true")
+Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/labs/eclipsing_binary/assets/finder_WUMa.jpg?raw=true")
 
 # ╔═╡ a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
 md"""
