@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 #> [frontmatter]
 #> title = "III - Introduction to Photometry"
@@ -85,6 +85,27 @@ md"""
 👉 Your notes here
 
 
+"""
+
+# ╔═╡ fb72c498-2e47-40cc-bdf4-1b9511b8e85f
+md"""
+### Estimating net flux
+
+To compute the net flux (i.e., counts) reported in our table above, we need to determine the flux coming from just the target within our circular aperture. To accomplish this, we subtract off the contributions from the background to the total observed flux. There are many ways to do this, but one common method is to estimate the average number of counts per pixel coming from the background within our annulus, and then use this to subtract the average background flux from the total counts measured from within our target aperture.
+
+Using the reported numbers above, we have:
+
+```math
+\begin{align}
+	\text{Net flux} &= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background flux}} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Average background flux} \times \text{Target aperture area}} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \color{darkcyan}\frac{\text{Background aperture flux}}{\text{Background annulus area}} \times \text{Target aperture area} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\frac{\text{Background aperture flux}}{\pi\left(R_\text{outer, bg}^2 - R_\text{inner, bg}^2\right)} \times \pi R_\text{target}^2} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background aperture flux} \times \frac{R_\text{target}^2}{R_\text{outer, bg}^2 - R_\text{inner, bg}^2}}
+\end{align}
+```
+
+where ``\color{darkcyan}R_\text{target}`` is the radius of our target aperture, and ``\color{darkcyan}R_\text{outer, bg}`` and ``\color{darkcyan}R_\text{inner, bg}`` are the outer and inner radius of our background annulus aperture, respectively. Try plugging the numbers in your tables above into this formula to confirm that they are consistent with the reported net flux measured.
 """
 
 # ╔═╡ 8eb8326f-b226-42fd-9582-de0744cdc0f1
@@ -202,6 +223,10 @@ end
 # Define the aperture based on `coords` specified in the above table
 ap = CircularAperture(coords.x, coords.y, coords.r);
 
+# ╔═╡ 17d9d7e6-1082-4053-97f7-60e72d16f61b
+# Area of circular aperture
+area = sum(ap) # Could also do π * ap.r^2
+
 # ╔═╡ 63187c16-c3b8-47a5-9086-02c1aad6b812
 ap_bg = CircularAnnulus(
 	coords.x_bg,
@@ -225,17 +250,57 @@ let
 	p
 end
 
+# ╔═╡ e92ec2b0-ec60-4088-896b-95817b865f46
+# Area of elliptical aperture
+area_bg = sum(ap_bg) # Could also do π * (ap_bg.r_out^2 - ap_bg.r_in^2)
+
 # ╔═╡ a67b9093-e47f-423e-9bac-7c16d4b4d2eb
 # Compute photometry in each aperture
-phot = photometry([ap, ap_bg], img_sci)
+phot, phot_bg = photometry([ap, ap_bg], img_sci)
+
+# ╔═╡ c6f3eceb-19f5-4e97-80bd-deadb7573807
+# Total flux measured in target aperture
+flux_total = phot.aperture_sum
+
+# ╔═╡ bf699c80-1a3a-47f0-baea-50f2490124b9
+# Total flux measured in background annulus
+flux_total_bg = phot_bg.aperture_sum
+
+# ╔═╡ 8017131c-6168-499a-899a-e6d2c1d0479b
+# Average flux per pixel in background annulus
+flux_avg_bg = flux_total_bg  / area_bg
+
+# ╔═╡ 7b893abf-4c4a-4a8f-902c-109af1c6158f
+# Background flux contribution in target aperture
+flux_bg = flux_avg_bg * area
+
+# ╔═╡ 0e1419c4-b1cb-4a36-b0f7-1917275b2d7b
+# Net flux (target flux - background flux)
+flux_net = flux_total - flux_bg
 
 # ╔═╡ f29af2e3-05f7-4e06-b917-ca50e337da13
 """
 !!! note "Photometry"
-	### $(round(Int, first(phot).aperture_sum)) total counts in circular aperture
 
-	### $(round(Int, last(phot).aperture_sum)) total counts in circular annulus aperture
+	| Target flux (counts) | Background aperture flux (counts) | Net flux (counts)
+	| :-:    | :-:     | :-:
+	| $(round(Int, phot.aperture_sum)) | $(round(Int, phot_bg.aperture_sum)) | $(round(Int, flux_net))
 """ |> Markdown.parse
+
+# ╔═╡ 4c6d5896-a854-409b-a8c2-9d00fb695ca5
+html"""
+<style>
+	th {
+		font-size: 16pt
+	}
+	pluto-output table > tbody td {
+	  font-size: 14pt
+	}
+</style>
+"""
+
+# ╔═╡ 93ba05ff-09c3-49f6-ba63-d97fb341325c
+PlutoUI.TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1851,7 +1916,15 @@ version = "17.4.0+2"
 # ╟─34c5da42-4d8f-4cc4-8c6b-5aad9703b3f7
 # ╟─b4e9e785-892f-4065-89eb-c353967396d1
 # ╠═4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
+# ╟─fb72c498-2e47-40cc-bdf4-1b9511b8e85f
 # ╟─8eb8326f-b226-42fd-9582-de0744cdc0f1
+# ╠═17d9d7e6-1082-4053-97f7-60e72d16f61b
+# ╠═e92ec2b0-ec60-4088-896b-95817b865f46
+# ╠═c6f3eceb-19f5-4e97-80bd-deadb7573807
+# ╠═bf699c80-1a3a-47f0-baea-50f2490124b9
+# ╠═8017131c-6168-499a-899a-e6d2c1d0479b
+# ╠═7b893abf-4c4a-4a8f-902c-109af1c6158f
+# ╠═0e1419c4-b1cb-4a36-b0f7-1917275b2d7b
 # ╠═4583909c-7171-49c2-aff6-71d45860072d
 # ╠═63187c16-c3b8-47a5-9086-02c1aad6b812
 # ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
@@ -1861,6 +1934,8 @@ version = "17.4.0+2"
 # ╟─829636f7-3d2b-4a30-8c92-523427335fc9
 # ╟─10e72b6f-8261-4093-af4c-c3bd698db7d2
 # ╟─eb63b8dc-644d-4b91-85a2-72e927fd1f1d
+# ╟─4c6d5896-a854-409b-a8c2-9d00fb695ca5
+# ╟─93ba05ff-09c3-49f6-ba63-d97fb341325c
 # ╟─a084aedc-31c3-49b0-aa7a-fc5088deaca8
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
