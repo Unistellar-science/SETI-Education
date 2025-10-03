@@ -89,9 +89,23 @@ md"""
 
 # ╔═╡ fb72c498-2e47-40cc-bdf4-1b9511b8e85f
 md"""
-## Estimating net flux
+### Estimating net flux
 
 To compute the net flux (i.e., counts) reported in our table above, we need to determine the flux coming from just the target within our circular aperture. To accomplish this, we subtract off the contributions from the background to the total observed flux. There are many ways to do this, but one common method is to estimate the average number of counts per pixel coming from the background within our annulus, and then use this to subtract the average background flux from the total counts measured from within our target aperture.
+
+Using the reported numbers above, we have:
+
+```math
+\begin{align}
+	\text{Net flux} &= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background flux}} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Average background flux} \times \text{Target aperture area}} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \color{darkcyan}\frac{\text{Background aperture flux}}{\text{Background annulus area}} \times \text{Target aperture area} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\frac{\text{Background aperture flux}}{\pi\left(R_\text{outer, bg}^2 - R_\text{inner, bg}^2\right)} \times \pi R_\text{target}^2} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background aperture flux} \times \frac{R_\text{target}^2}{R_\text{outer, bg}^2 - R_\text{inner, bg}^2}}
+\end{align}
+```
+
+where ``\color{darkcyan}R_\text{target}`` is the radius of our target aperture, and ``\color{darkcyan}R_\text{outer, bg}`` and ``\color{darkcyan}R_\text{inner, bg}`` are the outer and inner radius of our background annulus aperture, respectively. Try plugging the numbers in your tables above into this formula to confirm that they are consistent with the reported net flux measured.
 """
 
 # ╔═╡ 8eb8326f-b226-42fd-9582-de0744cdc0f1
@@ -268,7 +282,7 @@ flux_net = flux_total - flux_bg
 """
 !!! note "Photometry"
 
-	| Target flux (counts) | Background annulus flux (counts) | Net flux (counts)
+	| Target flux (counts) | Background aperture flux (counts) | Net flux (counts)
 	| :-:    | :-:     | :-:
 	| $(round(Int, phot.aperture_sum)) | $(round(Int, phot_bg.aperture_sum)) | $(round(Int, flux_net))
 """ |> Markdown.parse
@@ -1903,6 +1917,7 @@ version = "17.4.0+2"
 # ╟─b4e9e785-892f-4065-89eb-c353967396d1
 # ╠═4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
 # ╟─fb72c498-2e47-40cc-bdf4-1b9511b8e85f
+# ╟─8eb8326f-b226-42fd-9582-de0744cdc0f1
 # ╠═17d9d7e6-1082-4053-97f7-60e72d16f61b
 # ╠═e92ec2b0-ec60-4088-896b-95817b865f46
 # ╠═c6f3eceb-19f5-4e97-80bd-deadb7573807
@@ -1910,7 +1925,6 @@ version = "17.4.0+2"
 # ╠═8017131c-6168-499a-899a-e6d2c1d0479b
 # ╠═7b893abf-4c4a-4a8f-902c-109af1c6158f
 # ╠═0e1419c4-b1cb-4a36-b0f7-1917275b2d7b
-# ╟─8eb8326f-b226-42fd-9582-de0744cdc0f1
 # ╠═4583909c-7171-49c2-aff6-71d45860072d
 # ╠═63187c16-c3b8-47a5-9086-02c1aad6b812
 # ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
