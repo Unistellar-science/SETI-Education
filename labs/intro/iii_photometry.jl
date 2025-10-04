@@ -55,7 +55,7 @@ md"""
 
 1. Aperture photometry
 
-**[IV - Introduction to Differential Photometry and Light Curves](https://unistellar-science.github.io/SETI-Education/labs/intro/iv_timeseries.html)**
+**[IV - Introduction to Time Series](https://unistellar-science.github.io/SETI-Education/labs/intro/iv_timeseries.html)**
 
 1. Background
 1. Introduction
@@ -130,7 +130,7 @@ We now have one of the major fundamental tools in our roadmap to producing scien
 md"""
 **⬅️ Previous lab: [II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)**
 
-**➡️ Next lab: IV - Introduction to Differential Photometry and Light Curves**
+**➡️ Next lab: IV - [Introduction to Time Series](https://unistellar-science.github.io/SETI-Education/labs/intro/iv_timeseries.html)**
 """
 
 # ╔═╡ 6d2c1121-2547-4125-8709-cd4d11480726

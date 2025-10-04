@@ -64,7 +64,7 @@ What's in an image? Turns out just a nice, orderly set of numbers. In this serie
 
 1. Aperture photometry
 
-**[IV - Introduction to Differential Photometry and Light Curves](https://unistellar-science.github.io/SETI-Education/labs/intro/iv_timeseries.html)**
+**[IV - Introduction to Time Series](https://unistellar-science.github.io/SETI-Education/labs/intro/iv_timeseries.html)**
 
 1. Background
 1. Introduction
