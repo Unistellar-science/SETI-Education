@@ -350,7 +350,7 @@ md"""
 
 A typical astronomical observation might use the know RA and Dec of the field to [plate solve](https://astrobackyard.com/plate-solving/) each frame against background sources (see, e.g., [astrometry.net](https://astrometry.net/)). This then gives a coordinate transformation (e.g., with the [World Coordinate System (WCS) standard](https://fits.gsfc.nasa.gov/fits_wcs.html)) that can be applied to each frame to align them to a common grid with open source tools like [AstroImageJ](https://www.astro.louisville.edu/software/astroimagej/). Unfortunately, plate solving is a computationally expensive process that can take quite a while, especially if we have a large number of frames. Fortunately, there is a nice alternative that we can use if we do not care about the WCS information: [asterisms](https://en.wikipedia.org/wiki/Asterism_(astronomy)).
 
-In this process, one frame is aligned to another in much the same way that human brain might: by matching common shapes between each frame to each other. This works indpendently of WCS information, so it completely avoids the need to plate solve our images. We will employ the Python package [`astroalign`](https://astroalign.quatrope.org/en/latest/index.html) to perform this process.
+In this process, one frame is aligned to another in much the same way that a human brain might try to: by matching common shapes between each frame to each other. This works indpendently of WCS information, so it completely avoids the need to plate solve our images. We will employ the Python package [`astroalign`](https://astroalign.quatrope.org/en/latest/index.html) to perform this process.
 """
 
 # ╔═╡ d6bba196-213e-4c90-8d8e-f2ffc8108da6
