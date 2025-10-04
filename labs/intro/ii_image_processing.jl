@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.19
 
 #> [frontmatter]
 #> title = "II - Introduction to Image Processing"
@@ -29,15 +29,28 @@ md"""
 *Continued from [I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)*
 
 **[I - Introduction to Astronomical Images](https://unistellar-science.github.io/SETI-Education/labs/intro/i_astronomical_images.html)**
+
 1. Software tools
 1. Image formats
+
 **[II - Introduction to Image Processing](https://unistellar-science.github.io/SETI-Education/labs/intro/ii_image_processing.html)**
+
 1. Array representations
 1. Color maps and color scales
 1. Image stacking
+
 **[III - Introduction to Photometry](https://unistellar-science.github.io/SETI-Education/labs/intro/iii_photometry.html)**
+
 1. Aperture photometry
-**IV - Introduction to Differential Photometry and Light Curves (to be released)**
+
+**[IV - Introduction to Differential Photometry and Light Curves](https://unistellar-science.github.io/SETI-Education/labs/intro/iv_timeseries.html)**
+
+1. Background
+1. Introduction
+1. Data inspection
+1. Image alignment
+1. Aperture photometry
+1. Extensions
 
 !!! note "Coffee? ☕"
 	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
