@@ -51,7 +51,7 @@ begin
 	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 	ENV["DATADEPS_LOAD_PATH"] = @__DIR__
 	DataDep(
-		"data",
+		"sample_data",
 		"""
 		UCAN Data Files
 		Website: https://www.seti.org/education/ucan/unistellar-education-materials/
@@ -220,6 +220,18 @@ By convention, `t` is our observation time, `x1` is for our target star, and `x2
 md"""
 And divide by a sample comparison star  (the first one):
 """
+
+# ╔═╡ 9d88c884-3187-452d-8453-7f095dac4b03
+md"""
+To try this analysis on you own data:
+
+1. Place your data folder into the same folder as this notebook
+1. Type the name of your data folder below (e.g., `my_data`)
+1. Click `Enter`
+"""
+
+# ╔═╡ 1b71497f-636a-45c8-8f51-728bee091696
+@bind DATA_DIR_local confirm(TextField(); label = "Enter")
 
 # ╔═╡ e34ceb7c-1584-41ce-a5b5-3532fac3c03d
 md"""
@@ -677,7 +689,11 @@ let
 end
 
 # ╔═╡ 7c078085-ff30-400d-a0ab-2680f468c415
-const DATA_DIR = datadep"data";
+DATA_DIR = if isempty(DATA_DIR_local)
+	datadep"data"
+else
+	joinpath(@__DIR__, DATA_DIR_local)
+end;
 
 # ╔═╡ 1356c02f-9ff2-491f-b55d-666ee76e6fae
 df_sci = let
@@ -2818,7 +2834,7 @@ version = "0.41.3+0"
 # ╟─c1bbb6a2-6996-4fee-a642-a0212b473474
 # ╟─abb9a9c8-5cac-4af3-b0a0-b7a3608dfe1a
 # ╟─b360ad74-58b7-47b5-a8b0-437ef1119303
-# ╟─1356c02f-9ff2-491f-b55d-666ee76e6fae
+# ╠═1356c02f-9ff2-491f-b55d-666ee76e6fae
 # ╟─06d26240-81b6-401b-8eda-eab3a9a0fb20
 # ╟─dbe812e2-a795-4caa-842d-07da5eabcade
 # ╟─74197e45-3b80-44ad-b940-f2544f2f9b54
@@ -2843,6 +2859,8 @@ version = "0.41.3+0"
 # ╟─6470b357-4dc6-4b2b-9760-93d64bab13e9
 # ╟─17eb5723-71f4-4344-b1b1-41b894e7582b
 # ╟─59392770-f59e-4188-a675-89c2f2fc67d9
+# ╟─9d88c884-3187-452d-8453-7f095dac4b03
+# ╟─1b71497f-636a-45c8-8f51-728bee091696
 # ╟─381d0147-264b-46f6-82ab-8c840c50c7d1
 # ╟─79c924a7-f915-483d-aee6-94e749d3b004
 # ╟─e34ceb7c-1584-41ce-a5b5-3532fac3c03d
