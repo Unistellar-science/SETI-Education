@@ -354,7 +354,7 @@ end;
 # ╔═╡ a00cbbfc-56ce-413a-a7b8-13de8541fa6f
 if !isempty(username)
 	md"""
-	It looks like we have $(nrow(df_all)) hits, great! Let's filter these using some convenience syntax from [DataFramesMeta.jl](https://juliadata.org/DataFramesMeta.jl/stable/) to subset for targets that are easily observable, i.e., with our following criteria:
+	It looks like we have $(nrow(df_all)) hits, great! Let's filter these for targets that are easily observable, i.e., with our following criteria:
 
 	1. Large change in brightness (at least half a mag)
 	2. Fairly short period (period < 3 days)
@@ -2811,7 +2811,7 @@ version = "0.41.3+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═ac2acb87-8515-41cf-a762-ca48d8cd269a
+# ╟─ac2acb87-8515-41cf-a762-ca48d8cd269a
 # ╟─aa005b55-626e-41e0-8fe1-137bd7dd5599
 # ╟─4266575e-e19f-48e4-8b21-6f296c6d3f33
 # ╟─aaaaa4d6-737b-4e53-a3a4-fcac09789d4e
