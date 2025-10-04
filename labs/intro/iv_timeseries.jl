@@ -3,9 +3,9 @@
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/2lvaq5dt/image.png"
-#> title = "Eclipsing Binary Lab"
-#> date = "2025-08-01"
-#> description = "Catch an eclipsing binary in real time and measure its light curve."
+#> title = "Time Series Lab"
+#> date = "2025-10-03"
+#> description = "Measure light curves from your data. Example eclipsing binary use case included."
 
 using Markdown
 using InteractiveUtils
