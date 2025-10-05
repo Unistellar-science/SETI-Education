@@ -233,6 +233,12 @@ To try this analysis on you own data:
 # ╔═╡ 1b71497f-636a-45c8-8f51-728bee091696
 @bind DATA_DIR_local confirm(TextField(); label = "Enter")
 
+# ╔═╡ 1ede8642-1f36-4aad-bcad-383fd211d31a
+md"""
+!!! note
+	To reload the original sample data, clear the field above and click `Enter` again.
+"""
+
 # ╔═╡ e34ceb7c-1584-41ce-a5b5-3532fac3c03d
 md"""
 ### Wrapping up
@@ -690,7 +696,7 @@ end
 
 # ╔═╡ 7c078085-ff30-400d-a0ab-2680f468c415
 DATA_DIR = if isempty(DATA_DIR_local)
-	datadep"data"
+	datadep"sample_data"
 else
 	joinpath(@__DIR__, DATA_DIR_local)
 end;
@@ -2861,6 +2867,7 @@ version = "0.41.3+0"
 # ╟─59392770-f59e-4188-a675-89c2f2fc67d9
 # ╟─9d88c884-3187-452d-8453-7f095dac4b03
 # ╟─1b71497f-636a-45c8-8f51-728bee091696
+# ╟─1ede8642-1f36-4aad-bcad-383fd211d31a
 # ╟─381d0147-264b-46f6-82ab-8c840c50c7d1
 # ╟─79c924a7-f915-483d-aee6-94e749d3b004
 # ╟─e34ceb7c-1584-41ce-a5b5-3532fac3c03d
