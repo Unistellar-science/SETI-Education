@@ -174,6 +174,9 @@ md"""
 Here is the associated header information for our science frame:
 """
 
+# ╔═╡ 009f2c3f-bc8f-4874-9545-f18d6722284b
+@bind reset Button("Reset")
+
 # ╔═╡ 7d54fd96-b268-4964-929c-d62c7d89b4b2
 md"""
 Uh-oh, we see that our images are literally rotating out from under us! This [field rotation](https://calgary.rasc.ca/field_rotation.htm) and also some drift that needed to be manually corrected partway through the observation are normal effects of taking long duration observations on an alt-az mount. Fortunately, it is fairly manageable to handle this as we will see in the next section.
@@ -186,6 +189,25 @@ md"""
 A typical astronomical observation might use the know RA and Dec of the field to [plate solve](https://astrobackyard.com/plate-solving/) each frame against background sources (see, e.g., [astrometry.net](https://astrometry.net/)). This then gives a coordinate transformation (e.g., with the [World Coordinate System (WCS) standard](https://fits.gsfc.nasa.gov/fits_wcs.html)) that can be applied to each frame to align them to a common grid with open source tools like [AstroImageJ](https://www.astro.louisville.edu/software/astroimagej/). Unfortunately, plate solving is a computationally expensive process that can take quite a while, especially if we have a large number of frames. Fortunately, there is a nice alternative that we can use if we do not care about the WCS information: [asterisms](https://en.wikipedia.org/wiki/Asterism_(astronomy)).
 
 In this process, one frame is aligned to another in much the same way that the human brain might try to: by matching common shapes between each frame to each other. This works indpendently of WCS information, so it completely avoids the need to plate solve our images. We will use this method to align our science frames.
+"""
+
+# ╔═╡ bdfc0804-b83a-470f-a6e0-1e030eac63d8
+cm"""
+!!! note
+	If the frame alignment fails, e.g., if you get an error like:
+
+	```
+	MaxIterError: List of matching triangles exhausted before an acceptable transformation was found
+	```
+
+	that means that the parameters passed to our frame alignment routine needs to be adjusted for your particular dataset. Try adjusting one of these parameters below to see if the alignment procedure continues as desired:
+
+	| parameter | description | value |
+	| :-:       | :-:         | :-: |
+	| `detection_sigma` | Threshold to be counted as an alignment star. Lower number in slider corresponds to more stars included. | $(@bind detection_sigma Slider(1:5, default=2, show_value=true)) |
+	| `min_area` | The minimum number of pixels that should count as an alignment star. Helps avoid hot pixels. | $(@bind min_area Slider(1:50; default=25, show_value=true)) 
+
+	If this still fails, phone your local scientist, i.e., Ian or Shanil 📞
 """
 
 # ╔═╡ d6bba196-213e-4c90-8d8e-f2ffc8108da6
@@ -231,7 +253,10 @@ To try this analysis on you own data:
 """
 
 # ╔═╡ 1b71497f-636a-45c8-8f51-728bee091696
-@bind DATA_DIR_local confirm(TextField(); label = "Enter")
+begin
+	reset
+	@bind DATA_DIR_local confirm(TextField(); label = "Enter")
+end
 
 # ╔═╡ 1ede8642-1f36-4aad-bcad-383fd211d31a
 md"""
@@ -432,21 +457,21 @@ end;
 
 # ╔═╡ 03d38a82-4c31-4f3a-9afe-d1caead5e8af
 # Align img2 onto img1
-function align(img2, img1)
+function align(img2, img1; min_area, detection_sigma)
 	registered_image, footprint = aa.register(
 		to_py(img2),
 		to_py(img1);
-		min_area = 25,
-		detection_sigma = 2,
+		min_area,
+		detection_sigma,
 	)
 	return shareheader(img2, PyArray(registered_image))
 end;
 
 # ╔═╡ bdc24b15-d14a-422c-a7aa-5335547fa53c
-function align_frames(imgs)
+function align_frames(imgs; min_area, detection_sigma)
 	fixed = first(imgs)
 	frames_aligned = map(imgs[begin+1:end]) do img
-		align(img, fixed)
+		align(img, fixed; min_area, detection_sigma)
 	end
 	return [fixed, frames_aligned...]
 end;
@@ -770,7 +795,7 @@ Frame number: $(frame_slider = @bind frame_i Slider(1:length(imgs_sci); show_val
 """
 
 # ╔═╡ 1fe59945-8bce-44f3-b548-9646c2ce6bda
-imgs_sci_aligned = align_frames(imgs_sci);
+imgs_sci_aligned = align_frames(imgs_sci; detection_sigma, min_area);
 
 # ╔═╡ 73e16c0e-873c-46a3-a0fd-d7ed5405ed7b
 md"""
@@ -845,9 +870,6 @@ end
 # ╔═╡ a984c96d-273e-4d6d-bab8-896f14a79103
 TableOfContents(; depth=4)
 
-# ╔═╡ 285a56b7-bb3e-4929-a853-2fc69c77bdcb
-const clims = (150, 700);
-
 # ╔═╡ 21e828e5-00e4-40ce-bff5-60a17439bf44
 # Helpful for not having ginormous plot objects
 r2(img) = (restrict ∘ restrict)(img);
@@ -866,7 +888,7 @@ function htrace(img;
 	end
 
 	img_small = permutedims(img_small)
-	
+		
 	heatmap(;
 		x = img_small.dims[1].val,
 		y = img_small.dims[2].val,
@@ -901,8 +923,8 @@ shapes = [
 timestamp(img) = header(img)["DATE-OBS"];
 
 # ╔═╡ 24256769-2274-4b78-8445-88ec4536c407
-function plot_img(i, img; restrict=true)
-	hm = htrace(img; restrict)
+function plot_img(i, img; zmin=2400, zmax=3200, restrict=true)
+	hm = htrace(img; zmin, zmax, restrict)
 	
 	l = Layout(;
 		#width,
@@ -918,14 +940,16 @@ end;
 
 # ╔═╡ 86e53a41-ab0d-4d9f-8a80-855949847ba2
 let
-	p = plot_img(frame_i, imgs_sci[frame_i])
+	zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs_sci))
+	p = plot_img(frame_i, imgs_sci[frame_i]; zmin, zmax)
 	relayout!(p; shapes)
 	p
 end
 
 # ╔═╡ f3683998-543c-4bc4-8b73-fc1de6a6a955
 let
-	p = plot_img(frame_i_aligned, imgs_sci_aligned[frame_i_aligned])
+	zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs_sci))
+	p = plot_img(frame_i_aligned, imgs_sci_aligned[frame_i_aligned]; zmin, zmax)
 	relayout!(p; shapes)
 	p
 end
@@ -2850,10 +2874,12 @@ version = "0.41.3+0"
 # ╟─5abbcbe0-3ee6-4658-9c99-e4567a23e3f6
 # ╟─c06e64ef-4085-4bb5-9b8b-2ed244d5dbe8
 # ╟─86e53a41-ab0d-4d9f-8a80-855949847ba2
+# ╟─009f2c3f-bc8f-4874-9545-f18d6722284b
 # ╟─8f0e6529-bd67-47aa-9ddf-4032a5483a98
 # ╟─7d54fd96-b268-4964-929c-d62c7d89b4b2
 # ╟─1df329a0-629a-4527-8e5d-1dbac9ed8497
 # ╠═1fe59945-8bce-44f3-b548-9646c2ce6bda
+# ╟─bdfc0804-b83a-470f-a6e0-1e030eac63d8
 # ╟─d6bba196-213e-4c90-8d8e-f2ffc8108da6
 # ╟─e7ad4e24-5dc9-4713-836a-be001304e45c
 # ╟─73e16c0e-873c-46a3-a0fd-d7ed5405ed7b
@@ -2916,7 +2942,6 @@ version = "0.41.3+0"
 # ╟─7c078085-ff30-400d-a0ab-2680f468c415
 # ╟─035fcecb-f998-4644-9650-6aeaced3e41f
 # ╟─a984c96d-273e-4d6d-bab8-896f14a79103
-# ╟─285a56b7-bb3e-4929-a853-2fc69c77bdcb
 # ╟─21e828e5-00e4-40ce-bff5-60a17439bf44
 # ╟─e35d4be7-366d-4ca5-a89a-5de24e4c6677
 # ╟─a3bcad72-0e6c-43f8-a08d-777a154190d8
