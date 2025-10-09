@@ -1,2 +1,4 @@
 Manifest.toml
-data/
+*data*/
+sample_data/
+.aavso_key
