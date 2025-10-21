@@ -203,7 +203,7 @@ cm"""
 	that means that the parameters passed to our frame alignment routine needs to be adjusted for your particular dataset. Try adjusting one of these parameters below to see if the alignment procedure continues as desired:
 
 	| parameter | description | value |
-	| :-:       | :-:         | :-: |
+	| :-:       | :--         | :-: |
 	| `detection_sigma` | Threshold to be counted as an alignment star. Lower number in slider corresponds to more stars included. | $(@bind detection_sigma Slider(1:5, default=2, show_value=true)) |
 	| `min_area` | The minimum number of pixels that should count as an alignment star. Helps avoid hot pixels. | $(@bind min_area Slider(1:50; default=25, show_value=true)) 
 
@@ -240,7 +240,7 @@ By convention, `t` is our observation time, `x1` is for our target star, and `x2
 
 # ╔═╡ 17eb5723-71f4-4344-b1b1-41b894e7582b
 md"""
-And divide by a sample comparison star  (the first one):
+And divide by our comparison star:
 """
 
 # ╔═╡ 9d88c884-3187-452d-8453-7f095dac4b03
@@ -749,6 +749,9 @@ img_sci[reverse(begin:end), begin:end]
 # ╔═╡ 7d7cd508-be27-4f52-bc13-91c702450167
 header(img_sci)
 
+# ╔═╡ edf5f093-19cc-4802-a777-95d8492996a8
+h = header(img_sci);
+
 # ╔═╡ f6197e8e-3132-4ab5-86d7-32572e337c58
 img_size, img_eltype = size(img_sci), eltype(img_sci);
 
@@ -844,7 +847,7 @@ let
 	layout = Layout(
 		xaxis = attr(title="Date (UTC)"),
 		yaxis = attr(title="Relative aperture sum"),
-		title = "Source light curves",
+		title = "Raw light curves",
 		legend_title_text = "Source",
 	)
 	
@@ -860,7 +863,7 @@ let
 	layout = Layout(
 		xaxis = attr(title="Date (UTC)"),
 		yaxis = attr(title="Relative aperture sum"),
-		title = "W UMa divided light curve",
+		title = string("Divided light curve<br>", h["PURPOSE"], " observation: ",  h["DATE-OBS"]),
 		legend_title_text = "Source",
 	)
 	
@@ -2815,7 +2818,7 @@ uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
 version = "1.59.0+0"
 
 [[deps.oneTBB_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
 git-tree-sha1 = "d5a767a3bb77135a99e433afe0eb14cd7f6914c3"
 uuid = "1317d2d5-d96f-522e-a858-c73665f53c3e"
 version = "2022.0.0+0"
@@ -2867,6 +2870,7 @@ version = "0.41.3+0"
 # ╟─6470b357-4dc6-4b2b-9760-93d64bab13e9
 # ╟─17eb5723-71f4-4344-b1b1-41b894e7582b
 # ╟─59392770-f59e-4188-a675-89c2f2fc67d9
+# ╟─edf5f093-19cc-4802-a777-95d8492996a8
 # ╟─9d88c884-3187-452d-8453-7f095dac4b03
 # ╟─1b71497f-636a-45c8-8f51-728bee091696
 # ╟─1ede8642-1f36-4aad-bcad-383fd211d31a
