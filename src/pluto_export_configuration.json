@@ -1,0 +1,31 @@
+{
+    "title": "Master Your Unistellar Telescope & Do Science That Matters - Winter 2026",
+    "description": "Educational materials for this SETI/Unistellar + ASP workshop",
+    "collections": [
+        {
+            "title": "Week 1 - Asteroids / Planetary Defense",
+            "description": "",
+            "tags": ["Week 1"]
+        },
+        {
+            "title": "Week 2 - Comets / Planetary Defense?",
+            "description": "",
+            "tags": ["Week 2"]
+        },
+        {
+            "title": "Week 3 - Supernova Remnants & Planetary Nebula",
+            "description": "",
+            "tags": ["Week 3"]
+        },
+        {
+            "title": "Week 4 - Parallax",
+            "description": "",
+            "tags": ["Week 4"]
+        },
+        {
+            "title": "Week 5 - Supernovae and the Distance Ladder",
+            "description": "",
+            "tags": ["Week 5"]
+        }
+    ]
+}
