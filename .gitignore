@@ -2,3 +2,5 @@ Manifest.toml
 *data*/
 sample_data/
 .aavso_key
+_cache
+_site
