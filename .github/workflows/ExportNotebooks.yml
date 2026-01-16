@@ -1,0 +1,67 @@
+name: Export SETI | ASP notebooks & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+# Skip intermediate builds: always.
+# Cancel intermediate builds: only if it is a pull request build
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout SETI | ASP source
+        uses: actions/checkout@v6
+
+      - name: 🙌 Install Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+
+      - name: ⏱ Cache notebook states
+        uses: actions/cache@v5
+        with:
+          path: _cache
+          key: ${{ runner.os }}-pluto_state_cache-v3-${{ hashFiles('**/Project.toml', '**/Manifest.toml') }}-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-pluto_state_cache-v3-${{ hashFiles('**/Project.toml', '**/Manifest.toml') }}
+
+      - name: ⏱ Cache .julia
+        uses: actions/cache@v5
+        with:
+          path: ~/.julia
+          key: ${{ runner.os }}-dotjulia-v1-${{ hashFiles('**/Project.toml', '**/Manifest.toml') }}-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-dotjulia-v1-${{ hashFiles('**/Project.toml', '**/Manifest.toml') }}
+
+      - name: 📅 Checkout source
+        uses: actions/checkout@v6
+
+      - name: 🙌 Install dependencies
+        shell: julia --project {0}
+        run: import Pkg; Pkg.instantiate()
+
+      - name: 🪴 Generate site
+        shell: julia --project {0}
+        run: |
+          import PlutoPages
+          PlutoPages.generate("."; html_report_path="generation_report.html")
+        env:
+          JULIA_PKG_SERVER: ""
+
+      - name: 📰 Upload site generation report
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          path: generation_report.html
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: _site
