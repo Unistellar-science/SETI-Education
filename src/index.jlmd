@@ -1,25 +1,10 @@
 ---
-title: "SETI | ASP"
-description: "Workshop materials"
+title: "Unistellar | SETI | ASP"
+description: "Educational materials for use with Unistellar smart telescopes"
 tags: ["docs", "introduction"]
 layout: "md.jlmd"
 ---
 
-# SETI | ASP workshop - Winter 2026
+# Science Lab Notebooks
 
-## _Master Your Unistellar Telescope & Do Science That Matters_
-
-Workshop materials for use with your Unistellar smart telescope.
-
-[Learn @ ASP Dashboard](https://learn.astrosociety.org/products/master-your-unistellar-telescope-do-science-that-matters-winter-2026)
-
-# Syllabus
-
-| Week | Topic                                 |
-| ---  | ---                                   |
-| 1    | Asteroids / Planetary Defense         |
-| 2    | Comets / Planetary Defense            |
-| 3    | Supernova Remnants & Planetary Nebula |
-| 4    | Parallax                              |
-| 5    | Supernovae and the Distance Ladder    |
-
+Originally developed for the [Unistellar College Astronomy Network (UCAN)](https://www.seti.org/education/ucan/).

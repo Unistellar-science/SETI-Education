@@ -3,16 +3,28 @@
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/205ie3ne/drtardi-404-seti-institute.png"
-#> title = "II - Introduction to Image Processing"
+#> title = "I - Introduction to Astronomical Images"
 #> date = "2025-09-19"
-#> tags = ["Week 2", "images", "image processing", "arrays"]
-#> description = "Learn how to interpret and process images as an array of numbers."
+#> tags = ["asp", "images", "rgb", "image processing", "FITS"]
+#> description = "Learn how to install the software needed to interpret astronomical images."
 #> layout = "layout.jlhtml"
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 48d0a70b-62dc-426e-93c4-b21aa20acbfd
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
+# ╔═╡ 926ae0c8-5dd2-11f0-3c63-e540d51a756c
 begin
 	# Notebook widgets
 	using PlutoUI
@@ -24,344 +36,331 @@ begin
 	AstroImages.set_cmap!(nothing)
 end;
 
-# ╔═╡ 23132c2d-56d6-4e9a-9eef-94f0b0742a00
+# ╔═╡ 8e324690-373d-4139-8350-add89a86c9b0
 md"""
-# II - Introduction to Image Processing
+
+# Day 1 - Introduction to Astronomical Images
+
+$(Resource("https://imgs.xkcd.com/comics/painbow_award.png"))
+
+_Image credit: [xkcd](https://xkcd.com/2537/). Alt text: "This year, our team took home the dark blue ribbon, better than the midnight blue we got last year but still short of the winning navy blue."_
+
+---
+
+What's in an image? Turns out just a nice, orderly set of numbers. In this workshop, we will explore how astronomers use scientific programming to interpret these numbers. Along the way, we will cover the following key concepts in astronomical imaging:
+
+**Day 1 - Introduction to Astronomical Images**
+
+1. Software tools
+1. Image formats
+
+**Day 2 - Introduction to Image Processing**
+
+1. Array representations
+1. Color maps and color scales
+1. Image stacking
+
+**Day 3 - Introduction to Photometry**
+
+1. Aperture photometry
+
+**Day 4 - Introduction to Time Series**
+
+1. Background
+1. Introduction
+1. Data inspection
+1. Image alignment
+1. Aperture photometry
+1. Extensions
+
+!!! note "Coffee? ☕"
+	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
 """
 
-# ╔═╡ 81f1863b-061b-4660-bb5d-c32b3e543d35
+# ╔═╡ 13204b29-8bb9-42cc-b828-074fdf716087
 md"""
-## 1. Array representations 🔢
-
-Now that we have this mathematical representation of our image, shown below, let's explore a few key operations that we can perform on it:
-
-1. Indexing
-2. Slicing
-3. Reducing
+With this requisite information out of the way, let's get started!
 """
 
-# ╔═╡ 43f2ecb7-e601-4231-85fe-451e1f22e3a1
-md"""
-### Indexing
-
-We actually saw this earlier already when looking at individual pixels in our image. Indexing is just another way of saying selecting a subset of our image. For example,
-"""
-
-# ╔═╡ d9e3ad1b-b7cc-45c9-9355-3ee508361775
-md"""
-selects the element in the first row and first column of our image. We can also use generic keywords like `begin` and `end` to select the first or last element of our matrix, respectively.
-"""
-
-# ╔═╡ 9358d43e-819e-4321-a5b9-064cafbcb9d7
-md"""
-!!! tip "Question"
-	What does indexing with only a single number, e.g., `img_data[10]` return? Why is this?
-"""
-
-# ╔═╡ d0796c62-f843-495a-928a-108807d819a9
-md"""
-👉 Your notes here
-
-
-"""
-
-# ╔═╡ 8640a069-7cab-44ad-abe1-487fce5cde66
-md"""
-!!! hint
-	See [here](https://docs.julialang.org/en/v1/manual/arrays/#Linear-indexing) and [here](https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-column-major) in the manual.
-"""
-
-# ╔═╡ 75331c88-12e8-4352-9e23-823c25c6751f
-md"""
-### Slicing
-
-Selecting multiple elements that are next to each other (contiguous) is known as slicing. For example,
-"""
-
-# ╔═╡ ca1abb68-1afd-477d-8429-e9f714c92294
-md"""
-selects every column in the first row of `img_data` while,
-"""
-
-# ╔═╡ 8bfd0688-49c9-4ed0-9616-8a526c09d638
-details(md"What does `|>` do?",
-md"""
-!!! note ""
-	Known as the [pipe operator](https://docs.julialang.org/en/v1/manual/functions/#Function-composition-and-piping), this is a convenient way to pass the output of one function as input to another. For example,
-
-	```julia
-	sqrt(sum([1, 4, 5, 6])) # 4.0
-	```
-
-	is equivalent to:
-
-	```julia
-	[1, 4, 5, 6] |> sum |> sqrt # 4.0
-	```
-
-	Note how this seamlessly composes with the dot operator in our image example above.
-""")
-
-# ╔═╡ 850418f5-a286-4e78-929f-01247eb34c50
-md"""
-!!! tip "Question"
-	Try going back to your original color image `img`. Using slices, try to produce the following image:
-"""
-
-# ╔═╡ 012ff98b-b211-43be-95af-33bc56f6bf7a
-md"""
-For reference, here is the original color image:
-"""
-
-# ╔═╡ 1a4e2100-9253-45a5-bc98-4d69d2a5834a
-img = (load ∘ download)("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png")
-
-# ╔═╡ 73132792-b67a-41d8-b9c9-d47d52a4660e
-img_data = img .|> Gray .|> gray
-
-# ╔═╡ 4932a8ce-f62e-4649-ad1f-68eb7eb055a5
-img_data[1, 1]
-
-# ╔═╡ b17aac5d-407f-4a7f-8bb7-95025eaa4b48
-img_data_row = img_data[1, :]
-
-# ╔═╡ b20b026e-1b9f-48a7-8c6e-31bb94442750
-img_data_corner = img_data[1:500, 1:500]
-
-# ╔═╡ 51426bfb-ee8b-42de-b110-b8dadea70462
-md"""
-returns the first $(size(img_data_corner, 1)) rows and first $(size(img_data_corner, 2)) columns, i.e., the top-left corner:
-"""
-
-# ╔═╡ 5a93fca5-efa8-46f4-ad6f-cba498680eeb
-img_corner_gray = img_data_corner .|> Gray
-
-# ╔═╡ a65e988a-84e2-4f99-b350-1866163062d5
-img[1:60, :]
-
-# ╔═╡ 5a8e80e1-8e59-487b-872e-f85a1600ad1a
-md"""
-👉 Your notes here
-
-
-"""
-
-# ╔═╡ e4131b85-bb1d-4055-ae6d-49a9e457f235
-md"""
-👇 Your code here
-"""
-
-# ╔═╡ 390ecfb7-cb91-45cc-9284-c7089098fe18
-
-
-# ╔═╡ b5b063c8-d575-4574-b1cd-fea7ae04ddfb
-md"""
-### Reducing
-
-Often, we would like to know summary statistics about a given region in our image. Applying functions that boil down our box of numbers to a smaller representative set is known as reduction. For example, to get the total pixel value in each column of our above slice, shown below,
-"""
-
-# ╔═╡ bf33e9ce-159c-4367-b462-c966c88f9adf
-img_data[1:60, :]
-
-# ╔═╡ 99e846f2-f139-4b69-91c2-9d170201da90
-md"""
-we could do the following:
-"""
-
-# ╔═╡ 4d8c748a-6469-4b45-bc9b-268c35a7dc7b
-sum(img_data[1:60, :]; dims=1)
-
-# ╔═╡ 0a39d848-fbe9-4a61-9c5b-7df6376b5387
-md"""
-!!! tip "Question"
-	What does the `dims` keyword do? Try it out on a simpler matrix like:
-
-	```julia
-	arr = [
-		1 2
-		3 4
-	]
-	```
-
-	Note: You can pull up the documentation for any function by selecting the `Live Docs` button in the bottom right corner of this notebook.
-"""
-
-# ╔═╡ f535460d-ff47-4108-a561-7e993669b0f7
-md"""
-👉 Your notes here
-
-
-"""
-
-# ╔═╡ f4cf7cce-6d86-47cc-afb2-05c7ec46ee3a
-md"""
-## 2. Color maps and color scales 🌈
-
-So far, we have been using general purpose tools for displaying images. We now transition to a more specialized tool named [AstroImages.jl](https://juliaastro.org/AstroImages/stable/), which extends the functionality we have already used to work with astronomical images.
-
-
-$(details("Aside", md" 
-This method of extending functionality in separate packages is a core part of the Julia language. It allows for ecosystems of tools to form naturally in different fields of study, which then compose seamlessly with each other thanks to the [multiple dispatch](https://docs.julialang.org/en/v1/manual/methods/#Methods) paradigm that underpins the language. For more on this, see [this talk](https://www.youtube.com/watch?v=kc9HwsxE1OY) by one of the Julia creators."
-))
-
-To start, let's wrap our underlying image data in `img_data_corner` in an `AstroImage` type:
-"""
-
-# ╔═╡ eb913b0f-06e5-4915-b89c-53c5812abaab
-img_astro_gray = AstroImage(img_data_corner)
-
-# ╔═╡ ed3474d3-0a7b-4ac3-a723-5abb077200f2
-details("Why do things looks flipped?",
-md"""
-You may notice that `img_astro` looks transposed and flipped relative to `img_data`. This is to comply with the [FITS convention](https://juliaastro.org/AstroImages/stable/manual/conventions/) of placing the origin of an image in the bottom left corner, instead of the top left.
-"""
-)
-
-# ╔═╡ f0809836-33ce-4ed6-a4ae-a485f0604cb5
-md"""
-We now have all of the usual benefits of working with image data that we have seen already, along with additional features specific to FITS files, like headers and WCS information if available. We will explore these features more later in the workshop. For now, we will use the [`imview`](https://juliaastro.org/AstroImages/stable/api/#AstroImages.imview) function that comes with AstroImages.jl to explore different ways to visualize our given data.
-
-We called:
+# ╔═╡ c1885a59-367e-46dc-a954-4507a4278e5e
+msg_adding_colors = md"""
+##### Adding colors in Julia 🎨
+This makes magenta!
 
 ```julia
-AstroImages.set_cmap!(nothing)
+using ColorTypes
+
+RGB(1, 0, 0) + RGB(0, 0, 1)
 ```
 
-at the bottom of this notebook to set the default grayscale colormap (the relationship between the given pixel value and associated color) that our AstroImage.jl images are displayed in. We can override this mapping by passing the `cmap` keyword to `imview`:
-"""
+$(RGB(1, 0, 0) + RGB(0, 0, 1))
+"""; md"---"
 
-# ╔═╡ b21dbe98-0731-471f-a68c-2a081d34449c
-imview(img_astro_gray; cmap = :cividis)
+# ╔═╡ 03eb2bc6-0ff0-46f1-880b-eb702bfe9f70
+details("Using this notebook 🌱", md"""
+!!! note "First time running"
+	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
 
-# ╔═╡ 3770ca9f-c891-4b05-af57-b6a33c8c3656
+	If you have a Pluto session running already, you can also just paste the url for this notebook into the **Open a notebook** section of your Pluto landing page:
+
+	```
+	https://github.com/Unistellar-science/SETI-Education/blob/main/labs/intro/i_astronomical_images.jl
+	```
+	
+	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
+
+!!! tip "Advanced: bring your own editor"
+	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/intro/i_astronomical_images.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+
+	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
+
+	```julia-repl
+	julia> using Pluto
+	
+	julia> Pluto.run(auto_reload_from_file=true)
+	
+	# This will be on by default in an upcoming release =]
+	```
+
+	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
+
+
+!!! warning "Diving deeper"
+	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
+
+$(details("Details", msg_adding_colors))
+
+!!! warning " "
+	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
+""")
+
+# ╔═╡ d23819bc-ddae-4de7-83b1-58453848d266
 md"""
-This now our image using the Cividis colormap, which can be a good choice for people with color vision deficiencies to help make accurate interpretations of scientific data.
+## 1. Software tools 💻
 
-To help bring out features of interest, we can also control the functional mapping between pixel value and color via the `stretch` keyword:
+Today, there are a wide range of tools to select from when doing astronomical research. For this workshop series we will use [Julia](https://julialang.org/), a modern programming language geared towards [science and engineering applications](https://juliahub.com/industries/case-studies). A growing list of astronomy and astrophysics applications can be found on the [JuliaAstro case studies page](https://juliaastro.org/home/case_studies/).
+
+To promote best practices in modern science software developement (e.g., reproducibility, maintainability, and literacy), we will be using the [Pluto.jl](https://plutojl.org/) notebook environment (also written in Julia) to share and work with real code used by professional astronomers throughout this workshop. This notebook you are currently reading is also a Pluto.jl notebook!
+
+!!! tip
+	* For folks approaching programming for the first time: [What is a notebook?](https://en.wikipedia.org/wiki/Notebook_interface)
+
+	* For folks coming from a Python background: Julia is to Python as Pluto.jl is to Jupyter
 """
 
-# ╔═╡ b3587a50-9937-4ac4-a8c0-0c5eed0ee595
-imview(img_astro_gray; cmap = :cividis, stretch = powstretch)
-
-# ╔═╡ 2f473051-e5fb-460d-b4b0-3c5965fe0092
+# ╔═╡ 1a9ae0d8-9da7-4c60-a088-e242565b4534
 md"""
-!!! tip "Question"
+### Quickstart
 
-	What is `powstretch`? What other functions can be passed?
+To get started, please follow the instructions in the following two steps below:
 
-!!! hint
-	AstroImages.jl follows the colorscale specifications [defined in DS9](https://ds9.si.edu/doc/ref/how.html).
+1. [Install Julia](https://julialang.org/install/) 
+1. [Install Pluto.jl](https://plutojl.org/#install) 
+
+Additional resources:
+
+* Learn Julia: [Julia website](https://julialang.org/learning/)
+* Learn Pluto: [Pluto.jl manual](https://plutojl.org/en/docs/)
+* Noteworthy Differences from other Languages: [Julia manual](https://docs.julialang.org/en/v1/manual/noteworthy-differences/)
+* Handy cheatsheets: [JuliaDocs](https://cheatsheet.juliadocs.org/), [MATLAB--Python--Julia](https://cheatsheets.quantecon.org/)
+* [Featured Pluto.jl notebooks](https://featured.plutojl.org/)
 """
 
-# ╔═╡ fdac0d23-be08-45da-b9a4-90f94cff73cf
+# ╔═╡ af1b84fc-cc08-45e0-a849-fa11c1267b91
 md"""
-👉 Your notes here
+## 2. Image formats 📚
 
-
+Astronomical images start their lives as a box of numbers. This box can be represented in a variety of different formats, the most popular currently being the [Flexible Image Transport System](https://en.wikipedia.org/wiki/FITS) (FITS) format. We will explore FITS files shortly, but let's start with another common format that you might use every day, [Portable Network Graphics](https://en.wikipedia.org/wiki/PNG) (PNG), to get an idea of how image data is represented and how these different formats relate to each other.
 """
 
-# ╔═╡ 5493b2e6-36cd-4c07-b684-1e14dac2c6f8
+# ╔═╡ e054ca6a-d276-47d5-b8ee-eb63d7d770fa
 md"""
-Now that we have a handle on working with AstroImages.jl data, let's turn next to combining some real FITS data to make a full color image.
+### PNG
+
+We can use an image of anything, really. Below, we download a PNG of the famous ["Cosmic Cliffs"](https://webbtelescope.org/contents/media/images/2022/031/01G77PKB8NKR7S8Z6HBXMYATGJ) image taken from JWST and store it in a variable named `img`:
 """
 
-# ╔═╡ 292dc021-1da0-4459-9f0f-9b0ae7685eae
+# ╔═╡ 1bc51ec7-5dbf-43f7-b158-dc90992a48fe
 md"""
-## 3. Image stacking 🥞
-
-Let's start by pulling in some data. We'll use an example from the [AstroImages.jl documentation](https://juliaastro.org/AstroImages/stable/manual/converting-to-rgb/), which uses images of the colliding [Antennae galaxies](https://www.nasa.gov/image-article/antennae-galaxies/) provided by NASA/ESA.
+_Image credit: NASA, ESA, CSA, STScI_ | $(@bind reset Button("Reset"))
 """
 
-# ╔═╡ 4f4e5d63-fb00-4128-8ffb-220ecee9f365
+# ╔═╡ 8769ad1c-9de8-4ee4-b030-a2805f28353f
 md"""
-### RGB
-
-Below are images taken in the visible portion of the spectrum in red, green, and blue light, respectively. Data product information [here](https://esahubble.org/projects/fits_liberator/antennaedata/).
+We now have an image that we can analyze. For starters, let's display some key characteristics about `img`:
 """
 
-# ╔═╡ c26c62a8-b013-47b6-868d-8e06cd5cd558
-antred = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/red.fits"))[:, begin+14:end];
+# ╔═╡ d8cd4c83-9b02-43d2-947c-354ec7c51637
+@bind resample Button("Resample")
 
-# ╔═╡ 79c158b8-6fd7-48bb-a6b7-7f5ff6e4d987
-antgreen = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/green.fits"));
+# ╔═╡ 5e185421-f0f1-4337-b59f-1752addbbe09
+md"""
+Below our selected pixel, we map these (R, G, B) values to their corresponding sub-pixel, where 0 represents black (or no brightness), and 1 represents the peak brightness for the given color channel. The resulting color is then the [additive combination](https://en.wikipedia.org/wiki/RGB_color_model#Additive_colors) of these individual subpixels.
+"""
 
-# ╔═╡ d27284e3-f118-4ffb-b2f7-48eeb4bce66b
-antblue = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/blue.fits"))[:, begin+14:end];
+# ╔═╡ d3caebde-443a-45d8-802d-fa7f10f4a85e
+md"""
+!!! tip " "
+	See our [Unistellar image gallery](https://www.unistellar.com/gallery/) or browse the `#images_pretty` channel on our [Unistellar citizen science workspace](https://help.unistellar.com/hc/en-us/articles/4405646109842-How-do-I-join-the-Unistellar-Citizen-Science-Community) for more!
 
-# ╔═╡ 874103b8-140e-41b3-88be-d316ed9f9d85
-img_channels = antred, antgreen, antblue
+Astronomers typically work with [black and white](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color) (or [grayscale](https://en.wikipedia.org/wiki/Grayscale)) images, so we will next see how we can convert our image to this form using the information we have above. Later, we will see why this is a beneficial form to have our image in when we explore the FITS file format.
+"""
 
-# ╔═╡ 0a8fd090-36db-4319-86af-32ed69030268
+# ╔═╡ b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
+md"""
+#### Grayscale
+
+The converversion process from ``RGB`` to grayscale for a given pixel is achieved by taking a weighted average of its channel values according to an [international standard](https://en.wikipedia.org/wiki/Luma_%28video%29#Rec._601_luma_versus_Rec._709_luma_coefficients) established to emulate how the [human eye perceives relative brightnesses](https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale):
+
+```math
+0.299 R + 0.587 G + 0.114 B \quad.
+```
+
+This is [already implemented for us](https://juliaimages.org/latest/examples/color_channels/rgb_grayscale/) in the `ColorTypes` package with the `Gray` function, which we apply below to each pixel of our image to produce the following grayscale version:
+"""
+
+# ╔═╡ 4c0dd0c1-b446-46c2-a190-10eac40d1cc4
+details("Details", md"""
+!!! note " "
+	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
+""")
+
+# ╔═╡ 807485a1-aae1-4e4f-9787-14254fb8a005
+md"""
+Taking a look at the properties of our new image, we see that now instead of being a matrix composed of `RGB{N0f8}` types, it is composed of `Gray{N0f8}`s:
+"""
+
+# ╔═╡ 90960427-7433-4528-8cba-03444212d2c0
 md"""
 !!! note
-	We array slice some of the images to help line things up before stacking. We'll discuss more methodical ways for aligning astronomical images later in the workshop.
+	We elide the package names for brevity.
+
+In other words, instead of three numbers representing each pixel, we now have a single number for each, which we can view directly:
 """
 
-# ╔═╡ ad234863-91ed-4a29-a679-1de130d36092
+# ╔═╡ fc10e422-b881-4b40-8d33-e5f53008045c
 md"""
-We next call the `composecolors` function from AstroImages.jl to combine these three different color channels:
+This "box of numbers" format is how image data is represented in FITS files.
+
+!!! tip "Exercise"
+	Try repeating the above analysis with you own PNG image by loading it below! Note that the filetype must be a PNG.
 """
 
-# ╔═╡ 91f63c0e-fed1-460a-8309-6bd728872a07
-img_rgb = composecolors(img_channels;
-	stretch = [
-		asinhstretch,
-		asinhstretch,
-		asinhstretch,
-	],
-	multiplier = [1, 1.7, 1],
-)
+# ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
+begin
+	reset
+	@bind img_local FilePicker([MIME("image/png")])
+end
 
-# ╔═╡ a7201a02-ec80-47b1-ab60-daa483cca97d
+# ╔═╡ 563781c1-5046-413b-8846-6514cba58d77
+img = if isnothing(img_local)
+	load(download("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png"))
+else
+	let
+		path = tempname() * img_local["name"]
+		write(path, img_local["data"])
+		load(path)
+	end
+end
+
+# ╔═╡ 8eb994d7-c74d-481a-9e75-9c834d23bd18
+nrows, ncols = size(img)
+
+# ╔═╡ 49ca1b81-2eed-40da-afca-d9d2d51438f6
+px_type = eltype(img)
+
+# ╔═╡ 100d8b5b-9fb3-4008-89cf-b94a9ecd67b3
 md"""
-!!! tip "Question"
-	Explore the documentation for `composecolors`. What keywords can be passed to it? Try adding your own modified version of the above image using these keywords.
+We see here that our image is $(nrows) rows by $(ncols) columns wide, and each cell (or pixel) of this image is represented by a $(px_type) type.
+
+Even though this part is Julia specific, the underlying information is general enough to apply to most image processing libraries. Let's break down what each piece means: 
+
+* [`ColorTypes`](https://github.com/JuliaGraphics/ColorTypes.jl): The name of the package where a type called `RGB` is defined.
+
+* [`RGB`](https://github.com/JuliaGraphics/ColorTypes.jl#rgb-plus-bgr-xrgb-rgbx-and-rgb24-the-abstractrgb-group): A type that stores the red, green, and blue intensity values of a pixel. These can be thought of as [sub-pixels](https://en.wikipedia.org/wiki/Pixel#Subpixels).
+
+* [`FixedPointNumbers`](https://github.com/JuliaMath/FixedPointNumbers.jl): The name of the package where a type called `N0f8` is defined.
+
+* [`N0f8`](https://github.com/JuliaMath/FixedPointNumbers.jl#type-hierarchy-and-interpretation): A type that represents a number in memory. This essentially defines the specific number type used for each red, green, and blue value in each pixel. More on [`N0f8` and other number formats](https://juliaimages.org/latest/tutorials/quickstart/#The-0-to-1-intensity-scale).
+
+To summarize, our image is just a matrix of pixels, where each pixel value is represented by a triple of RGB values stored in a memory efficient format. Let's explore next how these numbers connect to how we perceive color.
 """
 
-# ╔═╡ 676ba2d0-d543-49f1-acc7-4bb9b2d2ebac
+# ╔═╡ c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
+begin
+	N_sampled_px = 5
+	resample
+	sample_px = rand(img, N_sampled_px)
+end
+
+# ╔═╡ 9cac3e33-c68a-4f6b-8021-003ba876b4e9
 md"""
-👉 Your notes here
+#### Pixel colors
+
+Below, we sample $(N_sampled_px) random pixels from `img`. Based on how colorful and varied the image is, these pixels can have a range of different colors between them. Pull the slider to look at each of these pixels one by one and/or click the `Resample` button to select $(N_sampled_px) new pixels at random. For convenience, we also display the individual (R, G, B) values next to our slider.
 """
 
-# ╔═╡ 82082413-ed77-4da5-89f9-503e021a2e8e
+# ╔═╡ 1f95d2e2-33f4-4016-84a6-b983ede688b2
+@bind px_img Slider(sample_px; show_value=true)
+
+# ╔═╡ f73c7298-cd97-4539-b85f-25cf69508466
+begin
+	r, g, b = px_img .|> (red, green, blue)
+	
+	md"""
+	Pixel | R | G | B
+	:-:|:-:|:-:|:-:
+	$(px_img) | $(RGB(r, 0, 0)) | $(RGB(0, g, 0)) | $(RGB(0, 0, b))
+	"""
+end
+
+# ╔═╡ 74f5cfda-1513-474a-b23d-7c561db34660
+# Modify the indices below
+img[500:700, 500:700]
+
+# ╔═╡ 57a70e86-625e-4ab4-9309-d618c5edba1b
+img_gray = Gray.(img)
+
+# ╔═╡ 92314a4b-3e05-42bf-a221-7dcf96c015fe
+eltype(img_gray)
+
+# ╔═╡ 79184229-63fa-44e8-a79e-8e6ac6ce485f
+img_data = gray.(img_gray)
+
+# ╔═╡ 94dae9e9-9eb5-406d-b777-976db28d6631
 md"""
-👇 Your code here
+### FITS
+
+[FITS](https://en.wikipedia.org/wiki/FITS) images are already in grayscale and can come packaged with additional metadata (known as *headers*) and data tables that inform us about the observing conditions (e.g., longitude, latitude, gain, exposure time) that our data were taken in. Together these are known as Headers + Data Units (or [*HDUs*](https://heasarc.gsfc.nasa.gov/docs/heasarc/fits_overview.html)), and they can help us reduce systematics from the instrument and environment. Additionally, individual science images can be stacked together to increase the overall signal-to-noise ratio (SNR) of our observations.
+
+!!! note "But why grayscale?"
+	FITS images give us a direct correspondence between the location of the pixel that a particular photon of light falls on in our array, and how strong that signal will be. Images taken at specific wavelengths can then be stacked together to create [full color composite images](https://hubblesite.org/contents/articles/the-meaning-of-light-and-color). The downside for our particular usecase is that these images taken by our eVscope sensor have not been [debayered](https://en.wikipedia.org/wiki/Bayer_filter), which complicates this correspondance. We will explore some of the imaging artifacts that are introduced by this, and potential techniques that we can use to mitigate them.
 """
 
-# ╔═╡ 9299b703-39bf-456e-a4d6-dca649d55b10
-
-
-# ╔═╡ 1f3ef930-d1e7-459c-b4d7-53d43211db3d
+# ╔═╡ 98e95070-f5a9-4d5a-b2c2-14d1b489febe
 md"""
-### H-alpha
+# 📖 Further reading
 
-We aren't limited to just the light that we can see though. Now that we know about colormaps, we can apply arbitrary color assingments to the underlying data to help us gain insight. For example, let's overlay another image of the Antennae galaxy taken with a Hydrogen filter to highlight active star-forming regions that glow brightly in the H-alpha portion of the spectrum. We'll assign this activity to the color maroon:
+Here are some additional resources that may be of interest for taking a deeper dive into color theory and data representation of images.
+
+!!! note ""
+	[Visualization: From Energy to Image](https://science.nasa.gov/ems/04_energytoimage/) _-- NASA_
+	
+	[How Are Webb’s Full-Color Images Made?](https://webbtelescope.org/contents/articles/how-are-webbs-full-color-images-made) _-- JWST_
+	
+	[Images as Data and Arrays](https://computationalthinking.mit.edu/Fall24/images_abstractions/images/) _-- Julia / MIT_
 """
 
-# ╔═╡ a676032f-9b71-4ba7-8855-85504e7e28da
-anthalph = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/hydrogen.fits"))[:, begin+14:end];
+# ╔═╡ 1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
+TableOfContents(depth = 4)
 
-# ╔═╡ ae89b95c-a0ea-4422-afb9-f3d4359c63d2
-img_rgbh = composecolors(
-    [antred, antgreen, antblue, anthalph],
-    ["red", "green", "blue", "maroon1"],
-    stretch = [
-        asinhstretch,
-        asinhstretch,
-        asinhstretch,
-        identity,
-    ],
-    multiplier = [1, 1.7, 1, 0.8],
-)
-
-# ╔═╡ ea3bf49a-4c43-4581-9313-813b6dd7281e
-md"""
-And with that, we now have a scientific image that we can use for future analysis.
+# ╔═╡ 3e9f7a17-b6cb-4c50-b38b-e39f437a5c30
+# Align html tables to the left side of the page by default
+html"""
+<style>
+	table { float: left }
+</style>
 """
-
-# ╔═╡ 9d69e2c0-fa7e-46f6-ba9c-9467eb271524
-TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -372,7 +371,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 AstroImages = "~0.5.1"
-ColorTypes = "~0.12.1"
+ColorTypes = "~0.11.5"
 PlutoUI = "~0.7.71"
 """
 
@@ -382,7 +381,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.4"
 manifest_format = "2.0"
-project_hash = "a956e433ff9dd49f25caafaada94ec166f3f4d83"
+project_hash = "e8d073a2795ce85082fefd600dcb18876dc42694"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -512,19 +511,15 @@ version = "3.31.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
-git-tree-sha1 = "67e11ee83a43eb71ddc950302c53bf33f0690dfe"
+git-tree-sha1 = "b10d0b65641d57b8b4d5e234446582de5047050d"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
-version = "0.12.1"
-weakdeps = ["StyledStrings"]
-
-    [deps.ColorTypes.extensions]
-    StyledStringsExt = "StyledStrings"
+version = "0.11.5"
 
 [[deps.ColorVectorSpace]]
 deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Requires", "Statistics", "TensorCore"]
-git-tree-sha1 = "8b3b6f87ce8f65a2b4f857528fd8d70086cd72b1"
+git-tree-sha1 = "a1f44953f2382ebb937d60dafbe2deea4bd23249"
 uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
-version = "0.11.0"
+version = "0.10.0"
 
     [deps.ColorVectorSpace.extensions]
     SpecialFunctionsExt = "SpecialFunctions"
@@ -534,9 +529,9 @@ version = "0.11.0"
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
-git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
+git-tree-sha1 = "362a287c3aa50601b0bc359053d5c2468f0e7ce0"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
-version = "0.13.1"
+version = "0.12.11"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1267,63 +1262,41 @@ version = "17.7.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─23132c2d-56d6-4e9a-9eef-94f0b0742a00
-# ╟─81f1863b-061b-4660-bb5d-c32b3e543d35
-# ╠═73132792-b67a-41d8-b9c9-d47d52a4660e
-# ╟─43f2ecb7-e601-4231-85fe-451e1f22e3a1
-# ╠═4932a8ce-f62e-4649-ad1f-68eb7eb055a5
-# ╟─d9e3ad1b-b7cc-45c9-9355-3ee508361775
-# ╟─9358d43e-819e-4321-a5b9-064cafbcb9d7
-# ╠═d0796c62-f843-495a-928a-108807d819a9
-# ╟─8640a069-7cab-44ad-abe1-487fce5cde66
-# ╟─75331c88-12e8-4352-9e23-823c25c6751f
-# ╠═b17aac5d-407f-4a7f-8bb7-95025eaa4b48
-# ╟─ca1abb68-1afd-477d-8429-e9f714c92294
-# ╠═b20b026e-1b9f-48a7-8c6e-31bb94442750
-# ╟─51426bfb-ee8b-42de-b110-b8dadea70462
-# ╠═5a93fca5-efa8-46f4-ad6f-cba498680eeb
-# ╟─8bfd0688-49c9-4ed0-9616-8a526c09d638
-# ╟─850418f5-a286-4e78-929f-01247eb34c50
-# ╟─a65e988a-84e2-4f99-b350-1866163062d5
-# ╟─012ff98b-b211-43be-95af-33bc56f6bf7a
-# ╟─1a4e2100-9253-45a5-bc98-4d69d2a5834a
-# ╠═5a8e80e1-8e59-487b-872e-f85a1600ad1a
-# ╟─e4131b85-bb1d-4055-ae6d-49a9e457f235
-# ╠═390ecfb7-cb91-45cc-9284-c7089098fe18
-# ╟─b5b063c8-d575-4574-b1cd-fea7ae04ddfb
-# ╟─bf33e9ce-159c-4367-b462-c966c88f9adf
-# ╟─99e846f2-f139-4b69-91c2-9d170201da90
-# ╠═4d8c748a-6469-4b45-bc9b-268c35a7dc7b
-# ╟─0a39d848-fbe9-4a61-9c5b-7df6376b5387
-# ╠═f535460d-ff47-4108-a561-7e993669b0f7
-# ╟─f4cf7cce-6d86-47cc-afb2-05c7ec46ee3a
-# ╠═eb913b0f-06e5-4915-b89c-53c5812abaab
-# ╟─ed3474d3-0a7b-4ac3-a723-5abb077200f2
-# ╟─f0809836-33ce-4ed6-a4ae-a485f0604cb5
-# ╠═b21dbe98-0731-471f-a68c-2a081d34449c
-# ╟─3770ca9f-c891-4b05-af57-b6a33c8c3656
-# ╠═b3587a50-9937-4ac4-a8c0-0c5eed0ee595
-# ╟─2f473051-e5fb-460d-b4b0-3c5965fe0092
-# ╠═fdac0d23-be08-45da-b9a4-90f94cff73cf
-# ╟─5493b2e6-36cd-4c07-b684-1e14dac2c6f8
-# ╟─292dc021-1da0-4459-9f0f-9b0ae7685eae
-# ╟─4f4e5d63-fb00-4128-8ffb-220ecee9f365
-# ╠═c26c62a8-b013-47b6-868d-8e06cd5cd558
-# ╠═79c158b8-6fd7-48bb-a6b7-7f5ff6e4d987
-# ╠═d27284e3-f118-4ffb-b2f7-48eeb4bce66b
-# ╠═874103b8-140e-41b3-88be-d316ed9f9d85
-# ╟─0a8fd090-36db-4319-86af-32ed69030268
-# ╟─ad234863-91ed-4a29-a679-1de130d36092
-# ╠═91f63c0e-fed1-460a-8309-6bd728872a07
-# ╟─a7201a02-ec80-47b1-ab60-daa483cca97d
-# ╠═676ba2d0-d543-49f1-acc7-4bb9b2d2ebac
-# ╟─82082413-ed77-4da5-89f9-503e021a2e8e
-# ╠═9299b703-39bf-456e-a4d6-dca649d55b10
-# ╟─1f3ef930-d1e7-459c-b4d7-53d43211db3d
-# ╠═a676032f-9b71-4ba7-8855-85504e7e28da
-# ╠═ae89b95c-a0ea-4422-afb9-f3d4359c63d2
-# ╟─ea3bf49a-4c43-4581-9313-813b6dd7281e
-# ╟─9d69e2c0-fa7e-46f6-ba9c-9467eb271524
-# ╟─48d0a70b-62dc-426e-93c4-b21aa20acbfd
+# ╟─8e324690-373d-4139-8350-add89a86c9b0
+# ╟─03eb2bc6-0ff0-46f1-880b-eb702bfe9f70
+# ╟─13204b29-8bb9-42cc-b828-074fdf716087
+# ╟─c1885a59-367e-46dc-a954-4507a4278e5e
+# ╟─d23819bc-ddae-4de7-83b1-58453848d266
+# ╟─1a9ae0d8-9da7-4c60-a088-e242565b4534
+# ╟─af1b84fc-cc08-45e0-a849-fa11c1267b91
+# ╟─e054ca6a-d276-47d5-b8ee-eb63d7d770fa
+# ╟─563781c1-5046-413b-8846-6514cba58d77
+# ╟─1bc51ec7-5dbf-43f7-b158-dc90992a48fe
+# ╟─8769ad1c-9de8-4ee4-b030-a2805f28353f
+# ╠═8eb994d7-c74d-481a-9e75-9c834d23bd18
+# ╠═49ca1b81-2eed-40da-afca-d9d2d51438f6
+# ╟─100d8b5b-9fb3-4008-89cf-b94a9ecd67b3
+# ╟─9cac3e33-c68a-4f6b-8021-003ba876b4e9
+# ╟─d8cd4c83-9b02-43d2-947c-354ec7c51637
+# ╟─c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
+# ╟─1f95d2e2-33f4-4016-84a6-b983ede688b2
+# ╟─f73c7298-cd97-4539-b85f-25cf69508466
+# ╟─5e185421-f0f1-4337-b59f-1752addbbe09
+# ╠═74f5cfda-1513-474a-b23d-7c561db34660
+# ╟─d3caebde-443a-45d8-802d-fa7f10f4a85e
+# ╟─b4c6c60b-b7bc-46a7-9e3c-5f8494fc8068
+# ╠═57a70e86-625e-4ab4-9309-d618c5edba1b
+# ╟─4c0dd0c1-b446-46c2-a190-10eac40d1cc4
+# ╟─807485a1-aae1-4e4f-9787-14254fb8a005
+# ╠═92314a4b-3e05-42bf-a221-7dcf96c015fe
+# ╟─90960427-7433-4528-8cba-03444212d2c0
+# ╠═79184229-63fa-44e8-a79e-8e6ac6ce485f
+# ╟─fc10e422-b881-4b40-8d33-e5f53008045c
+# ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
+# ╟─94dae9e9-9eb5-406d-b777-976db28d6631
+# ╟─98e95070-f5a9-4d5a-b2c2-14d1b489febe
+# ╟─926ae0c8-5dd2-11f0-3c63-e540d51a756c
+# ╟─1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
+# ╟─3e9f7a17-b6cb-4c50-b38b-e39f437a5c30
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

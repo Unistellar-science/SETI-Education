@@ -3,10 +3,10 @@
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/205ie3ne/drtardi-404-seti-institute.png"
-#> title = "III - Introduction to Photometry"
-#> date = "2025-09-19"
-#> tags = ["Week 3", "image processing", "arrays", "FITS", "photometry"]
-#> description = "Learn how to perform simple aperture photometry on an astronomical image."
+#> title = "IV - Time Series"
+#> date = "2025-10-03"
+#> tags = ["asp", "time series"]
+#> description = "Measure light curves from your data. Example eclipsing binary use case included."
 #> layout = "layout.jlhtml"
 
 using Markdown
@@ -24,278 +24,942 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ a084aedc-31c3-49b0-aa7a-fc5088deaca8
+# ╔═╡ 6bc5d30d-2051-4249-9f2a-c4354aa49198
 begin
-	# Notebook widgets
-	using PlutoUI
-
-	# Analysis tools
-	using AstroImages, ColorTypes, Photometry, PlutoPlotly
+	# Notebook UI
+	using PlutoUI, CommonMark
 	
-	# Colormap default settings
-	AstroImages.set_cmap!(nothing)
+	# Data wrangling
+	using CCDReduction, DataDeps, DataFramesMeta
+
+	# Web
+	using HTTP, JSONTables, TableScraper
+	
+	# Visualization and analysis
+	using AstroImages, PlutoPlotly, AstroAngles, Photometry
+	using AstroImages: restrict
+	using Dates, Unitful, Statistics 
+
+	AstroImages.set_cmap!(:cividis)
+
+	# Python
+	using CondaPkg
+	CondaPkg.add("astroalign")
+	CondaPkg.add("numpy"; version="<2")
+	using PythonCall
+
+	# Use DataDeps.jl for dataset management
+	# Auto-download data to current directory by default
+	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
+	ENV["DATADEPS_LOAD_PATH"] = @__DIR__
+	DataDep(
+		"sample_data",
+		"""
+		UCAN Data Files
+		Website: https://www.seti.org/education/ucan/unistellar-education-materials/
+		""",
+		["https://www.dropbox.com/scl/fo/om02nzsex9ql00gcnp0r4/AA11_SrUS2GUwvuMUQm85x8?rlkey=np5upxstx4z6lhcch6tje1b0j&st=st2wzmyp&dl=1"],
+		["f5692a2382a035b892600e962ac950d70176c7137ae5e2d716816fc9c43aab7c"],
+		post_fetch_method = unpack,
+	) |> register
 end;
 
-# ╔═╡ 0c0aebab-c9c2-41a0-931d-c687e2a961f1
+# ╔═╡ ac2acb87-8515-41cf-a762-ca48d8cd269a
 md"""
-# III - Introduction to Photometry
+# IV - Introduction to Time Series
+
+Using the photometric analysis tools developed in the previous notebook, we will now turn to the technique of generalizing this for images taken at multiple times to build a time series science product, aka a light curve. We will use sample eVscope data of an eclipsing binary system as a real life test case, and show how we can find additional targets to study from the American Association of Variable Star Observers ([AAVSO](https://www.aavso.org/)).
 """
 
-# ╔═╡ 59f8b374-4db2-416c-bedc-652f5de7ca7e
+# ╔═╡ aa005b55-626e-41e0-8fe1-137bd7dd5599
 md"""
-## 1. Aperture photometry
+## 1. Background 📖
 
-Now that we have a handle on working with [FITS files](#FITS) and treating images as [arrays of numbers](#3.-Array-representations-%F0%9F%94%A2), let's turn next to one of the fundamental steps of producing a science product from one of our Unistellar science campaigns, [aperture photometry](https://lco.global/spacebook/telescopes/what-is-photometry/). Photometry is the the measurement of the amount of light that falls on our sensor. The aperture is the shape of the imaginary boundary that we are measuring the light within.
+It turns out that the alien world described in the [3 Body Problem](https://www.netflix.com/tudum/articles/3-body-problem-teaser-release-date) is not too far off from what we see in reality. Star systems can be made up of just one star like in our system, three as in the tv show and book series from which the 3 Body Problem [draws its inspiration](https://en.wikipedia.org/wiki/Alpha_Centauri), or even as many as six different stars as in this [recently discovered system](https://science.nasa.gov/universe/exoplanets/discovery-alert-first-six-star-system-where-all-six-stars-undergo-eclipses/)! While these would make for some quite interesting sunsets, a system's stability decreases as more bodies are added. This is partly why the most common star systems we see are singular star systems, followed closely behind by binary systems, which have two stars and account for [nearly two-thirds of all star systems in the Milky Way](https://pweb.cfa.harvard.edu/news/most-milky-way-stars-are-single).
 
-A typical example would be placing an aperture around an imaged star or background part of the sky, and then counting up the total flux within that region. Brighter stars have more flux, and dimmer stars have less flux. For our purposes, each number in our "box-of-numbers" model will be a proxy for our flux measurement at that particular pixel.
-
-Let's explore this in the sample science image below:
+A sub-class of this binary star case, known as eclipsing binaries, has proved to be an invaluable tool for helping us learn more about [orbital mechanics and stellar evolution](https://www.aavso.org/introduction-why-are-eclipsing-binary-stars-important). In these types of systems, not only do these two stars orbit about their common center-of-mass, but they do so along our line of sight. In other words, eclipsing binaries are star systems where each star passes in front of the other from our vantage point. As they do so, the combined light that we receive from both objects will vary in time.
 """
 
-# ╔═╡ 2172fb04-0eb2-4270-8d13-611803e10d21
-@bind reset Button("Reset")
-
-# ╔═╡ 34c5da42-4d8f-4cc4-8c6b-5aad9703b3f7
+# ╔═╡ 4266575e-e19f-48e4-8b21-6f296c6d3f33
 md"""
-What are some things that you notice? Try doing the same analysis on one of your own FITS images on your computer by clicking the `Browse...` button below:
+$(Resource("https://upload.wikimedia.org/wikipedia/commons/transcoded/7/7e/Artist%E2%80%99s_impression_of_eclipsing_binary.ogv/Artist%E2%80%99s_impression_of_eclipsing_binary.ogv.720p.vp9.webm"))
+
+*ESO/L. Calçada*
+
+In this visualization, we see how the observed brightness of an eclipsing binary system changes based on how much of each star is visible at a given point in time from our perspective. When they are both unobstructed the measured brightness is maximum, and when one is partially covered by the other, the combined brightness decreases periodically over time. In this lab, we will capture this dance going on in real time in a fairly popular constellation.
 """
 
-# ╔═╡ b4e9e785-892f-4065-89eb-c353967396d1
-begin
-	reset
-	@bind img_local FilePicker([MIME("image/fits")])
-end
-
-# ╔═╡ 4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
+# ╔═╡ aaaaa4d6-737b-4e53-a3a4-fcac09789d4e
 md"""
-👉 Your notes here
+## 2. Introduction 🤝
 
+[W Ursae Majoris (W UMa)](https://www.aavso.org/vsots_wuma) is an eclipsing binary system located in the [Ursa Major](https://en.wikipedia.org/wiki/Ursa_Major) constellation, and can be seen being chased across the sky by the Big Dipper throughout the night:
 
+$(Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/labs/eclipsing_binary/assets/constellation_WUMa.png?raw=true"))
+
+*W UMa is marked by the larger, red dot to the right of the Big Dipper*
 """
 
-# ╔═╡ fb72c498-2e47-40cc-bdf4-1b9511b8e85f
+# ╔═╡ c1bbb6a2-6996-4fee-a642-a0212b473474
 md"""
-### Estimating net flux
+Discovered in the early 1900s, this system is composed of two main-sequence F-type stars orbiting so closely together that they are expected to be [contact binaries](https://en.wikipedia.org/wiki/Contact_binary), meaning they share a common gaseous envelope. Their proximity to each other also gives this system an astonishingly short orbital period of just over 8 hours. Because of how neatly this fits into an Earth day, eclipse events occur at almost the same time every night, making them the ideal target for regular follow-up study. When the fainter of the two passes in front of the brighter one, we call that a _primary eclipse_, and when the brighter companion passes in front of the fainter one, we call it a _secondary eclipse_.
 
-To compute the net flux (i.e., counts) reported in our table above, we need to determine the flux coming from just the target within our circular aperture. To accomplish this, we subtract off the contributions from the background to the total observed flux. There are many ways to do this, but one common method is to estimate the average number of counts per pixel coming from the background within our annulus, and then use this to subtract the average background flux from the total counts measured from within our target aperture.
+According to the [AAVSO ephemeris](https://milwaukeeastro.org/EB/MAS_EB_2025_10.pdf) for this system, primary eclipse is predicted to occur around **6:00 -- 7:00 UTC**, depending on what part of the month we are in. Due to the similar sizes and spectral types of each star, the eclipse depths for both are fairly similar and can vary by almost a whole apparent magnitude! With a total duration of about three hours, the entire light curve for a given eclipse can be captured in a single night.
 
-Using the reported numbers above, we have:
+!!! tip
+	For more on reading eclipsing binary ephemerides, please see this [AAVSO resource](https://www.aavso.org/how-use-eb-ephemeris).
+"""
 
-```math
-\begin{align}
-	\text{Net flux} &= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background flux}} \\\\
-	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Average background flux} \times \text{Target aperture area}} \\\\
-	&= \textcolor{darkorange}{\text{Target flux}} - \color{darkcyan}\frac{\text{Background aperture flux}}{\text{Background annulus area}} \times \text{Target aperture area} \\\\
-	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\frac{\text{Background aperture flux}}{\pi\left(R_\text{outer, bg}^2 - R_\text{inner, bg}^2\right)} \times \pi R_\text{target}^2} \\\\
-	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background aperture flux} \times \frac{R_\text{target}^2}{R_\text{outer, bg}^2 - R_\text{inner, bg}^2}}
-\end{align}
+# ╔═╡ abb9a9c8-5cac-4af3-b0a0-b7a3608dfe1a
+md"""
+## 3. Data inspection 🔎
+
+For this lab, we will be using eVscope 2 data collected for this target on the night of March 25th, 2024. Observations were taken in the [exoplanet science mode](https://science.unistellar.com/exoplanets/tutorial/) with the following observation parameters:
+
+```
+Observing mode: Exoplanets
+Eclipse mid-point: 23:00 PT
+Eclipse duration: 3 hrs
+Ra: 09h 43m 45.47s
+Dec: +55° 57' 09.07"   
+Duration: 3 hrs
+Exposure time (ms): 1400
+Cadence (ms): 4000
+Recommended Gain (dB): 0
+Max Gain (dB): 1.78
 ```
 
-where ``\color{darkcyan}R_\text{target}`` is the radius of our target aperture, and ``\color{darkcyan}R_\text{outer, bg}`` and ``\color{darkcyan}R_\text{inner, bg}`` are the outer and inner radius of our background annulus aperture, respectively. Try plugging the numbers in your tables above into this formula to confirm that they are consistent with the reported net flux measured.
+
+!!! note
+	The sample data for this lab can be downloaded [here](https://drive.google.com/drive/folders/1P7PTtx9LUnR-QF_SWjszTBjCwpJHZ7AN?usp=sharing).
 """
 
-# ╔═╡ 8eb8326f-b226-42fd-9582-de0744cdc0f1
+# ╔═╡ b360ad74-58b7-47b5-a8b0-437ef1119303
 md"""
-We now have one of the major fundamental tools in our roadmap to producing science products from our Unistellar science campaigns: Photometry. For those interested, the relevant programming commands are shown below:
+Here is a summary of the header information for each science frame taken:
 """
 
-# ╔═╡ 6d2c1121-2547-4125-8709-cd4d11480726
-function tiny(img)
-	imgv = copy(img)
-	
-	while length(eachindex(imgv)) > 10^6
-		imgv = AstroImages.restrict(imgv)
-	end
+# ╔═╡ 74197e45-3b80-44ad-b940-f2544f2f9b54
+Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/labs/eclipsing_binary/assets/finder_WUMa.jpg?raw=true")
 
-	return imgv
+# ╔═╡ a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
+md"""
+Here is the associated header information for our science frame:
+"""
+
+# ╔═╡ 009f2c3f-bc8f-4874-9545-f18d6722284b
+@bind reset Button("Reset")
+
+# ╔═╡ 7d54fd96-b268-4964-929c-d62c7d89b4b2
+md"""
+Uh-oh, we see that our images are literally rotating out from under us! This [field rotation](https://calgary.rasc.ca/field_rotation.htm) and also some drift that needed to be manually corrected partway through the observation are normal effects of taking long duration observations on an alt-az mount. Fortunately, it is fairly manageable to handle this as we will see in the next section.
+"""
+
+# ╔═╡ 1df329a0-629a-4527-8e5d-1dbac9ed8497
+md"""
+## 4. Image alignment 📐
+
+A typical astronomical observation might use the know RA and Dec of the field to [plate solve](https://astrobackyard.com/plate-solving/) each frame against background sources (see, e.g., [astrometry.net](https://astrometry.net/)). This then gives a coordinate transformation (e.g., with the [World Coordinate System (WCS) standard](https://fits.gsfc.nasa.gov/fits_wcs.html)) that can be applied to each frame to align them to a common grid with open source tools like [AstroImageJ](https://www.astro.louisville.edu/software/astroimagej/). Unfortunately, plate solving is a computationally expensive process that can take quite a while, especially if we have a large number of frames. Fortunately, there is a nice alternative that we can use if we do not care about the WCS information: [asterisms](https://en.wikipedia.org/wiki/Asterism_(astronomy)).
+
+In this process, one frame is aligned to another in much the same way that the human brain might try to: by matching common shapes between each frame to each other. This works indpendently of WCS information, so it completely avoids the need to plate solve our images. We will use this method to align our science frames.
+"""
+
+# ╔═╡ bdfc0804-b83a-470f-a6e0-1e030eac63d8
+cm"""
+!!! note
+	If the frame alignment fails, e.g., if you get an error like:
+
+	```
+	MaxIterError: List of matching triangles exhausted before an acceptable transformation was found
+	```
+
+	that means that the parameters passed to our frame alignment routine needs to be adjusted for your particular dataset. Try adjusting one of these parameters below to see if the alignment procedure continues as desired:
+
+	| parameter | description | value |
+	| :-:       | :--         | :-: |
+	| `detection_sigma` | Threshold to be counted as an alignment star. Lower number in slider corresponds to more stars included. | $(@bind detection_sigma Slider(1:5, default=2, show_value=true)) |
+	| `min_area` | The minimum number of pixels that should count as an alignment star. Helps avoid hot pixels. | $(@bind min_area Slider(1:50; default=25, show_value=true)) 
+
+	If this still fails, phone your local scientist, i.e., Ian or Shanil 📞
+"""
+
+# ╔═╡ d6bba196-213e-4c90-8d8e-f2ffc8108da6
+md"""
+!!! tip "Future work"
+	Stay tuned for an upcoming notebook where we will examine this asterism alignment process in more depth!
+"""
+
+# ╔═╡ e7ad4e24-5dc9-4713-836a-be001304e45c
+md"""
+Let's see how our aligned frames look below:
+"""
+
+# ╔═╡ 102ce649-e560-470e-afa5-699db577e148
+md"""
+Nice! The rotation looks to have been successfuly transformed out. We turn next to computing the photometry for our aligned series of frames.
+"""
+
+# ╔═╡ d6d19588-9fa5-4b3e-987a-082345357fe7
+md"""
+## 5. Aperture photometry 🔾
+
+This process is very similar to what was shown in our previous notebook. Only now, instead of computing the photometry for a single image, we will compute it for a series of images and store the results:
+"""
+
+# ╔═╡ 15ad7461-9c40-4755-8f00-14aa3be53e0f
+md"""
+By convention, `t` is our observation time, `x1` is for our target star, and `x2` is for our comparison star. We also scaled the flux of each star by its median observed flux to make the numbers more comfortable to work with. We can now visualize the light curve of our target from our photometry table above:
+"""
+
+# ╔═╡ 17eb5723-71f4-4344-b1b1-41b894e7582b
+md"""
+And divide by our comparison star:
+"""
+
+# ╔═╡ 9d88c884-3187-452d-8453-7f095dac4b03
+md"""
+To try this analysis on you own data:
+
+1. Place your data folder into the same folder as this notebook
+1. Type the name of your data folder below (e.g., `my_data`)
+1. Click `Enter`
+"""
+
+# ╔═╡ 1b71497f-636a-45c8-8f51-728bee091696
+begin
+	reset
+	@bind DATA_DIR_local confirm(TextField(); label = "Enter")
+end
+
+# ╔═╡ 1ede8642-1f36-4aad-bcad-383fd211d31a
+md"""
+!!! note
+	To reload the original sample data, clear the field above and click `Enter` again.
+"""
+
+# ╔═╡ e34ceb7c-1584-41ce-a5b5-3532fac3c03d
+md"""
+### Wrapping up
+
+We now have a light curve of an eclipsing binary captured at the predicted time! By eye, totality looks to have lasted for about half an hour, and the total eclipse duration looks to be close to the three hours estimated by the ephemeris. Not too bad for a quick observation taken from a backyard in the middle of a light polluted city.
+
+Since the total period for this system is about 8 hours, we only caught one of the eclipses, in this case the secondary eclipse. With a more careful treatment of the calibration and data reduction procedures, we might also be able to measure the eclipse depth as well as get a more precise estimate on the "time of minimum" (ToM). The former allows us to determine the size of the eclipsing object relative to its companion, and the latter is the precise time that the two objects are exactly aligned. Measuring the ToM over time create so-called "[O-C curves](https://www.aavso.org/analysis-times-minima-o-c-diagram)", or observed minus calculated (predicted) times over time, which allow us to not only measure the periods of binary systems, but also characterize the stellar and orbital evolution of these dynamic systems.
+"""
+
+# ╔═╡ 276ff16f-95f1-44eb-971d-db65e8821e59
+md"""
+## 6. Extensions 🌱
+"""
+
+# ╔═╡ 934b1888-0e5c-4dcb-a637-5c2f813161d4
+md"""
+### Other systematics
+
+Although this was a fairly bright target with a relatively large [signal-to-noise ratio](http://spiff.rit.edu/classes/ast613/lectures/signal/signal_illus.html), its resulting light curve still contains systematics that can be addressed.
+"""
+
+# ╔═╡ c5286692-2610-414d-97b7-ffab0bd485a7
+md"""
+### Observing other eclipsing binary systems
+
+The AAVSO has a great [web interface](https://targettool.aavso.org/) for finding other potential eclipsing binary targets. Below, we briefly show how this could be accessed in a programmatic fashion using [their API](https://targettool.aavso.org/TargetTool/api). If there is interest, we may publish a separate lab on just this topic.
+"""
+
+# ╔═╡ 4a6a8956-f6e5-433a-a87b-056a5123ffbc
+md"""
+We start by [creating an account](https://targettool.aavso.org/init/default/user/register?_next=/init/default/index) on AAVSO. This will allow us to access their API and set our observing location. Once we are logged in, our API key will be displayed as a string of numbers and letters across the top of the [API webpage](https://targettool.aavso.org/TargetTool/api). Copy this key into a text file in your `data` folder, and name it `.aavso_key`. Select the `Query` button below to submit your query to AAVSO.
+"""
+
+# ╔═╡ 502fe5dd-d55a-450e-9209-60dc05f395dc
+@bind submit_query Button("Submit Query")
+
+# ╔═╡ 14998fe7-8e22-4cd4-87c6-9a5334d218ed
+begin
+	submit_query
+	username = if isfile(".aavso_key")
+		@debug "API key found"
+		readline(".aavso_key")
+	else
+		@debug "No API key found"
+		""
+	end
 end;
 
-# ╔═╡ d388fd60-3884-4944-b30b-61cc8edf544d
-# Julia photometry aperture object --> plotly shape object
-function circ(ap, r=ap.r; line_color=:lightgreen)
+# ╔═╡ 4a779bd1-bcf3-41e1-af23-ed00d29db46f
+md"""
+!!! note
+	This is your personal key. Do not share this with others.
+"""
+
+# ╔═╡ 7f9c4c42-26fc-4d02-805f-97732032b272
+if !isempty(username)
+	md"""
+	We are now ready to query AAVSO for eclipsing binaries observable from our location. Using the [HTTP.jl](https://juliaweb.github.io/HTTP.jl/stable/) package, we send our query using the following format:
+
+	```julia
+	HTTP.get(url; query)
+	```
+	
+	where `url` is entry point into the API (essentially what we would manually type into our browser window):
+	
+	```julia
+	url = "https://{your api key here}:api_token@targettool.aavso.org/TargetTool/api/v1/targets"
+	```
+	
+	and `query` is a key, value map (dictionary) of settings that we would like to pass to the API:
+
+	```julia
+	query = (
+		# :latitude => 37.76329102360394,
+		# :longitude => -122.41190624779506,
+		:obs_section => "eb",
+		:observable => true,
+		:orderby => "period",
+	)
+	```
+	
+	Below is a list from the API page of what each of the inputs mean:
+
+	!!! tip ""
+		`obs_section` An array with observing sections of interest. You may use one or more of: ac,ep,cv,eb,spp,lpv,yso,het,misc,all. Default is \['ac'\] (Alerts & Campaigns).
+		
+		`observable` If true, filters out targets which are visible at the telescope location during the following nighttime period. Default is false.
+		
+		`orderby` Order by any of the output fields below, except for observability\_times and solar\_conjunction.
+		
+		`reverse` If true, reverses the order. Default is false.
+		
+		`latitude` Latitude of telescope. South is negative, North is positive. If not provided, the user's settings are assumed.
+		
+		`longitude` Longitude of telescope. West is negative, East is positive. If not provided, the user's settings are assumed.
+		
+		`targetaltitude` Minimum altitude that the telescope can observe in degrees relative to the horizon. If not provided, the user's settings are assumed.
+		
+		`sunaltitude` Altitude of sun at dusk and dawn in degrees. If not provided, the user's settings are assumed.
+	"""
+end
+
+# ╔═╡ e927297b-9d63-4448-8245-4d73d1fbff27
+md"""
+Feel free to uncomment the lat/long fields below to override the default location set in your profile, or add any additional settings. We store our query in a [DataFrame](https://dataframes.juliadata.org/stable/) to view the first 10 results:
+"""
+
+# ╔═╡ 399f53c5-b654-4330-9ead-4d795917b03b
+if !isempty(username)
+	df_all = let
+		api = "targettool.aavso.org/TargetTool/api/v1/targets"
+		url = "https://$(username):api_token@$(api)"
+		query = (
+			# :latitude => 37.76329102360394,
+			# :longitude => -122.41190624779506,
+			:obs_section => "eb",
+			# :observable => true,
+			:orderby => "period",
+		)
+		r = HTTP.get(url; query)
+		
+		# The table under the `target` field of the JSONTable does not
+		# seem to convert nulls to missings, so using the raw string directly instead
+		DataFrame(jsontable(chop(String(r.body); head=12)))
+	end
+end;
+
+# ╔═╡ edda8d09-ec46-4a0b-b1b2-b1289ee5456e
+!isempty(username) && first(df_all, 10) #|> pretty
+
+# ╔═╡ a00cbbfc-56ce-413a-a7b8-13de8541fa6f
+if !isempty(username)
+	md"""
+	It looks like we have $(nrow(df_all)) hits, great! Let's filter these for targets that are easily observable, i.e., with our following criteria:
+
+	1. Large change in brightness (at least half a mag)
+	2. Fairly short period (period < 3 days)
+	3. Includes an ephemeris (the `other_info` column must include this link)
+
+	!!! note
+		We also prioritize dimmer targets (V > 9.0). The reason for this is that we are taking a time series over the course of hours, which would lead to an unfeasable number of total science frames taken if the exposure time for each one needed to be dialed down for bright targets. Instead, we fix our exposure time to the maximum on eVscopes (4 seconds), and select targets that would not be overexposed at this level.
+	
+	Lastly, we select the columns that we care about and make some visual transforms for convenience (e.g., including units, converting decimal RA and Dec to `[h m s]`, and `[° ' "]` format, respectively, for easy copy-pasting into the Unistellar app):
+	"""
+end
+
+# ╔═╡ 1d2bedb1-509d-4956-8e5a-ad1c0f1ffe26
+md"""
+### Determining observation parameters
+
+Once a target has been found, here's how we might estimate an observing setup for it based on the [Unistellar Exposure Time and Gain Calculator](https://docs.google.com/spreadsheets/d/1niBg5LOkWyR8lCCOOcIo6OHt5kwlc3vnsBsazo7YfXQ/edit#gid=0).
+"""
+
+# ╔═╡ 9c482134-6336-4e72-9d30-87080ebae671
+@bind target PlutoUI.combine() do Child
+	cm"""
+	!!! tip "Observation inputs"
+		Enter your target's visual magnitude and desired exposure time (in milliseconds) below:
+	
+		
+		|``V_\mathrm{mag}``|``t_\mathrm{exp}``|
+		|------------------|------------------|
+		|$(Child(:v_mag, NumberField(1:0.1:20; default=11.7)))|$(Child(:t_exp, NumberField(100:100:4_000; default=3_200))) (ms)
+	"""
+end
+
+# ╔═╡ f2c89a20-09d5-47f4-8f83-e59477723d95
+!isempty(username) && nrow(df_all); # Total number of targets in our list
+
+# ╔═╡ b944bc98-ff4b-4851-89ea-1ee4e3191759
+@py begin
+	import numpy as np
+	import astroalign as aa
+end;
+
+# ╔═╡ 36db58d8-23be-461a-ac75-998c8ad43068
+# Workaround. Apparently just wrapping img in a numpy array fails somewhere
+# maybe in the call to sep within astroalign
+function to_py(img)
+	arr = np.zeros_like(img)
+	PyArray(arr; copy=false) .= img
+	return arr
+end;
+
+# ╔═╡ 03d38a82-4c31-4f3a-9afe-d1caead5e8af
+# Align img2 onto img1
+function align(img2, img1; min_area, detection_sigma)
+	registered_image, footprint = aa.register(
+		to_py(img2),
+		to_py(img1);
+		min_area,
+		detection_sigma,
+	)
+	return shareheader(img2, PyArray(registered_image))
+end;
+
+# ╔═╡ bdc24b15-d14a-422c-a7aa-5335547fa53c
+function align_frames(imgs; min_area, detection_sigma)
+	fixed = first(imgs)
+	frames_aligned = map(imgs[begin+1:end]) do img
+		align(img, fixed; min_area, detection_sigma)
+	end
+	return [fixed, frames_aligned...]
+end;
+
+# ╔═╡ 46e6bba9-0c83-47b7-be17-f41301efa18e
+function to_hms(ra_deci)
+	hms = round.(deg2hms(ra_deci); digits=2)
+	format_angle(hms; delim=["h ", "m ", "s"])
+end;
+
+# ╔═╡ 77544f9e-6053-4ed6-aa9a-4e7a54ca41d9
+function to_dms(ra_deci)
+	dms = round.(deg2dms(ra_deci); digits=2)
+	format_angle(dms; delim=["° ", "' ", "\""])
+end;
+
+# ╔═╡ 3242f19a-83f7-4db6-b2ea-6ca3403e1039
+function get_url(s)
+	url = @chain s begin
+		split("Ephemeris info ")
+		last
+		split("]]")
+		first
+	end
+end;
+
+# ╔═╡ 1e5596fb-7dca-408b-afbd-6ca2e2487d75
+get_shapes(aps; line_color=:lightgreen) = [
+	circle(ap.x - ap.r/2, ap.x + ap.r/2, ap.y - ap.r/2, ap.y + ap.r/2;
+		line_color,
+	)
+	for ap in aps
+];
+
+# ╔═╡ 2ea12676-7b5e-444e-8025-5bf9c05d0e2d
+function ephem(url)
+	st = scrape_tables(url)
+	ephem_blob = st[3].rows
+	if length(ephem_blob[2]) != 4
+		error("Expected ephemeris to have Epoch, Start, Mid, and End. Received: ", ephem_blob[2])
+	end
+	ephem_title, ephem_data... = filter(x -> length(x) == 4, ephem_blob)
+	return ephem_title, ephem_data
+end;
+
+# ╔═╡ d359625e-5a95-49aa-86e4-bc65299dd92a
+function deep_link(;
+	mission = "transit",
+	ra = 0.0,
+	dec = 0.0,
+	c = 4_000,
+	et = 4_000,
+	g = 0.0,
+	d = 0.0,
+	t = 0.0,
+	scitag = "scitag",
+)
+	link = join([
+		"unistellar://science/$(mission)?ra=$(ra)",
+		"dec=$(dec)",
+		"c=$(c)",
+		"et=$(et)",
+		"g=$(g)",
+		"d=$(d)",
+		"t=$(t)",
+		"scitag=$(scitag)",
+	], '&')
+
+	Markdown.parse("[link]($(link))")
+end;
+
+# ╔═╡ 829cde81-be03-4a9f-a853-28f84923d493
+# Make the table view a bit nicer in the browser
+pretty(df) = DataFrames.PrettyTables.pretty_table(HTML, df;
+	maximum_column_width = "max-width",
+	nosubheader = true,
+	alignment = :c,
+);
+
+# ╔═╡ f290d98e-5a8a-44f2-bee5-b93738abe9af
+# Keep these values untouched
+const baseline = (
+	v_mag = 11.7, # V (mag)
+	t_exp = 3200.0, # Exptime (ms)
+	gain = 25.0, # Gain (dB)
+	peak_px = 3000, # Peak Pixel ADU
+);
+
+# ╔═╡ 3c601844-3bb9-422c-ab1e-b40f7e7cb0df
+function flux_factor(target, baseline)
+	f_mag = (target.v_mag - baseline.v_mag) / -2.5 |> exp10
+	f_exp = target.t_exp / baseline.t_exp
+	return f_mag * f_exp 
+end;
+
+# ╔═╡ f26f890b-5924-497c-85a3-eff924d0470b
+# Maximum gain
+max_gain(baseline, f) = baseline.gain - log10(f) / log10(1.122);
+
+# ╔═╡ 95a67d04-0a32-4e55-ac2f-d004ecc9ca84
+# Recommended gain
+rec_gain(g) = Int(round(g, RoundDown) - 1.0);
+
+# ╔═╡ 6cec1700-f2de-4e80-b26d-b23b5f7f1823
+if !isempty(username)
+	df_candidates = @chain df_all begin
+		dropmissing
+		@rsubset begin
+			:min_mag > 9.0 &&
+			:min_mag - :max_mag ≥ 0.5 &&
+			:min_mag_band == "V" && :max_mag_band == "V" &&
+			:period ≤ 3.0 &&
+			startswith(:other_info, "[[Ephemeris")
+		end
+		
+		@rtransform :ephem_url = get_url(:other_info)
+		
+		@rtransform begin
+			:star_name
+			:period = round(Minute, :period * u"d") |> canonicalize
+			:ra = to_hms(:ra)
+			:ra_deci = :ra
+			:dec = to_dms(:dec)
+			:dec_deci = :dec
+			:min_mag
+			# :min_mag_band
+			:max_mag
+			:V_mag = (:min_mag + :max_mag) / 2.0
+			# :max_mag_band
+			# :var_type
+			# :min_mag
+			# :max_mag
+			:ephem_link = Markdown.parse("[link]($(:ephem_url))")
+			:ephem_url
+			# :unix_timestamp = (last ∘ first)(:observability_times)
+		end
+		@rtransform begin
+			:gain = let
+				target = (v_mag=:V_mag, t_exp=4_000) # Default to max exp
+				f_factor = flux_factor(target, baseline) 
+				gain_max = max_gain(baseline, f_factor)
+				rec_gain(gain_max)
+			end
+		end
+	
+		sort(:period)
+
+		@select begin
+			:star_name
+			:period
+			:ra
+			:ra_deci
+			:dec
+			:dec_deci
+			:V_mag
+			:gain
+			:ephem_link
+			:ephem_url
+		end
+	end
+end
+
+# ╔═╡ 95f9803a-86df-4517-adc8-0bcbb0ff6fbc
+if !isempty(username)
+	md"""
+	We now have $(nrow(df_candidates)) prime candidates that we can plan our observations for. Clicking on the `ephem_link` in the last column should take us to a table on AAVSO with the predicted eclipse times for the next month. For convenience, we can also select one of the targets below to generate a table of deep links:
+
+	!!! note
+		This will only work for targets that have a complete ephemeris. All times are in UTC.
+	"""
+end
+
+# ╔═╡ a5f3915c-6eed-480d-9aed-8fdd052a324a
+!isempty(username) && @bind star_name Select(df_candidates.star_name)
+
+# ╔═╡ 3f548bb1-37b0-48b7-a35c-d7701405a64e
+if !isempty(username)
+	df_selected = @rsubset df_candidates :star_name == star_name
+end;
+
+# ╔═╡ 8a39fbbb-6b5b-4744-a875-469c289242fb
+if !isempty(username)
+	df_ephem = let
+		ephem_title, ephem_data = ephem(only(df_selected.ephem_url))
+		df = DataFrame(
+			stack(ephem_data; dims=1),
+			ephem_title,
+		)
+	
+		fmt = dateformat"dd u YYYY HH:MM"
+		@chain df begin
+			@rtransform begin
+				# :Epoch = parse(Float64, :Epoch)
+				:star_name = only(df_selected.star_name)
+				:Start = DateTime(:Start, fmt)
+				:Mid = DateTime(:Mid, fmt)
+				:End = DateTime(:End, fmt)
+				
+			end
+			
+			@rtransform begin
+				:Duration = canonicalize(:End - :Start)
+				:Duration_s = Second(:End - :Start).value
+				:unix_timestamp_ms = 1_000 * datetime2unix(:Mid)
+			end
+		end
+	end
+end;
+
+# ╔═╡ 31c23e2b-1a2d-41aa-81c1-22868e241f7e
+if !isempty(username)
+	df_obs = let
+		df = leftjoin(df_selected, df_ephem; on=:star_name)
+		fmt = dateformat"yymmdd"
+		@rselect df begin
+			:star_name
+			:Start
+			:Mid
+			:End
+			:Duration
+			:deep_link = deep_link(;
+				ra = :ra_deci,
+				dec = :dec_deci,
+				g = :gain,
+				d = round(Int, 1.5 * :Duration_s),
+				t = round(Int, :unix_timestamp_ms),
+				scitag = join([
+					"e",
+					Dates.format(:Mid, fmt),
+					replace(:star_name, " " => ""),
+				]),
+			)
+		end
+	end
+
+	df_obs #|> pretty
+end
+
+# ╔═╡ 90b6ef16-7853-46e1-bbd6-cd1a904c442a
+let
+	f_factor = flux_factor(target, baseline)
+	gain_max = max_gain(baseline, f_factor)
+	gain_recommended = rec_gain(gain_max)
+
+	@debug "Observing params" gain_max gain_recommended
+end
+
+# ╔═╡ 7c078085-ff30-400d-a0ab-2680f468c415
+DATA_DIR = if isempty(DATA_DIR_local)
+	datadep"sample_data"
+else
+	joinpath(@__DIR__, DATA_DIR_local)
+end;
+
+# ╔═╡ 1356c02f-9ff2-491f-b55d-666ee76e6fae
+df_sci = let
+	df = fitscollection(DATA_DIR; abspath=false)
+	@transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
+end
+
+# ╔═╡ 06d26240-81b6-401b-8eda-eab3a9a0fb20
+let
+	obs_start, obs_end = df_sci[:, "DATE-OBS"] |> extrema .|> string
+md"""
+We see that we have $(nrow(df_sci)) fits files taken from $(obs_start) -- $(obs_end) UTC. Here's what that first image looks like compared to its [finder chart](https://astro.swarthmore.edu/transits/finding_charts.cgi):
+"""
+end
+
+# ╔═╡ 2b8c75f6-c148-4c70-be6a-c1a4b95d5849
+img_sci = load(first(df_sci).path); # The semicolon hides automatic output
+
+# ╔═╡ dbe812e2-a795-4caa-842d-07da5eabcade
+img_sci[reverse(begin:end), begin:end]
+
+# ╔═╡ 7d7cd508-be27-4f52-bc13-91c702450167
+header(img_sci)
+
+# ╔═╡ edf5f093-19cc-4802-a777-95d8492996a8
+h = header(img_sci);
+
+# ╔═╡ f6197e8e-3132-4ab5-86d7-32572e337c58
+img_size, img_eltype = size(img_sci), eltype(img_sci);
+
+# ╔═╡ 5abbcbe0-3ee6-4658-9c99-e4567a23e3f6
+md"""
+It looks like this image is $(first(img_size)) x $(last(img_size)) pixels, with the ADU counts for each pixel stored as a $(img_eltype) to reduce memory storage. Now that we know that we are pointing at the right place in the sky, let's take at look at how these images change over time. Drag the slider below to scroll through each of our science frames. (Note for the rest of this notebook that we will be using the default image orientation in the plotting software):
+"""
+
+# ╔═╡ 8f0e6529-bd67-47aa-9ddf-4032a5483a98
+begin
+	X_max, Y_max = img_size
+	X_mid, Y_mid = img_size .÷ 2
+	@bind coords PlutoUI.combine() do Child
+		md"""
+		| | X (pixels) | Y (pixels) | radius (pixels)
+		| :-: | :-: | :-: | :-: |
+		| target |$(Child("x", NumberField(1:X_max; default = 1029))) | $(Child("y", NumberField(1:Y_max; default = 779))) | $(Child("r", NumberField(1:1000; default = 50))) | ----
+		| comparison |$(Child("x_comp", NumberField(1:X_max; default = 1153))) | $(Child("y_comp", NumberField(1:Y_max; default = 711))) | $(Child("r_comp", NumberField(1:1000; default = 50)))
+
+		!!! note "Apertures and comparison stars"
+
+			To better show the frame to frame differences, we also added some sample target and comparison star aperturess (in green and orange, respectively) centered on the first frame in our image series. We use comparison stars to divide out common systematics like atmospheric turbulence and other changes in seeing conditions so that ideally only the target signal will be left.
+		"""
+	end
+end
+
+# ╔═╡ f1ed6484-8f6a-4fbf-9a3d-0fe20360ab3b
+# Aperture object that will be used for photometry
+# (x_center, y_center, radius)
+ap_target = CircularAperture(coords.x, coords.y, coords.r);
+
+# ╔═╡ 954c7918-7dd1-4967-a67b-7856f00dc498
+ap_comp1 = CircularAperture(coords.x_comp, coords.y_comp, coords.r_comp);
+
+# ╔═╡ 381d0147-264b-46f6-82ab-8c840c50c7d1
+aps = [ap_target, ap_comp1];
+
+# ╔═╡ 035fcecb-f998-4644-9650-6aeaced3e41f
+imgs_sci = [load(f.path) for f in eachrow(df_sci)];
+
+# ╔═╡ c06e64ef-4085-4bb5-9b8b-2ed244d5dbe8
+md"""
+Frame number: $(frame_slider = @bind frame_i Slider(1:length(imgs_sci); show_value=true))
+"""
+
+# ╔═╡ 1fe59945-8bce-44f3-b548-9646c2ce6bda
+imgs_sci_aligned = align_frames(imgs_sci; detection_sigma, min_area);
+
+# ╔═╡ 73e16c0e-873c-46a3-a0fd-d7ed5405ed7b
+md"""
+Frame number: $(frame_slider_aligned = @bind frame_i_aligned Slider(1:length(imgs_sci_aligned); show_value=true))
+"""
+
+# ╔═╡ 79c924a7-f915-483d-aee6-94e749d3b004
+aperture_sums = map(imgs_sci_aligned) do img
+	# Returns (x_center, y_center, aperture_sum)
+	# for each aperture
+	p = photometry(aps, img)
+	
+	# Just store the aperture sum for each frame
+	p.aperture_sum
+end;
+
+# ╔═╡ 96dc5bbe-3284-43a0-8c04-c1bb51ad618b
+df_phot = let
+	# `stack` converts to a Matrix
+	# `:auto` names the columns for us
+	# `copycols` sets whether we want a view or copy of the source matrix 
+	data = stack(aperture_sums; dims=1)
+	data ./ median(data; dims=1)
+	
+	df = DataFrame(data, :auto; copycols=false)
+
+	@transform! df begin
+		:x1 = :x1 / median(:x1)
+		:x2 = :x2 / median(:x2)
+	end
+	
+	# Place the observation time in the first column
+	insertcols!(df, 1, :t => df_sci.:"DATE-OBS")
+end
+
+# ╔═╡ 6470b357-4dc6-4b2b-9760-93d64bab13e9
+let
+	# Switch to long "tidy" format to use convenient plotting syntax
+	p = plot(stack(df_phot);
+		x = :t,
+		y = :value,
+		color = :variable,
+		mode = :markers,
+	)
+
+	layout = Layout(
+		xaxis = attr(title="Date (UTC)"),
+		yaxis = attr(title="Relative aperture sum"),
+		title = "Raw light curves",
+		legend_title_text = "Source",
+	)
+	
+	relayout!(p, layout)
+
+	p
+end
+
+# ╔═╡ 59392770-f59e-4188-a675-89c2f2fc67d9
+let
+	sc = scatter(x=df_phot.t, y=df_phot.x1 ./ df_phot.x2, mode = :markers,)
+
+	layout = Layout(
+		xaxis = attr(title="Date (UTC)"),
+		yaxis = attr(title="Relative aperture sum"),
+		title = string("Divided light curve<br>", h["PURPOSE"], " observation: ",  h["DATE-OBS"]),
+		legend_title_text = "Source",
+	)
+	
+	plot(sc, layout)
+end
+
+# ╔═╡ a984c96d-273e-4d6d-bab8-896f14a79103
+TableOfContents(; depth=4)
+
+# ╔═╡ 21e828e5-00e4-40ce-bff5-60a17439bf44
+# Helpful for not having ginormous plot objects
+r2(img) = (restrict ∘ restrict)(img);
+
+# ╔═╡ e35d4be7-366d-4ca5-a89a-5de24e4c6677
+function htrace(img;
+	zmin = 2_400,
+	zmax = 3_200,
+	title = "ADU",
+	restrict = true,
+)
+	if restrict
+		img_small = r2(img)
+	else
+		img_small = img
+	end
+
+	img_small = permutedims(img_small)
+		
+	heatmap(;
+		x = img_small.dims[1].val,
+		y = img_small.dims[2].val,
+		z = img_small.data,
+		zmin,
+		zmax,
+		colorbar = attr(; title),
+		colorscale = :Cividis,
+	)
+end;
+
+# ╔═╡ a3bcad72-0e6c-43f8-a08d-777a154190d8
+function circ(ap; line_color=:lightgreen)
 	circle(
-		ap.x - r, # x_min
-		ap.x + r, # x_max
-		ap.y - r, # y_min
-		ap.y + r; # y_max
+		ap.x - ap.r, # x_min
+		ap.x + ap.r, # x_max
+		ap.y - ap.r, # y_min
+		ap.y + ap.r; # y_max
 		line_color,
 	)
 end;
 
-# ╔═╡ 829636f7-3d2b-4a30-8c92-523427335fc9
-# Plotly heatmap trace of img
-function htrace(img;
-	zlims,
-	title = "ADU",
-	restrict = true,
-)
-		
-	# Account for plotly orientation convention
-	img = permutedims(img)
-	
-	# dims is used here to convert back from an offset array
-	# to a simple array that JS can ingest
-	zmin, zmax = zlims
-	
-	heatmap(;
-		x = dims(img, X).val,
-		y = dims(img, Y).val,
-		z = Matrix{Float32}(img.data),
-		zmin,
-		zmax,
-		colorbar = attr(; title),
-		colorscale = "Cividis",
-	)
-end;
+# ╔═╡ 2e59cc0d-e477-4826-b8b6-d2d68c8592a9
+# Convert to plotly objects for plotting
+shapes = [
+	circ(ap_target),
+	circ(ap_comp1; line_color=:orange),
+	# circ(ap_comp2; line_color=:orange),
+];
 
-# ╔═╡ 10e72b6f-8261-4093-af4c-c3bd698db7d2
-# Combines plotly trace and layout into a plot object
-function plot_img(img; zlims=Percent(99.5)(img), restrict = true)
-	imgv = (tiny ∘ AstroImage)(img)
-	# imgv = img
-	
-	hm = htrace(imgv; zlims, restrict)
+# ╔═╡ 8da80446-84d7-44bb-8122-874b4c9514f4
+timestamp(img) = header(img)["DATE-OBS"];
+
+# ╔═╡ 24256769-2274-4b78-8445-88ec4536c407
+function plot_img(i, img; zmin=2400, zmax=3200, restrict=true)
+	hm = htrace(img; zmin, zmax, restrict)
 	
 	l = Layout(;
-		# width,
-		# height,
-		# title = timestamp(img),
-		xaxis = attr(title = "X", constrain = "domain"),
-		yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
+		#width,
+		#height,
+		title = string("Frame $(i): ", timestamp(img)),
+		xaxis = attr(title="X", constrain=:domain),
+		yaxis = attr(title="Y", scaleanchor=:x, constrain=:domain),
 		uirevision = 1,
 	)
 
 	plot(hm, l)
 end;
 
-# ╔═╡ eb63b8dc-644d-4b91-85a2-72e927fd1f1d
-img_sci = if isnothing(img_local)
-	img = (load ∘ download)("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png")
-		img_data = img .|> Gray .|> gray
-		img_data_corner = img_data[1:500, 1:500]
-		AstroImage(img_data_corner)
-else
-	path = tempname() * img_local["name"]
-	write(path, img_local["data"])
-	load(path)
-end;
-
-# ╔═╡ 01f950ec-fb20-4b6f-837c-a8cfaeada5de
-begin
-	img_size = size(img_sci)
-	X_max, Y_max = img_size
-	X_mid, Y_mid = img_size .÷ 2
-	@bind coords PlutoUI.combine() do Child
-		md"""
-		!!! tip ""
-			Try changing the values below to choose where our circular aperture and circular annulus aperture should be placed. The resulting aperture sums displayed below will update automatically.
-		
-		| | X (pixels) | Y (pixels) | radius -- inner (pixels) | radius -- outer (pixels)
-		| :-: | :-: | :-: | :-: | :-:
-		| target |$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:1000; default = X_mid ÷ 4))) | ----
-		| background |$(Child("x_bg", NumberField(1:X_max; default = X_mid))) | $(Child("y_bg", NumberField(1:Y_max; default = Y_mid))) | $(Child("r_in", NumberField(1:1000; default = 1.4 * (X_mid ÷ 4)))) | $(Child("r_out", NumberField(1:1000; default = 1.7 * (X_mid ÷ 4))))
-		"""
-	end
-end
-
-# ╔═╡ 4583909c-7171-49c2-aff6-71d45860072d
-# Define the aperture based on `coords` specified in the above table
-ap = CircularAperture(coords.x, coords.y, coords.r);
-
-# ╔═╡ 17d9d7e6-1082-4053-97f7-60e72d16f61b
-# Area of circular aperture
-area = sum(ap) # Could also do π * ap.r^2
-
-# ╔═╡ 63187c16-c3b8-47a5-9086-02c1aad6b812
-ap_bg = CircularAnnulus(
-	coords.x_bg,
-	coords.y_bg,
-	coords.r_in,
-	coords.r_out,
-);
-
-# ╔═╡ 01de070f-9672-47e1-b4c0-cfefe711decb
+# ╔═╡ 86e53a41-ab0d-4d9f-8a80-855949847ba2
 let
-	p = plot_img(img_sci)
-
-	shapes = [
-		circ(ap; line_color = :darkorange),
-		circ(ap_bg, ap_bg.r_in; line_color = :cyan),
-		circ(ap_bg, ap_bg.r_out; line_color = :cyan),
-	]
-	
+	zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs_sci))
+	p = plot_img(frame_i, imgs_sci[frame_i]; zmin, zmax)
 	relayout!(p; shapes)
-
 	p
 end
 
-# ╔═╡ e92ec2b0-ec60-4088-896b-95817b865f46
-# Area of elliptical aperture
-area_bg = sum(ap_bg) # Could also do π * (ap_bg.r_out^2 - ap_bg.r_in^2)
-
-# ╔═╡ a67b9093-e47f-423e-9bac-7c16d4b4d2eb
-# Compute photometry in each aperture
-phot, phot_bg = photometry([ap, ap_bg], img_sci)
-
-# ╔═╡ c6f3eceb-19f5-4e97-80bd-deadb7573807
-# Total flux measured in target aperture
-flux_total = phot.aperture_sum
-
-# ╔═╡ bf699c80-1a3a-47f0-baea-50f2490124b9
-# Total flux measured in background annulus
-flux_total_bg = phot_bg.aperture_sum
-
-# ╔═╡ 8017131c-6168-499a-899a-e6d2c1d0479b
-# Average flux per pixel in background annulus
-flux_avg_bg = flux_total_bg  / area_bg
-
-# ╔═╡ 7b893abf-4c4a-4a8f-902c-109af1c6158f
-# Background flux contribution in target aperture
-flux_bg = flux_avg_bg * area
-
-# ╔═╡ 0e1419c4-b1cb-4a36-b0f7-1917275b2d7b
-# Net flux (target flux - background flux)
-flux_net = flux_total - flux_bg
-
-# ╔═╡ f29af2e3-05f7-4e06-b917-ca50e337da13
-"""
-!!! note "Photometry"
-
-	| Target flux (counts) | Background aperture flux (counts) | Net flux (counts)
-	| :-:    | :-:     | :-:
-	| $(round(Int, phot.aperture_sum)) | $(round(Int, phot_bg.aperture_sum)) | $(round(Int, flux_net))
-""" |> Markdown.parse
-
-# ╔═╡ 4c6d5896-a854-409b-a8c2-9d00fb695ca5
-html"""
-<style>
-	th {
-		font-size: 16pt
-	}
-	pluto-output table > tbody td {
-	  font-size: 14pt
-	}
-</style>
-"""
-
-# ╔═╡ 93ba05ff-09c3-49f6-ba63-d97fb341325c
-PlutoUI.TableOfContents()
+# ╔═╡ f3683998-543c-4bc4-8b73-fc1de6a6a955
+let
+	zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs_sci))
+	p = plot_img(frame_i_aligned, imgs_sci_aligned[frame_i_aligned]; zmin, zmax)
+	relayout!(p; shapes)
+	p
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AstroAngles = "5c4adb95-c1fc-4c53-b4ea-2a94080c53d2"
 AstroImages = "fe3fc30c-9b16-11e9-1c73-17dabf39f4ad"
-ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+CCDReduction = "b790e538-3052-4cb9-9f1f-e05859a455f5"
+CommonMark = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSONTables = "b9914132-a727-11e9-1322-f18e41205b0b"
 Photometry = "af68cb61-81ac-52ed-8703-edc140936be4"
 PlutoPlotly = "8e989ff0-3d88-8e9f-f020-2b208a939ff0"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+TableScraper = "3d876f86-fca9-45cb-9864-7207416dc431"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
+AstroAngles = "~0.2.0"
 AstroImages = "~0.5.1"
-ColorTypes = "~0.11.5"
+CCDReduction = "~0.2.3"
+CommonMark = "~0.9.1"
+CondaPkg = "~0.2.33"
+DataDeps = "~0.7.13"
+DataFramesMeta = "~0.15.4"
+HTTP = "~1.10.19"
+JSONTables = "~1.0.3"
 Photometry = "~0.9.6"
 PlutoPlotly = "~0.6.4"
 PlutoUI = "~0.7.71"
+PythonCall = "~0.9.28"
+TableScraper = "~0.1.4"
+Unitful = "~1.25.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -304,7 +968,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.4"
 manifest_format = "2.0"
-project_hash = "e04b88b60f7f722e00b534d3ba26fb899dfcc559"
+project_hash = "6826d2084f5b9b9a7ac3e163e2c259f75a27f7ed"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -322,6 +986,11 @@ deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "2d9c9a55f9c93e8887ad391fbae72f8ef55e1177"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.4.5"
 
 [[deps.Accessors]]
 deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "MacroTools"]
@@ -349,9 +1018,9 @@ version = "0.1.42"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "f7817e2e585aa6d924fd714df1e2a84be7896c60"
+git-tree-sha1 = "7e35fca2bdfba44d797c53dfe63a51fabf39bfc0"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.3.0"
+version = "4.4.0"
 weakdeps = ["SparseArrays", "StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -471,11 +1140,22 @@ git-tree-sha1 = "e38fbc49a620f5d0b660d7f543db1009fe0f8336"
 uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 version = "1.6.0"
 
+[[deps.BitFlags]]
+git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
+uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
+version = "0.1.9"
+
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "1b96ea4a01afe0ea4090c5c8039690672dd13f2e"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.9+0"
+
+[[deps.CCDReduction]]
+deps = ["DataFrames", "FITSIO", "LazyStack", "ResumableFunctions", "Statistics"]
+git-tree-sha1 = "4b3eb62b3a20d36ce1cb4b633c51b34627a0ced3"
+uuid = "b790e538-3052-4cb9-9f1f-e05859a455f5"
+version = "0.2.3"
 
 [[deps.CEnum]]
 git-tree-sha1 = "389ad5c84de1ae7cf0e28e381131c98ea87d54fc"
@@ -506,11 +1186,22 @@ git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
 
+[[deps.Cascadia]]
+deps = ["AbstractTrees", "Gumbo"]
+git-tree-sha1 = "c0769cbd930aea932c0912c4d2749c619a263fc1"
+uuid = "54eefc05-d75b-58de-a785-1a3403f0919f"
+version = "1.0.2"
+
 [[deps.CatIndices]]
 deps = ["CustomUnitRanges", "OffsetArrays"]
 git-tree-sha1 = "a0f80a09780eed9b1d106a1bf62041c2efc995bc"
 uuid = "aafaddc9-749c-510e-ac4f-586e18779b91"
 version = "0.2.2"
+
+[[deps.Chain]]
+git-tree-sha1 = "9ae9be75ad8ad9d26395bf625dea9beac6d519f1"
+uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+version = "0.6.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
@@ -562,6 +1253,12 @@ git-tree-sha1 = "362a287c3aa50601b0bc359053d5c2468f0e7ce0"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.11"
 
+[[deps.CommonMark]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "351d6f4eaf273b753001b2de4dffb8279b100769"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "0.9.1"
+
 [[deps.CommonSubexpressions]]
 deps = ["MacroTools"]
 git-tree-sha1 = "cda2cfaebb4be89c9084adaca7dd7333369715c5"
@@ -575,9 +1272,9 @@ version = "1.0.0"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
-git-tree-sha1 = "0037835448781bb46feb39866934e243886d756a"
+git-tree-sha1 = "9d8a54ce4b17aa5bdce0ea5c34bc5e7c340d16ad"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.18.0"
+version = "4.18.1"
 weakdeps = ["Dates", "LinearAlgebra"]
 
     [deps.Compat.extensions]
@@ -602,6 +1299,18 @@ git-tree-sha1 = "52cb3ec90e8a8bea0e62e275ba577ad0f74821f7"
 uuid = "ed09eef8-17a6-5b46-8889-db040fac31e3"
 version = "0.3.2"
 
+[[deps.ConcurrentUtilities]]
+deps = ["Serialization", "Sockets"]
+git-tree-sha1 = "d9d26935a0bcffc87d2613ce14c527c99fc543fd"
+uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
+version = "2.5.0"
+
+[[deps.CondaPkg]]
+deps = ["JSON3", "Markdown", "MicroMamba", "Pidfile", "Pkg", "Preferences", "Scratch", "TOML", "pixi_jll"]
+git-tree-sha1 = "bd491d55b97a036caae1d78729bdb70bf7dababc"
+uuid = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+version = "0.2.33"
+
 [[deps.ConstructionBase]]
 git-tree-sha1 = "b4b092499347b18a015186eae3042f72267106cb"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
@@ -619,6 +1328,11 @@ git-tree-sha1 = "a692f5e257d332de1e554e4566a4e5a8a72de2b2"
 uuid = "150eb455-5306-5404-9cee-2592286d6298"
 version = "0.6.4"
 
+[[deps.Crayons]]
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
+uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+version = "4.1.1"
+
 [[deps.CustomUnitRanges]]
 git-tree-sha1 = "1a3f97f907e6dd8983b744d2642651bb162a3f7a"
 uuid = "dc8bdbbb-1ca9-579f-8c36-e416f6a65cce"
@@ -628,6 +1342,24 @@ version = "1.0.2"
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.16.0"
+
+[[deps.DataDeps]]
+deps = ["HTTP", "Libdl", "Reexport", "SHA", "Scratch", "p7zip_jll"]
+git-tree-sha1 = "8ae085b71c462c2cb1cfedcb10c3c877ec6cf03f"
+uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+version = "0.7.13"
+
+[[deps.DataFrames]]
+deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "c967271c27a95160e30432e011b58f42cd7501b5"
+uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+version = "1.8.0"
+
+[[deps.DataFramesMeta]]
+deps = ["Chain", "DataFrames", "MacroTools", "OrderedCollections", "Reexport", "TableMetadataTools"]
+git-tree-sha1 = "21a4335f249f8b5f311d00d5e62938b50ccace4e"
+uuid = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
+version = "0.15.4"
 
 [[deps.DataStructures]]
 deps = ["OrderedCollections"]
@@ -740,6 +1472,12 @@ git-tree-sha1 = "d6863c556f1142a061532e79f611aa46be201686"
 uuid = "90fa49ef-747e-5e6f-a989-263ba693cf1a"
 version = "0.5.2"
 
+[[deps.ExceptionUnwrapping]]
+deps = ["Test"]
+git-tree-sha1 = "d36f682e590a83d63d1c7dbd287573764682d12a"
+uuid = "460bff9d-24e4-43bc-9d9f-a8973cb893f4"
+version = "0.1.11"
+
 [[deps.ExprTools]]
 git-tree-sha1 = "27415f162e6028e81c72b82ef756bf321213b6ec"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
@@ -785,12 +1523,10 @@ deps = ["Pkg", "Requires", "UUIDs"]
 git-tree-sha1 = "b66970a70db13f45b7e57fbda1736e1cf72174ea"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.17.0"
+weakdeps = ["HTTP"]
 
     [deps.FileIO.extensions]
     HTTPExt = "HTTP"
-
-    [deps.FileIO.weakdeps]
-    HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -839,6 +1575,24 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "6570366d757b50fabae9f4315ad74d2e40c0560a"
 uuid = "59f7168a-df46-5410-90c8-f2779963d0ec"
 version = "5.2.3+0"
+
+[[deps.Gumbo]]
+deps = ["AbstractTrees", "Gumbo_jll", "Libdl"]
+git-tree-sha1 = "eab9e02310eb2c3e618343c859a12b51e7577f5e"
+uuid = "708ec375-b3d6-5a57-a7ce-8257bf98657a"
+version = "0.8.3"
+
+[[deps.Gumbo_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "29070dee9df18d9565276d68a596854b1764aa38"
+uuid = "528830af-5a63-567c-a44a-034ed33b8444"
+version = "0.10.2+0"
+
+[[deps.HTTP]]
+deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
+git-tree-sha1 = "5e6fe50ae7f23d171f44e311c2960294aaa0beb5"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "1.10.19"
 
 [[deps.HashArrayMappedTries]]
 git-tree-sha1 = "2eaa69a7cab70a52b9687c8bf950a5a93ec895ae"
@@ -942,6 +1696,19 @@ git-tree-sha1 = "4da0f88e9a39111c2fa3add390ab15f3a44f3ca3"
 uuid = "22cec73e-a1b8-11e9-2c92-598750a2cf9c"
 version = "0.3.1"
 
+[[deps.InlineStrings]]
+git-tree-sha1 = "8f3d257792a522b4601c24a577954b0a8cd7334d"
+uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
+version = "1.4.5"
+
+    [deps.InlineStrings.extensions]
+    ArrowTypesExt = "ArrowTypes"
+    ParsersExt = "Parsers"
+
+    [deps.InlineStrings.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
+    Parsers = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
 git-tree-sha1 = "ec1debd61c300961f98064cfb21287613ad7f303"
@@ -963,14 +1730,11 @@ deps = ["Adapt", "AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArr
 git-tree-sha1 = "65d505fa4c0d7072990d659ef3fc086eb6da8208"
 uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 version = "0.16.2"
+weakdeps = ["ForwardDiff", "Unitful"]
 
     [deps.Interpolations.extensions]
     InterpolationsForwardDiffExt = "ForwardDiff"
     InterpolationsUnitfulExt = "Unitful"
-
-    [deps.Interpolations.weakdeps]
-    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.IntervalArithmetic]]
 deps = ["CRlibm", "EnumX", "FastRounding", "LinearAlgebra", "Markdown", "Random", "RecipesBase", "RoundingEmulator", "SetRounding", "StaticArrays"]
@@ -1043,6 +1807,12 @@ version = "1.14.3"
     [deps.JSON3.weakdeps]
     ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
+[[deps.JSONTables]]
+deps = ["JSON3", "StructTypes", "Tables"]
+git-tree-sha1 = "13f7485bb0b4438bb5e83e62fcadc65c5de1d1bb"
+uuid = "b9914132-a727-11e9-1322-f18e41205b0b"
+version = "1.0.3"
+
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
 git-tree-sha1 = "9496de8fb52c224a2e3f9ff403947674517317d9"
@@ -1097,6 +1867,12 @@ git-tree-sha1 = "e360e9c943387c8b416ddc0025204277abfd7042"
 uuid = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
 version = "5.0.0"
 
+[[deps.LazyStack]]
+deps = ["ChainRulesCore", "Compat", "LinearAlgebra"]
+git-tree-sha1 = "aff621f1f49e9262a34aaf0d57d02ea3b35aec60"
+uuid = "1fad7336-0346-5a1a-a56f-a06ba010965b"
+version = "0.1.3"
+
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
@@ -1134,9 +1910,9 @@ version = "1.7.1+1"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
-git-tree-sha1 = "4ab7581296671007fc33f07a721631b8855f4b1d"
+git-tree-sha1 = "f04133fe05eff1667d2054c53d59f9122383fe05"
 uuid = "89763e89-9b03-5906-acba-b20f662cd828"
-version = "4.7.1+0"
+version = "4.7.2+0"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
@@ -1162,6 +1938,12 @@ version = "0.3.29"
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 version = "1.11.0"
+
+[[deps.LoggingExtras]]
+deps = ["Dates", "Logging"]
+git-tree-sha1 = "f00544d95982ea270145636c181ceda21c4e2575"
+uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
+version = "1.2.0"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
@@ -1191,15 +1973,33 @@ version = "1.11.0"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON3", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test"]
-git-tree-sha1 = "9603279ae328cb943a5f36ecd40de2774b5646d3"
+git-tree-sha1 = "700acfa97a2b23569c0a6dcfcd85f183d7258e31"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.44.0"
+version = "1.45.0"
+
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
+git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.1.9"
+
+[[deps.MbedTLS_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "926c6af3a037c68d02596a44c22ec3595f5f760b"
+uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
+version = "2.28.6+0"
 
 [[deps.MicroCollections]]
 deps = ["Accessors", "BangBang", "InitialValues"]
 git-tree-sha1 = "44d32db644e84c75dab479f1bc15ee76a1a3618f"
 uuid = "128add7d-3638-4c79-886c-908ea0c25c34"
 version = "0.2.0"
+
+[[deps.MicroMamba]]
+deps = ["Pkg", "Scratch", "micromamba_jll"]
+git-tree-sha1 = "011cab361eae7bcd7d278f0a7a00ff9c69000c51"
+uuid = "0b3b1443-0f03-428d-bdfb-f27f9c1191ea"
+version = "0.1.14"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -1223,9 +2023,9 @@ version = "2025.11.4"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "a03ae6a640a92191615fb53baae6a74b74bce56d"
+git-tree-sha1 = "5801388fbfb801822721b5dee720a55a6d03d41d"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.6.5"
+version = "1.6.6"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
@@ -1280,6 +2080,12 @@ deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.7+0"
 
+[[deps.OpenSSL]]
+deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
+git-tree-sha1 = "f1a7e086c677df53e064e0fdd2c9d0b0833e3f6e"
+uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
+version = "1.5.0"
+
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
@@ -1325,6 +2131,12 @@ deps = ["ImageFiltering", "ImageTransformations", "Interpolations", "LazySets", 
 git-tree-sha1 = "7ef9827b25d13d64b2b88952223d6eedfa9fcf43"
 uuid = "af68cb61-81ac-52ed-8703-edc140936be4"
 version = "0.9.6"
+
+[[deps.Pidfile]]
+deps = ["FileWatching", "Test"]
+git-tree-sha1 = "2d8aaf8ee10df53d0dfb9b8ee44ae7c04ced2b03"
+uuid = "fa939f87-e72e-5be4-a000-7fc836dbe307"
+version = "1.3.0"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -1385,6 +2197,12 @@ git-tree-sha1 = "8329a3a4f75e178c11c1ce2342778bcbbbfa7e3c"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.71"
 
+[[deps.PooledArrays]]
+deps = ["DataAPI", "Future"]
+git-tree-sha1 = "36d8b4b899628fb92c2749eb488d884a926614d3"
+uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
+version = "1.4.3"
+
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
 git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
@@ -1396,6 +2214,12 @@ deps = ["TOML"]
 git-tree-sha1 = "0f27480397253da18fe2c12a4ba4eb9eb208bf3d"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.5.0"
+
+[[deps.PrettyTables]]
+deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "REPL", "Reexport", "StringManipulation", "Tables"]
+git-tree-sha1 = "5e9fe23c86d3ca630baa1efcad78575a27f158b2"
+uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+version = "3.0.11"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1417,6 +2241,20 @@ version = "1.11.0"
 git-tree-sha1 = "1d36ef11a9aaf1e8b74dacc6a731dd1de8fd493d"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
 version = "1.3.0"
+
+[[deps.PythonCall]]
+deps = ["CondaPkg", "Dates", "Libdl", "MacroTools", "Markdown", "Pkg", "Serialization", "Tables", "UnsafePointers"]
+git-tree-sha1 = "34510e11cabd7964291f32f14d28b367e9960e6e"
+uuid = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+version = "0.9.28"
+
+    [deps.PythonCall.extensions]
+    CategoricalArraysExt = "CategoricalArrays"
+    PyCallExt = "PyCall"
+
+    [deps.PythonCall.weakdeps]
+    CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+    PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 
 [[deps.QOI]]
 deps = ["ColorTypes", "FileIO", "FixedPointNumbers"]
@@ -1484,6 +2322,12 @@ git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.1"
 
+[[deps.ResumableFunctions]]
+deps = ["Logging", "MacroTools"]
+git-tree-sha1 = "ff561071ec94fa68117ae1b64ef35ac6e80f1088"
+uuid = "c5292f4c-5179-55e1-98c5-05642aab7184"
+version = "1.0.4"
+
 [[deps.Rotations]]
 deps = ["LinearAlgebra", "Quaternions", "Random", "StaticArrays"]
 git-tree-sha1 = "5680a9276685d392c87407df00d57c9924d9f11e"
@@ -1505,9 +2349,14 @@ version = "0.7.0"
 
 [[deps.SIMD]]
 deps = ["PrecompileTools"]
-git-tree-sha1 = "fea870727142270bdf7624ad675901a1ee3b4c87"
+git-tree-sha1 = "e24dc23107d426a096d3eae6c165b921e74c18e4"
 uuid = "fdea26ae-647d-5447-a871-4b548cad5224"
-version = "3.7.1"
+version = "3.7.2"
+
+[[deps.SciMLPublic]]
+git-tree-sha1 = "ed647f161e8b3f2973f24979ec074e8d084f1bee"
+uuid = "431bcebd-1456-4ced-9d72-93c2757fff0b"
+version = "1.0.0"
 
 [[deps.ScopedValues]]
 deps = ["HashArrayMappedTries", "Logging"]
@@ -1520,6 +2369,12 @@ deps = ["Dates"]
 git-tree-sha1 = "9b81b8393e50b7d4e6d0a9f14e192294d3b7c109"
 uuid = "6c6a2e73-6563-6170-7368-637461726353"
 version = "1.3.0"
+
+[[deps.SentinelArrays]]
+deps = ["Dates", "Random"]
+git-tree-sha1 = "712fb0231ee6f9120e005ccd56297abbc053e7e0"
+uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
+version = "1.4.8"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -1540,6 +2395,11 @@ version = "1.1.2"
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 version = "1.11.0"
+
+[[deps.SimpleBufferStream]]
+git-tree-sha1 = "f305871d2f381d21527c770d4788c06c097c9bc1"
+uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
+version = "1.2.0"
 
 [[deps.SimpleTraits]]
 deps = ["InteractiveUtils", "MacroTools"]
@@ -1570,9 +2430,9 @@ version = "1.12.0"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "41852b8679f78c8d8961eeadc8f62cef861a52e3"
+git-tree-sha1 = "f2685b435df2613e25fc10ad8c26dddb8640f547"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.5.1"
+version = "2.6.1"
 weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
@@ -1603,10 +2463,10 @@ uuid = "cae243ae-269e-4f55-b966-ac2d0dc13c15"
 version = "0.1.2"
 
 [[deps.Static]]
-deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools"]
-git-tree-sha1 = "f737d444cb0ad07e61b3c1bef8eb91203c321eff"
+deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools", "SciMLPublic"]
+git-tree-sha1 = "1e44e7b1dbb5249876d84c32466f8988a6b41bbb"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "1.2.0"
+version = "1.3.0"
 
 [[deps.StaticArrayInterface]]
 deps = ["ArrayInterface", "Compat", "IfElse", "LinearAlgebra", "PrecompileTools", "Static"]
@@ -1657,6 +2517,12 @@ git-tree-sha1 = "2c962245732371acd51700dbb268af311bddd719"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.34.6"
 
+[[deps.StringManipulation]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "725421ae8e530ec29bcbdddbe91ff8053421d023"
+uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
+version = "0.4.1"
+
 [[deps.StructTypes]]
 deps = ["Dates", "UUIDs"]
 git-tree-sha1 = "159331b30e94d7b11379037feeb9b690950cace8"
@@ -1676,6 +2542,18 @@ version = "7.8.3+2"
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 version = "1.0.3"
+
+[[deps.TableMetadataTools]]
+deps = ["DataAPI", "Dates", "TOML", "Tables", "Unitful"]
+git-tree-sha1 = "c0405d3f8189bb9a9755e429c6ea2138fca7e31f"
+uuid = "9ce81f87-eacc-4366-bf80-b621a3098ee2"
+version = "0.1.0"
+
+[[deps.TableScraper]]
+deps = ["Cascadia", "Gumbo", "HTTP", "Tables"]
+git-tree-sha1 = "73e600bad3a9b6c04c8a055e316fd60dd2ab372c"
+uuid = "3d876f86-fca9-45cb-9864-7207416dc431"
+version = "0.1.4"
 
 [[deps.TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
@@ -1773,6 +2651,32 @@ version = "1.0.2"
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 version = "1.11.0"
+
+[[deps.Unitful]]
+deps = ["Dates", "LinearAlgebra", "Random"]
+git-tree-sha1 = "cec2df8cf14e0844a8c4d770d12347fda5931d72"
+uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
+version = "1.25.0"
+
+    [deps.Unitful.extensions]
+    ConstructionBaseUnitfulExt = "ConstructionBase"
+    ForwardDiffExt = "ForwardDiff"
+    InverseFunctionsUnitfulExt = "InverseFunctions"
+    LatexifyExt = ["Latexify", "LaTeXStrings"]
+    PrintfExt = "Printf"
+
+    [deps.Unitful.weakdeps]
+    ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
+    LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+    Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+    Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.UnsafePointers]]
+git-tree-sha1 = "c81331b3b2e60a982be57c046ec91f599ede674a"
+uuid = "e17b2a0c-0bdf-430a-bd0c-3a23cae4ff39"
+version = "1.0.0"
 
 [[deps.WCS]]
 deps = ["ConstructionBase", "WCS_jll"]
@@ -1874,6 +2778,12 @@ git-tree-sha1 = "4e4282c4d846e11dce56d74fa8040130b7a95cb3"
 uuid = "c5f90fcd-3b7e-5836-afba-fc50a0988cb2"
 version = "1.6.0+0"
 
+[[deps.micromamba_jll]]
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
+git-tree-sha1 = "2ca2ac0b23a8e6b76752453e08428b3b4de28095"
+uuid = "f8abcde7-e9b7-5caa-b8af-a437887ae8e4"
+version = "1.5.12+0"
+
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
@@ -1889,37 +2799,105 @@ version = "2022.0.0+0"
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 version = "17.7.0+0"
+
+[[deps.pixi_jll]]
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
+git-tree-sha1 = "f349584316617063160a947a82638f7611a8ef0f"
+uuid = "4d7b5844-a134-5dcd-ac86-c8f19cd51bed"
+version = "0.41.3+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─0c0aebab-c9c2-41a0-931d-c687e2a961f1
-# ╟─59f8b374-4db2-416c-bedc-652f5de7ca7e
-# ╟─01de070f-9672-47e1-b4c0-cfefe711decb
-# ╟─2172fb04-0eb2-4270-8d13-611803e10d21
-# ╟─01f950ec-fb20-4b6f-837c-a8cfaeada5de
-# ╟─f29af2e3-05f7-4e06-b917-ca50e337da13
-# ╟─34c5da42-4d8f-4cc4-8c6b-5aad9703b3f7
-# ╟─b4e9e785-892f-4065-89eb-c353967396d1
-# ╠═4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
-# ╟─fb72c498-2e47-40cc-bdf4-1b9511b8e85f
-# ╟─8eb8326f-b226-42fd-9582-de0744cdc0f1
-# ╠═17d9d7e6-1082-4053-97f7-60e72d16f61b
-# ╠═e92ec2b0-ec60-4088-896b-95817b865f46
-# ╠═c6f3eceb-19f5-4e97-80bd-deadb7573807
-# ╠═bf699c80-1a3a-47f0-baea-50f2490124b9
-# ╠═8017131c-6168-499a-899a-e6d2c1d0479b
-# ╠═7b893abf-4c4a-4a8f-902c-109af1c6158f
-# ╠═0e1419c4-b1cb-4a36-b0f7-1917275b2d7b
-# ╠═4583909c-7171-49c2-aff6-71d45860072d
-# ╠═63187c16-c3b8-47a5-9086-02c1aad6b812
-# ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
-# ╟─6d2c1121-2547-4125-8709-cd4d11480726
-# ╟─d388fd60-3884-4944-b30b-61cc8edf544d
-# ╟─829636f7-3d2b-4a30-8c92-523427335fc9
-# ╟─10e72b6f-8261-4093-af4c-c3bd698db7d2
-# ╟─eb63b8dc-644d-4b91-85a2-72e927fd1f1d
-# ╟─4c6d5896-a854-409b-a8c2-9d00fb695ca5
-# ╟─93ba05ff-09c3-49f6-ba63-d97fb341325c
-# ╟─a084aedc-31c3-49b0-aa7a-fc5088deaca8
+# ╟─ac2acb87-8515-41cf-a762-ca48d8cd269a
+# ╟─aa005b55-626e-41e0-8fe1-137bd7dd5599
+# ╟─4266575e-e19f-48e4-8b21-6f296c6d3f33
+# ╟─aaaaa4d6-737b-4e53-a3a4-fcac09789d4e
+# ╟─c1bbb6a2-6996-4fee-a642-a0212b473474
+# ╟─abb9a9c8-5cac-4af3-b0a0-b7a3608dfe1a
+# ╟─b360ad74-58b7-47b5-a8b0-437ef1119303
+# ╟─1356c02f-9ff2-491f-b55d-666ee76e6fae
+# ╟─06d26240-81b6-401b-8eda-eab3a9a0fb20
+# ╟─dbe812e2-a795-4caa-842d-07da5eabcade
+# ╟─74197e45-3b80-44ad-b940-f2544f2f9b54
+# ╠═2b8c75f6-c148-4c70-be6a-c1a4b95d5849
+# ╟─a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
+# ╟─7d7cd508-be27-4f52-bc13-91c702450167
+# ╟─5abbcbe0-3ee6-4658-9c99-e4567a23e3f6
+# ╟─c06e64ef-4085-4bb5-9b8b-2ed244d5dbe8
+# ╟─86e53a41-ab0d-4d9f-8a80-855949847ba2
+# ╟─009f2c3f-bc8f-4874-9545-f18d6722284b
+# ╟─8f0e6529-bd67-47aa-9ddf-4032a5483a98
+# ╟─7d54fd96-b268-4964-929c-d62c7d89b4b2
+# ╟─1df329a0-629a-4527-8e5d-1dbac9ed8497
+# ╠═1fe59945-8bce-44f3-b548-9646c2ce6bda
+# ╟─bdfc0804-b83a-470f-a6e0-1e030eac63d8
+# ╟─d6bba196-213e-4c90-8d8e-f2ffc8108da6
+# ╟─e7ad4e24-5dc9-4713-836a-be001304e45c
+# ╟─73e16c0e-873c-46a3-a0fd-d7ed5405ed7b
+# ╟─f3683998-543c-4bc4-8b73-fc1de6a6a955
+# ╟─102ce649-e560-470e-afa5-699db577e148
+# ╟─d6d19588-9fa5-4b3e-987a-082345357fe7
+# ╟─96dc5bbe-3284-43a0-8c04-c1bb51ad618b
+# ╟─15ad7461-9c40-4755-8f00-14aa3be53e0f
+# ╟─6470b357-4dc6-4b2b-9760-93d64bab13e9
+# ╟─17eb5723-71f4-4344-b1b1-41b894e7582b
+# ╟─59392770-f59e-4188-a675-89c2f2fc67d9
+# ╠═edf5f093-19cc-4802-a777-95d8492996a8
+# ╟─9d88c884-3187-452d-8453-7f095dac4b03
+# ╟─1b71497f-636a-45c8-8f51-728bee091696
+# ╟─1ede8642-1f36-4aad-bcad-383fd211d31a
+# ╠═381d0147-264b-46f6-82ab-8c840c50c7d1
+# ╠═79c924a7-f915-483d-aee6-94e749d3b004
+# ╟─e34ceb7c-1584-41ce-a5b5-3532fac3c03d
+# ╟─276ff16f-95f1-44eb-971d-db65e8821e59
+# ╟─934b1888-0e5c-4dcb-a637-5c2f813161d4
+# ╟─c5286692-2610-414d-97b7-ffab0bd485a7
+# ╟─4a6a8956-f6e5-433a-a87b-056a5123ffbc
+# ╟─502fe5dd-d55a-450e-9209-60dc05f395dc
+# ╟─14998fe7-8e22-4cd4-87c6-9a5334d218ed
+# ╟─4a779bd1-bcf3-41e1-af23-ed00d29db46f
+# ╠═7f9c4c42-26fc-4d02-805f-97732032b272
+# ╟─e927297b-9d63-4448-8245-4d73d1fbff27
+# ╠═399f53c5-b654-4330-9ead-4d795917b03b
+# ╠═edda8d09-ec46-4a0b-b1b2-b1289ee5456e
+# ╠═a00cbbfc-56ce-413a-a7b8-13de8541fa6f
+# ╠═6cec1700-f2de-4e80-b26d-b23b5f7f1823
+# ╠═95f9803a-86df-4517-adc8-0bcbb0ff6fbc
+# ╠═a5f3915c-6eed-480d-9aed-8fdd052a324a
+# ╠═31c23e2b-1a2d-41aa-81c1-22868e241f7e
+# ╟─1d2bedb1-509d-4956-8e5a-ad1c0f1ffe26
+# ╟─9c482134-6336-4e72-9d30-87080ebae671
+# ╟─90b6ef16-7853-46e1-bbd6-cd1a904c442a
+# ╠═f2c89a20-09d5-47f4-8f83-e59477723d95
+# ╠═8a39fbbb-6b5b-4744-a875-469c289242fb
+# ╠═3f548bb1-37b0-48b7-a35c-d7701405a64e
+# ╠═b944bc98-ff4b-4851-89ea-1ee4e3191759
+# ╠═36db58d8-23be-461a-ac75-998c8ad43068
+# ╠═03d38a82-4c31-4f3a-9afe-d1caead5e8af
+# ╠═bdc24b15-d14a-422c-a7aa-5335547fa53c
+# ╠═46e6bba9-0c83-47b7-be17-f41301efa18e
+# ╠═77544f9e-6053-4ed6-aa9a-4e7a54ca41d9
+# ╠═3242f19a-83f7-4db6-b2ea-6ca3403e1039
+# ╠═1e5596fb-7dca-408b-afbd-6ca2e2487d75
+# ╠═2ea12676-7b5e-444e-8025-5bf9c05d0e2d
+# ╠═d359625e-5a95-49aa-86e4-bc65299dd92a
+# ╠═829cde81-be03-4a9f-a853-28f84923d493
+# ╠═f290d98e-5a8a-44f2-bee5-b93738abe9af
+# ╠═3c601844-3bb9-422c-ab1e-b40f7e7cb0df
+# ╠═f26f890b-5924-497c-85a3-eff924d0470b
+# ╠═95a67d04-0a32-4e55-ac2f-d004ecc9ca84
+# ╠═f1ed6484-8f6a-4fbf-9a3d-0fe20360ab3b
+# ╠═954c7918-7dd1-4967-a67b-7856f00dc498
+# ╠═2e59cc0d-e477-4826-b8b6-d2d68c8592a9
+# ╠═f6197e8e-3132-4ab5-86d7-32572e337c58
+# ╠═7c078085-ff30-400d-a0ab-2680f468c415
+# ╠═035fcecb-f998-4644-9650-6aeaced3e41f
+# ╠═a984c96d-273e-4d6d-bab8-896f14a79103
+# ╠═21e828e5-00e4-40ce-bff5-60a17439bf44
+# ╠═e35d4be7-366d-4ca5-a89a-5de24e4c6677
+# ╠═a3bcad72-0e6c-43f8-a08d-777a154190d8
+# ╠═8da80446-84d7-44bb-8122-874b4c9514f4
+# ╠═24256769-2274-4b78-8445-88ec4536c407
+# ╟─6bc5d30d-2051-4249-9f2a-c4354aa49198
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

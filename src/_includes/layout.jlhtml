@@ -38,7 +38,7 @@ $(pluto_head)
         <nav id="pages-sidebar" style="height: 100vh; overflow-y: auto; top: 0px;">
         <div>
         <ul>
-            <li class="pluto_home_link"><a class="pluto_home_link" href=$(root_url)><img src="$(root_url)/assets/favicon.svg"><span>SETI | ASP<br>Workshop</span></a>
+            <li class="pluto_home_link"><a class="pluto_home_link" href=$(root_url)><img src="$(root_url)/assets/favicon.svg"><span>Unistellar<br>SETI | ASP</span></a>
         </li>
                 <li>
             <div class="search-bar">
