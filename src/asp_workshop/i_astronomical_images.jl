@@ -2,7 +2,6 @@
 # v0.20.21
 
 #> [frontmatter]
-#> image = "https://www.seti.org/media/205ie3ne/drtardi-404-seti-institute.png"
 #> title = "I - Introduction to Astronomical Images"
 #> date = "2025-09-19"
 #> tags = ["asp", "images", "rgb", "image processing", "FITS"]

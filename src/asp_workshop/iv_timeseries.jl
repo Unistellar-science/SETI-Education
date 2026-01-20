@@ -2,7 +2,6 @@
 # v0.20.21
 
 #> [frontmatter]
-#> image = "https://www.seti.org/media/205ie3ne/drtardi-404-seti-institute.png"
 #> title = "IV - Time Series"
 #> date = "2025-10-03"
 #> tags = ["asp", "time series"]
@@ -267,7 +266,7 @@ The AAVSO has a great [web interface](https://targettool.aavso.org/) for finding
 
 # ╔═╡ 4a6a8956-f6e5-433a-a87b-056a5123ffbc
 md"""
-We start by [creating an account](https://targettool.aavso.org/init/default/user/register?_next=/init/default/index) on AAVSO. This will allow us to access their API and set our observing location. Once we are logged in, our API key will be displayed as a string of numbers and letters across the top of the [API webpage](https://targettool.aavso.org/TargetTool/api). Copy this key into a text file in your `data` folder, and name it `.aavso_key`. Select the `Query` button below to submit your query to AAVSO.
+We start by [creating an account](https://targettool.aavso.org/init/default/user/register?_next=/init/default/index) on AAVSO. This will allow us to access their API and set our observing location. Once we are logged in, our API key will be displayed as a string of numbers and letters across the top of the [API webpage](https://targettool.aavso.org/TargetTool/api). Copy this key into a text file in your data folder, and name it `.aavso_key`. Select the `Query` button below to submit your query to AAVSO.
 """
 
 # ╔═╡ 502fe5dd-d55a-450e-9209-60dc05f395dc
@@ -280,7 +279,7 @@ begin
 		@debug "API key found"
 		readline(".aavso_key")
 	else
-		@debug "No API key found"
+		@debug "Please load your API key using the instructions above."
 		""
 	end
 end;
@@ -292,52 +291,50 @@ md"""
 """
 
 # ╔═╡ 7f9c4c42-26fc-4d02-805f-97732032b272
-if !isempty(username)
-	md"""
-	We are now ready to query AAVSO for eclipsing binaries observable from our location. Using the [HTTP.jl](https://juliaweb.github.io/HTTP.jl/stable/) package, we send our query using the following format:
+md"""
+We are now ready to query AAVSO for eclipsing binaries observable from our location. Using the [HTTP.jl](https://juliaweb.github.io/HTTP.jl/stable/) package, we send our query using the following format:
 
-	```julia
-	HTTP.get(url; query)
-	```
-	
-	where `url` is entry point into the API (essentially what we would manually type into our browser window):
-	
-	```julia
-	url = "https://{your api key here}:api_token@targettool.aavso.org/TargetTool/api/v1/targets"
-	```
-	
-	and `query` is a key, value map (dictionary) of settings that we would like to pass to the API:
+```julia
+HTTP.get(url; query)
+```
 
-	```julia
-	query = (
-		# :latitude => 37.76329102360394,
-		# :longitude => -122.41190624779506,
-		:obs_section => "eb",
-		:observable => true,
-		:orderby => "period",
-	)
-	```
-	
-	Below is a list from the API page of what each of the inputs mean:
+where `url` is entry point into the API (essentially what we would manually type into our browser window):
 
-	!!! tip ""
-		`obs_section` An array with observing sections of interest. You may use one or more of: ac,ep,cv,eb,spp,lpv,yso,het,misc,all. Default is \['ac'\] (Alerts & Campaigns).
-		
-		`observable` If true, filters out targets which are visible at the telescope location during the following nighttime period. Default is false.
-		
-		`orderby` Order by any of the output fields below, except for observability\_times and solar\_conjunction.
-		
-		`reverse` If true, reverses the order. Default is false.
-		
-		`latitude` Latitude of telescope. South is negative, North is positive. If not provided, the user's settings are assumed.
-		
-		`longitude` Longitude of telescope. West is negative, East is positive. If not provided, the user's settings are assumed.
-		
-		`targetaltitude` Minimum altitude that the telescope can observe in degrees relative to the horizon. If not provided, the user's settings are assumed.
-		
-		`sunaltitude` Altitude of sun at dusk and dawn in degrees. If not provided, the user's settings are assumed.
-	"""
-end
+```julia
+url = "https://{your api key here}:api_token@targettool.aavso.org/TargetTool/api/v1/targets"
+```
+
+and `query` is a key, value map (dictionary) of settings that we would like to pass to the API:
+
+```julia
+query = (
+	# :latitude => 37.76329102360394,
+	# :longitude => -122.41190624779506,
+	:obs_section => "eb",
+	:observable => true,
+	:orderby => "period",
+)
+```
+
+Below is a list from the API page of what each of the inputs mean:
+
+!!! tip ""
+	`obs_section` An array with observing sections of interest. You may use one or more of: ac,ep,cv,eb,spp,lpv,yso,het,misc,all. Default is \['ac'\] (Alerts & Campaigns).
+	
+	`observable` If true, filters out targets which are visible at the telescope location during the following nighttime period. Default is false.
+	
+	`orderby` Order by any of the output fields below, except for observability\_times and solar\_conjunction.
+	
+	`reverse` If true, reverses the order. Default is false.
+	
+	`latitude` Latitude of telescope. South is negative, North is positive. If not provided, the user's settings are assumed.
+	
+	`longitude` Longitude of telescope. West is negative, East is positive. If not provided, the user's settings are assumed.
+	
+	`targetaltitude` Minimum altitude that the telescope can observe in degrees relative to the horizon. If not provided, the user's settings are assumed.
+	
+	`sunaltitude` Altitude of sun at dusk and dawn in degrees. If not provided, the user's settings are assumed.
+"""
 
 # ╔═╡ e927297b-9d63-4448-8245-4d73d1fbff27
 md"""
@@ -345,8 +342,9 @@ Feel free to uncomment the lat/long fields below to override the default locatio
 """
 
 # ╔═╡ 399f53c5-b654-4330-9ead-4d795917b03b
-if !isempty(username)
-	df_all = let
+df_all = if isempty(username)
+		DataFrame()
+	else
 		api = "targettool.aavso.org/TargetTool/api/v1/targets"
 		url = "https://$(username):api_token@$(api)"
 		query = (
@@ -361,27 +359,21 @@ if !isempty(username)
 		# The table under the `target` field of the JSONTable does not
 		# seem to convert nulls to missings, so using the raw string directly instead
 		DataFrame(jsontable(chop(String(r.body); head=12)))
-	end
-end;
-
-# ╔═╡ edda8d09-ec46-4a0b-b1b2-b1289ee5456e
-!isempty(username) && first(df_all, 10) #|> pretty
+end
 
 # ╔═╡ a00cbbfc-56ce-413a-a7b8-13de8541fa6f
-if !isempty(username)
-	md"""
-	It looks like we have $(nrow(df_all)) hits, great! Let's filter these for targets that are easily observable, i.e., with our following criteria:
+md"""
+It looks like we have $(nrow(df_all)) hits. Let's filter these for targets that are easily observable, i.e., with our following criteria:
 
-	1. Large change in brightness (at least half a mag)
-	2. Fairly short period (period < 3 days)
-	3. Includes an ephemeris (the `other_info` column must include this link)
+1. Large change in brightness (at least half a mag)
+2. Fairly short period (period < 3 days)
+3. Includes an ephemeris (the `other_info` column must include this link)
 
-	!!! note
-		We also prioritize dimmer targets (V > 9.0). The reason for this is that we are taking a time series over the course of hours, which would lead to an unfeasable number of total science frames taken if the exposure time for each one needed to be dialed down for bright targets. Instead, we fix our exposure time to the maximum on eVscopes (4 seconds), and select targets that would not be overexposed at this level.
-	
-	Lastly, we select the columns that we care about and make some visual transforms for convenience (e.g., including units, converting decimal RA and Dec to `[h m s]`, and `[° ' "]` format, respectively, for easy copy-pasting into the Unistellar app):
-	"""
-end
+!!! note
+	We also prioritize dimmer targets (V > 9.0). The reason for this is that we are taking a time series over the course of hours, which would lead to an unfeasable number of total science frames taken if the exposure time for each one needed to be dialed down for bright targets. Instead, we fix our exposure time to the maximum on eVscopes (4 seconds), and select targets that would not be overexposed at this level.
+
+Lastly, we select the columns that we care about and make some visual transforms for convenience (e.g., including units, converting decimal RA and Dec to `[h m s]`, and `[° ' "]` format, respectively, for easy copy-pasting into the Unistellar app):
+"""
 
 # ╔═╡ 1d2bedb1-509d-4956-8e5a-ad1c0f1ffe26
 md"""
@@ -404,13 +396,18 @@ Once a target has been found, here's how we might estimate an observing setup fo
 end
 
 # ╔═╡ f2c89a20-09d5-47f4-8f83-e59477723d95
-!isempty(username) && nrow(df_all); # Total number of targets in our list
+nrow(df_all) # Total number of targets in our list
+
+# ╔═╡ e7f88515-305b-4899-8fa0-326e9e2097b5
+md"""
+## Convenience functions
+"""
 
 # ╔═╡ b944bc98-ff4b-4851-89ea-1ee4e3191759
 @py begin
 	import numpy as np
 	import astroalign as aa
-end;
+end
 
 # ╔═╡ 36db58d8-23be-461a-ac75-998c8ad43068
 # Workaround. Apparently just wrapping img in a numpy array fails somewhere
@@ -419,7 +416,7 @@ function to_py(img)
 	arr = np.zeros_like(img)
 	PyArray(arr; copy=false) .= img
 	return arr
-end;
+end
 
 # ╔═╡ 03d38a82-4c31-4f3a-9afe-d1caead5e8af
 # Align img2 onto img1
@@ -431,7 +428,7 @@ function align(img2, img1; min_area, detection_sigma)
 		detection_sigma,
 	)
 	return shareheader(img2, PyArray(registered_image))
-end;
+end
 
 # ╔═╡ bdc24b15-d14a-422c-a7aa-5335547fa53c
 function align_frames(imgs; min_area, detection_sigma)
@@ -440,19 +437,19 @@ function align_frames(imgs; min_area, detection_sigma)
 		align(img, fixed; min_area, detection_sigma)
 	end
 	return [fixed, frames_aligned...]
-end;
+end
 
 # ╔═╡ 46e6bba9-0c83-47b7-be17-f41301efa18e
 function to_hms(ra_deci)
 	hms = round.(deg2hms(ra_deci); digits=2)
 	format_angle(hms; delim=["h ", "m ", "s"])
-end;
+end
 
 # ╔═╡ 77544f9e-6053-4ed6-aa9a-4e7a54ca41d9
 function to_dms(ra_deci)
 	dms = round.(deg2dms(ra_deci); digits=2)
 	format_angle(dms; delim=["° ", "' ", "\""])
-end;
+end
 
 # ╔═╡ 3242f19a-83f7-4db6-b2ea-6ca3403e1039
 function get_url(s)
@@ -462,7 +459,7 @@ function get_url(s)
 		split("]]")
 		first
 	end
-end;
+end
 
 # ╔═╡ 1e5596fb-7dca-408b-afbd-6ca2e2487d75
 get_shapes(aps; line_color=:lightgreen) = [
@@ -470,7 +467,7 @@ get_shapes(aps; line_color=:lightgreen) = [
 		line_color,
 	)
 	for ap in aps
-];
+]
 
 # ╔═╡ 2ea12676-7b5e-444e-8025-5bf9c05d0e2d
 function ephem(url)
@@ -481,7 +478,7 @@ function ephem(url)
 	end
 	ephem_title, ephem_data... = filter(x -> length(x) == 4, ephem_blob)
 	return ephem_title, ephem_data
-end;
+end
 
 # ╔═╡ d359625e-5a95-49aa-86e4-bc65299dd92a
 function deep_link(;
@@ -507,7 +504,7 @@ function deep_link(;
 	], '&')
 
 	Markdown.parse("[link]($(link))")
-end;
+end
 
 # ╔═╡ 829cde81-be03-4a9f-a853-28f84923d493
 # Make the table view a bit nicer in the browser
@@ -515,7 +512,7 @@ pretty(df) = DataFrames.PrettyTables.pretty_table(HTML, df;
 	maximum_column_width = "max-width",
 	nosubheader = true,
 	alignment = :c,
-);
+)
 
 # ╔═╡ f290d98e-5a8a-44f2-bee5-b93738abe9af
 # Keep these values untouched
@@ -524,26 +521,28 @@ const baseline = (
 	t_exp = 3200.0, # Exptime (ms)
 	gain = 25.0, # Gain (dB)
 	peak_px = 3000, # Peak Pixel ADU
-);
+)
 
 # ╔═╡ 3c601844-3bb9-422c-ab1e-b40f7e7cb0df
 function flux_factor(target, baseline)
 	f_mag = (target.v_mag - baseline.v_mag) / -2.5 |> exp10
 	f_exp = target.t_exp / baseline.t_exp
 	return f_mag * f_exp 
-end;
+end
 
 # ╔═╡ f26f890b-5924-497c-85a3-eff924d0470b
 # Maximum gain
-max_gain(baseline, f) = baseline.gain - log10(f) / log10(1.122);
+max_gain(baseline, f) = baseline.gain - log10(f) / log10(1.122)
 
 # ╔═╡ 95a67d04-0a32-4e55-ac2f-d004ecc9ca84
 # Recommended gain
-rec_gain(g) = Int(round(g, RoundDown) - 1.0);
+rec_gain(g) = Int(round(g, RoundDown) - 1.0)
 
 # ╔═╡ 6cec1700-f2de-4e80-b26d-b23b5f7f1823
-if !isempty(username)
-	df_candidates = @chain df_all begin
+df_candidates = if isempty(username)
+		DataFrame(star_name = "Sol")
+	else
+		@chain df_all begin
 		dropmissing
 		@rsubset begin
 			:min_mag > 9.0 &&
@@ -584,7 +583,7 @@ if !isempty(username)
 		end
 	
 		sort(:period)
-
+	
 		@select begin
 			:star_name
 			:period
@@ -601,26 +600,23 @@ if !isempty(username)
 end
 
 # ╔═╡ 95f9803a-86df-4517-adc8-0bcbb0ff6fbc
-if !isempty(username)
-	md"""
-	We now have $(nrow(df_candidates)) prime candidates that we can plan our observations for. Clicking on the `ephem_link` in the last column should take us to a table on AAVSO with the predicted eclipse times for the next month. For convenience, we can also select one of the targets below to generate a table of deep links:
+md"""
+We now have $(nrow(df_candidates)) prime candidates that we can plan our observations for. Clicking on the `ephem_link` in the last column should take us to a table on AAVSO with the predicted eclipse times for the next month. For convenience, we can also select one of the targets below to generate a table of deep links:
 
-	!!! note
-		This will only work for targets that have a complete ephemeris. All times are in UTC.
-	"""
-end
+!!! note
+	This will only work for targets that have a complete ephemeris. All times are in UTC.
+"""
 
 # ╔═╡ a5f3915c-6eed-480d-9aed-8fdd052a324a
-!isempty(username) && @bind star_name Select(df_candidates.star_name)
+@bind star_name Select(df_candidates.star_name)
 
 # ╔═╡ 3f548bb1-37b0-48b7-a35c-d7701405a64e
-if !isempty(username)
-	df_selected = @rsubset df_candidates :star_name == star_name
-end;
+df_selected = @rsubset df_candidates :star_name == star_name
 
 # ╔═╡ 8a39fbbb-6b5b-4744-a875-469c289242fb
-if !isempty(username)
-	df_ephem = let
+df_ephem = if isempty(username)
+		DataFrame()
+	else
 		ephem_title, ephem_data = ephem(only(df_selected.ephem_url))
 		df = DataFrame(
 			stack(ephem_data; dims=1),
@@ -644,15 +640,13 @@ if !isempty(username)
 				:unix_timestamp_ms = 1_000 * datetime2unix(:Mid)
 			end
 		end
-	end
-end;
+end
 
 # ╔═╡ 31c23e2b-1a2d-41aa-81c1-22868e241f7e
-if !isempty(username)
-	df_obs = let
-		df = leftjoin(df_selected, df_ephem; on=:star_name)
-		fmt = dateformat"yymmdd"
-		@rselect df begin
+df_obs = if isempty(username)
+		DataFrame()
+	else 
+		@rselect leftjoin(df_selected, df_ephem; on=:star_name) begin
 			:star_name
 			:Start
 			:Mid
@@ -666,14 +660,11 @@ if !isempty(username)
 				t = round(Int, :unix_timestamp_ms),
 				scitag = join([
 					"e",
-					Dates.format(:Mid, fmt),
+					Dates.format(:Mid, dateformat"yymmdd"),
 					replace(:star_name, " " => ""),
 				]),
 			)
 		end
-	end
-
-	df_obs #|> pretty
 end
 
 # ╔═╡ 90b6ef16-7853-46e1-bbd6-cd1a904c442a
@@ -841,7 +832,7 @@ TableOfContents(; depth=4)
 
 # ╔═╡ 21e828e5-00e4-40ce-bff5-60a17439bf44
 # Helpful for not having ginormous plot objects
-r2(img) = (restrict ∘ restrict)(img);
+r2(img) = (restrict ∘ restrict)(img)
 
 # ╔═╡ e35d4be7-366d-4ca5-a89a-5de24e4c6677
 function htrace(img;
@@ -867,7 +858,7 @@ function htrace(img;
 		colorbar = attr(; title),
 		colorscale = :Cividis,
 	)
-end;
+end
 
 # ╔═╡ a3bcad72-0e6c-43f8-a08d-777a154190d8
 function circ(ap; line_color=:lightgreen)
@@ -878,7 +869,7 @@ function circ(ap; line_color=:lightgreen)
 		ap.y + ap.r; # y_max
 		line_color,
 	)
-end;
+end
 
 # ╔═╡ 2e59cc0d-e477-4826-b8b6-d2d68c8592a9
 # Convert to plotly objects for plotting
@@ -889,7 +880,7 @@ shapes = [
 ];
 
 # ╔═╡ 8da80446-84d7-44bb-8122-874b4c9514f4
-timestamp(img) = header(img)["DATE-OBS"];
+timestamp(img) = header(img)["DATE-OBS"]
 
 # ╔═╡ 24256769-2274-4b78-8445-88ec4536c407
 function plot_img(i, img; zmin=2400, zmax=3200, restrict=true)
@@ -905,7 +896,7 @@ function plot_img(i, img; zmin=2400, zmax=3200, restrict=true)
 	)
 
 	plot(hm, l)
-end;
+end
 
 # ╔═╡ 86e53a41-ab0d-4d9f-8a80-855949847ba2
 let
@@ -2848,6 +2839,9 @@ version = "0.41.3+0"
 # ╟─1ede8642-1f36-4aad-bcad-383fd211d31a
 # ╠═381d0147-264b-46f6-82ab-8c840c50c7d1
 # ╠═79c924a7-f915-483d-aee6-94e749d3b004
+# ╠═f1ed6484-8f6a-4fbf-9a3d-0fe20360ab3b
+# ╠═954c7918-7dd1-4967-a67b-7856f00dc498
+# ╠═2e59cc0d-e477-4826-b8b6-d2d68c8592a9
 # ╟─e34ceb7c-1584-41ce-a5b5-3532fac3c03d
 # ╟─276ff16f-95f1-44eb-971d-db65e8821e59
 # ╟─934b1888-0e5c-4dcb-a637-5c2f813161d4
@@ -2856,48 +2850,45 @@ version = "0.41.3+0"
 # ╟─502fe5dd-d55a-450e-9209-60dc05f395dc
 # ╟─14998fe7-8e22-4cd4-87c6-9a5334d218ed
 # ╟─4a779bd1-bcf3-41e1-af23-ed00d29db46f
-# ╠═7f9c4c42-26fc-4d02-805f-97732032b272
+# ╟─7f9c4c42-26fc-4d02-805f-97732032b272
 # ╟─e927297b-9d63-4448-8245-4d73d1fbff27
-# ╠═399f53c5-b654-4330-9ead-4d795917b03b
-# ╠═edda8d09-ec46-4a0b-b1b2-b1289ee5456e
-# ╠═a00cbbfc-56ce-413a-a7b8-13de8541fa6f
-# ╠═6cec1700-f2de-4e80-b26d-b23b5f7f1823
-# ╠═95f9803a-86df-4517-adc8-0bcbb0ff6fbc
-# ╠═a5f3915c-6eed-480d-9aed-8fdd052a324a
-# ╠═31c23e2b-1a2d-41aa-81c1-22868e241f7e
+# ╟─399f53c5-b654-4330-9ead-4d795917b03b
+# ╟─a00cbbfc-56ce-413a-a7b8-13de8541fa6f
+# ╟─6cec1700-f2de-4e80-b26d-b23b5f7f1823
+# ╟─95f9803a-86df-4517-adc8-0bcbb0ff6fbc
+# ╟─a5f3915c-6eed-480d-9aed-8fdd052a324a
+# ╟─31c23e2b-1a2d-41aa-81c1-22868e241f7e
 # ╟─1d2bedb1-509d-4956-8e5a-ad1c0f1ffe26
 # ╟─9c482134-6336-4e72-9d30-87080ebae671
 # ╟─90b6ef16-7853-46e1-bbd6-cd1a904c442a
 # ╠═f2c89a20-09d5-47f4-8f83-e59477723d95
-# ╠═8a39fbbb-6b5b-4744-a875-469c289242fb
+# ╟─8a39fbbb-6b5b-4744-a875-469c289242fb
 # ╠═3f548bb1-37b0-48b7-a35c-d7701405a64e
+# ╟─e7f88515-305b-4899-8fa0-326e9e2097b5
 # ╠═b944bc98-ff4b-4851-89ea-1ee4e3191759
-# ╠═36db58d8-23be-461a-ac75-998c8ad43068
-# ╠═03d38a82-4c31-4f3a-9afe-d1caead5e8af
-# ╠═bdc24b15-d14a-422c-a7aa-5335547fa53c
-# ╠═46e6bba9-0c83-47b7-be17-f41301efa18e
-# ╠═77544f9e-6053-4ed6-aa9a-4e7a54ca41d9
-# ╠═3242f19a-83f7-4db6-b2ea-6ca3403e1039
-# ╠═1e5596fb-7dca-408b-afbd-6ca2e2487d75
-# ╠═2ea12676-7b5e-444e-8025-5bf9c05d0e2d
-# ╠═d359625e-5a95-49aa-86e4-bc65299dd92a
-# ╠═829cde81-be03-4a9f-a853-28f84923d493
+# ╟─36db58d8-23be-461a-ac75-998c8ad43068
+# ╟─03d38a82-4c31-4f3a-9afe-d1caead5e8af
+# ╟─bdc24b15-d14a-422c-a7aa-5335547fa53c
+# ╟─46e6bba9-0c83-47b7-be17-f41301efa18e
+# ╟─77544f9e-6053-4ed6-aa9a-4e7a54ca41d9
+# ╟─3242f19a-83f7-4db6-b2ea-6ca3403e1039
+# ╟─1e5596fb-7dca-408b-afbd-6ca2e2487d75
+# ╟─2ea12676-7b5e-444e-8025-5bf9c05d0e2d
+# ╟─d359625e-5a95-49aa-86e4-bc65299dd92a
+# ╟─829cde81-be03-4a9f-a853-28f84923d493
 # ╠═f290d98e-5a8a-44f2-bee5-b93738abe9af
 # ╠═3c601844-3bb9-422c-ab1e-b40f7e7cb0df
-# ╠═f26f890b-5924-497c-85a3-eff924d0470b
-# ╠═95a67d04-0a32-4e55-ac2f-d004ecc9ca84
-# ╠═f1ed6484-8f6a-4fbf-9a3d-0fe20360ab3b
-# ╠═954c7918-7dd1-4967-a67b-7856f00dc498
-# ╠═2e59cc0d-e477-4826-b8b6-d2d68c8592a9
+# ╟─f26f890b-5924-497c-85a3-eff924d0470b
+# ╟─95a67d04-0a32-4e55-ac2f-d004ecc9ca84
 # ╠═f6197e8e-3132-4ab5-86d7-32572e337c58
 # ╠═7c078085-ff30-400d-a0ab-2680f468c415
 # ╠═035fcecb-f998-4644-9650-6aeaced3e41f
 # ╠═a984c96d-273e-4d6d-bab8-896f14a79103
-# ╠═21e828e5-00e4-40ce-bff5-60a17439bf44
-# ╠═e35d4be7-366d-4ca5-a89a-5de24e4c6677
-# ╠═a3bcad72-0e6c-43f8-a08d-777a154190d8
-# ╠═8da80446-84d7-44bb-8122-874b4c9514f4
-# ╠═24256769-2274-4b78-8445-88ec4536c407
+# ╟─21e828e5-00e4-40ce-bff5-60a17439bf44
+# ╟─e35d4be7-366d-4ca5-a89a-5de24e4c6677
+# ╟─a3bcad72-0e6c-43f8-a08d-777a154190d8
+# ╟─8da80446-84d7-44bb-8122-874b4c9514f4
+# ╟─24256769-2274-4b78-8445-88ec4536c407
 # ╟─6bc5d30d-2051-4249-9f2a-c4354aa49198
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
