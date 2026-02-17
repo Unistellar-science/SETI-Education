@@ -94,7 +94,7 @@ md"""
 
 [W Ursae Majoris (W UMa)](https://www.aavso.org/vsots_wuma) is an eclipsing binary system located in the [Ursa Major](https://en.wikipedia.org/wiki/Ursa_Major) constellation, and can be seen being chased across the sky by the Big Dipper throughout the night:
 
-$(Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/labs/eclipsing_binary/assets/constellation_WUMa.png?raw=true"))
+$(Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/src/ucan/eclipsing_binary/assets/constellation_WUMa.png?raw=true"))
 
 *W UMa is marked by the larger, red dot to the right of the Big Dipper*
 """
@@ -139,7 +139,7 @@ Here is a summary of the header information for each science frame taken:
 """
 
 # ╔═╡ 74197e45-3b80-44ad-b940-f2544f2f9b54
-Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/labs/eclipsing_binary/assets/finder_WUMa.jpg?raw=true")
+Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/src/ucan/eclipsing_binary/assets/finder_WUMa.jpg?raw=true")
 
 # ╔═╡ a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
 md"""
