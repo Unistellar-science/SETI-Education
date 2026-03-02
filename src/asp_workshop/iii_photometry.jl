@@ -84,7 +84,7 @@ Using the reported numbers above, we have:
 \begin{align}
 	\text{Net flux} &= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background flux}} \\\\
 	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Average background flux} \times \text{Target aperture area}} \\\\
-	&= \textcolor{darkorange}{\text{Target flux}} - \color{darkcyan}\frac{\text{Background aperture flux}}{\text{Background annulus area}} \times \text{Target aperture area} \\\\
+	&= \textcolor{darkorange}{\text{Target flux}} - \color{darkcyan}\frac{\text{Background aperture flux}}{\text{Background aperture area}} \times \text{Target aperture area} \\\\
 	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\frac{\text{Background aperture flux}}{\pi\left(R_\text{outer, bg}^2 - R_\text{inner, bg}^2\right)} \times \pi R_\text{target}^2} \\\\
 	&= \textcolor{darkorange}{\text{Target flux}} - \textcolor{darkcyan}{\text{Background aperture flux} \times \frac{R_\text{target}^2}{R_\text{outer, bg}^2 - R_\text{inner, bg}^2}}
 \end{align}
