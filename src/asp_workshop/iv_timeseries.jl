@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.23
 
 #> [frontmatter]
 #> title = "IV - Time Series"
@@ -375,6 +375,103 @@ It looks like we have $(nrow(df_all)) hits. Let's filter these for targets that 
 Lastly, we select the columns that we care about and make some visual transforms for convenience (e.g., including units, converting decimal RA and Dec to `[h m s]`, and `[° ' "]` format, respectively, for easy copy-pasting into the Unistellar app):
 """
 
+# ╔═╡ 6cec1700-f2de-4e80-b26d-b23b5f7f1823
+df_candidates = if isempty(username)
+		DataFrame(star_name = "Sol")
+	else
+		@chain df_all begin
+		dropmissing
+		@rsubset begin
+			:min_mag > 9.0 &&
+			:min_mag - :max_mag ≥ 0.5 &&
+			:min_mag_band == "V" && :max_mag_band == "V" &&
+			:period ≤ 3.0 &&
+			startswith(:other_info, "[[Ephemeris")
+		end
+		
+		@rtransform :ephem_url = get_url(:other_info)
+		
+		@rtransform begin
+			:star_name
+			:period = round(Minute, :period * u"d") |> canonicalize
+			:ra = to_hms(:ra)
+			:ra_deci = :ra
+			:dec = to_dms(:dec)
+			:dec_deci = :dec
+			:min_mag
+			# :min_mag_band
+			:max_mag
+			:V_mag = (:min_mag + :max_mag) / 2.0
+			# :max_mag_band
+			# :var_type
+			# :min_mag
+			# :max_mag
+			:ephem_link = Markdown.parse("[link]($(:ephem_url))")
+			:ephem_url
+			# :unix_timestamp = (last ∘ first)(:observability_times)
+		end
+		@rtransform begin
+			:gain = let
+				target = (v_mag=:V_mag, t_exp=4_000) # Default to max exp
+				f_factor = flux_factor(target, baseline) 
+				gain_max = max_gain(baseline, f_factor)
+				rec_gain(gain_max)
+			end
+		end
+	
+		sort(:period)
+	
+		@select begin
+			:star_name
+			:period
+			:ra
+			:ra_deci
+			:dec
+			:dec_deci
+			:V_mag
+			:gain
+			:ephem_link
+			:ephem_url
+		end
+	end
+end
+
+# ╔═╡ 95f9803a-86df-4517-adc8-0bcbb0ff6fbc
+md"""
+We now have $(nrow(df_candidates)) prime candidates that we can plan our observations for. Clicking on the `ephem_link` in the last column should take us to a table on AAVSO with the predicted eclipse times for the next month. For convenience, we can also select one of the targets below to generate a table of deep links:
+
+!!! note
+	This will only work for targets that have a complete ephemeris. All times are in UTC.
+"""
+
+# ╔═╡ a5f3915c-6eed-480d-9aed-8fdd052a324a
+@bind star_name Select(df_candidates.star_name)
+
+# ╔═╡ 31c23e2b-1a2d-41aa-81c1-22868e241f7e
+df_obs = if isempty(username)
+		DataFrame()
+	else 
+		@rselect leftjoin(df_selected, df_ephem; on=:star_name) begin
+			:star_name
+			:Start
+			:Mid
+			:End
+			:Duration
+			:deep_link = deep_link(;
+				ra = :ra_deci,
+				dec = :dec_deci,
+				g = :gain,
+				d = round(Int, 1.5 * :Duration_s),
+				t = round(Int, :unix_timestamp_ms),
+				scitag = join([
+					"e",
+					Dates.format(:Mid, dateformat"yymmdd"),
+					replace(:star_name, " " => ""),
+				]),
+			)
+		end
+end
+
 # ╔═╡ 1d2bedb1-509d-4956-8e5a-ad1c0f1ffe26
 md"""
 ### Determining observation parameters
@@ -397,6 +494,9 @@ end
 
 # ╔═╡ f2c89a20-09d5-47f4-8f83-e59477723d95
 nrow(df_all) # Total number of targets in our list
+
+# ╔═╡ 3f548bb1-37b0-48b7-a35c-d7701405a64e
+df_selected = @rsubset df_candidates :star_name == star_name
 
 # ╔═╡ e7f88515-305b-4899-8fa0-326e9e2097b5
 md"""
@@ -480,6 +580,35 @@ function ephem(url)
 	return ephem_title, ephem_data
 end
 
+# ╔═╡ 8a39fbbb-6b5b-4744-a875-469c289242fb
+df_ephem = if isempty(username)
+		DataFrame()
+	else
+		ephem_title, ephem_data = ephem(only(df_selected.ephem_url))
+		df = DataFrame(
+			stack(ephem_data; dims=1),
+			ephem_title,
+		)
+	
+		fmt = dateformat"dd u YYYY HH:MM"
+		@chain df begin
+			@rtransform begin
+				# :Epoch = parse(Float64, :Epoch)
+				:star_name = only(df_selected.star_name)
+				:Start = DateTime(:Start, fmt)
+				:Mid = DateTime(:Mid, fmt)
+				:End = DateTime(:End, fmt)
+				
+			end
+			
+			@rtransform begin
+				:Duration = canonicalize(:End - :Start)
+				:Duration_s = Second(:End - :Start).value
+				:unix_timestamp_ms = 1_000 * datetime2unix(:Mid)
+			end
+		end
+end
+
 # ╔═╡ d359625e-5a95-49aa-86e4-bc65299dd92a
 function deep_link(;
 	mission = "transit",
@@ -537,135 +666,6 @@ max_gain(baseline, f) = baseline.gain - log10(f) / log10(1.122)
 # ╔═╡ 95a67d04-0a32-4e55-ac2f-d004ecc9ca84
 # Recommended gain
 rec_gain(g) = Int(round(g, RoundDown) - 1.0)
-
-# ╔═╡ 6cec1700-f2de-4e80-b26d-b23b5f7f1823
-df_candidates = if isempty(username)
-		DataFrame(star_name = "Sol")
-	else
-		@chain df_all begin
-		dropmissing
-		@rsubset begin
-			:min_mag > 9.0 &&
-			:min_mag - :max_mag ≥ 0.5 &&
-			:min_mag_band == "V" && :max_mag_band == "V" &&
-			:period ≤ 3.0 &&
-			startswith(:other_info, "[[Ephemeris")
-		end
-		
-		@rtransform :ephem_url = get_url(:other_info)
-		
-		@rtransform begin
-			:star_name
-			:period = round(Minute, :period * u"d") |> canonicalize
-			:ra = to_hms(:ra)
-			:ra_deci = :ra
-			:dec = to_dms(:dec)
-			:dec_deci = :dec
-			:min_mag
-			# :min_mag_band
-			:max_mag
-			:V_mag = (:min_mag + :max_mag) / 2.0
-			# :max_mag_band
-			# :var_type
-			# :min_mag
-			# :max_mag
-			:ephem_link = Markdown.parse("[link]($(:ephem_url))")
-			:ephem_url
-			# :unix_timestamp = (last ∘ first)(:observability_times)
-		end
-		@rtransform begin
-			:gain = let
-				target = (v_mag=:V_mag, t_exp=4_000) # Default to max exp
-				f_factor = flux_factor(target, baseline) 
-				gain_max = max_gain(baseline, f_factor)
-				rec_gain(gain_max)
-			end
-		end
-	
-		sort(:period)
-	
-		@select begin
-			:star_name
-			:period
-			:ra
-			:ra_deci
-			:dec
-			:dec_deci
-			:V_mag
-			:gain
-			:ephem_link
-			:ephem_url
-		end
-	end
-end
-
-# ╔═╡ 95f9803a-86df-4517-adc8-0bcbb0ff6fbc
-md"""
-We now have $(nrow(df_candidates)) prime candidates that we can plan our observations for. Clicking on the `ephem_link` in the last column should take us to a table on AAVSO with the predicted eclipse times for the next month. For convenience, we can also select one of the targets below to generate a table of deep links:
-
-!!! note
-	This will only work for targets that have a complete ephemeris. All times are in UTC.
-"""
-
-# ╔═╡ a5f3915c-6eed-480d-9aed-8fdd052a324a
-@bind star_name Select(df_candidates.star_name)
-
-# ╔═╡ 3f548bb1-37b0-48b7-a35c-d7701405a64e
-df_selected = @rsubset df_candidates :star_name == star_name
-
-# ╔═╡ 8a39fbbb-6b5b-4744-a875-469c289242fb
-df_ephem = if isempty(username)
-		DataFrame()
-	else
-		ephem_title, ephem_data = ephem(only(df_selected.ephem_url))
-		df = DataFrame(
-			stack(ephem_data; dims=1),
-			ephem_title,
-		)
-	
-		fmt = dateformat"dd u YYYY HH:MM"
-		@chain df begin
-			@rtransform begin
-				# :Epoch = parse(Float64, :Epoch)
-				:star_name = only(df_selected.star_name)
-				:Start = DateTime(:Start, fmt)
-				:Mid = DateTime(:Mid, fmt)
-				:End = DateTime(:End, fmt)
-				
-			end
-			
-			@rtransform begin
-				:Duration = canonicalize(:End - :Start)
-				:Duration_s = Second(:End - :Start).value
-				:unix_timestamp_ms = 1_000 * datetime2unix(:Mid)
-			end
-		end
-end
-
-# ╔═╡ 31c23e2b-1a2d-41aa-81c1-22868e241f7e
-df_obs = if isempty(username)
-		DataFrame()
-	else 
-		@rselect leftjoin(df_selected, df_ephem; on=:star_name) begin
-			:star_name
-			:Start
-			:Mid
-			:End
-			:Duration
-			:deep_link = deep_link(;
-				ra = :ra_deci,
-				dec = :dec_deci,
-				g = :gain,
-				d = round(Int, 1.5 * :Duration_s),
-				t = round(Int, :unix_timestamp_ms),
-				scitag = join([
-					"e",
-					Dates.format(:Mid, dateformat"yymmdd"),
-					replace(:star_name, " " => ""),
-				]),
-			)
-		end
-end
 
 # ╔═╡ 90b6ef16-7853-46e1-bbd6-cd1a904c442a
 let
