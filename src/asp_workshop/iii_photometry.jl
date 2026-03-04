@@ -29,7 +29,7 @@ begin
 	using PlutoUI, CommonMark
 
 	# Analysis tools
-	using AstroImages, ColorTypes, Photometry, DataFramesMeta, PlutoPlotly, FlexiJoins, SkyCoords, VirtualObservatory, Unitful, UnitfulAstro
+	using AstroImages, ColorTypes, Photometry, DataFramesMeta, CSV, PlutoPlotly, FlexiJoins, SkyCoords, VirtualObservatory, Unitful, UnitfulAstro
 	
 	# Colormap default settings
 	AstroImages.set_cmap!(nothing)
@@ -180,28 +180,33 @@ Since its launch in 2013, this flagship satellite from the ESA observed nearly t
 """
 
 # ╔═╡ 58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
-df_gaia = let
-	df = execute(TAPService(:gaia), """
-	    SELECT
-	        gs.source_id,
-	        gs.ra,
-	        gs.dec,
-	        gs.phot_g_mean_mag,
-	        gs.bp_rp,
-	        gs.parallax,
-	        gs.pmra,
-	        gs.pmdec,
-	        gs.ruwe,
-	        DISTANCE(POINT(gs.ra, gs.dec), POINT(132.825, 11.8167)) * 60 AS sep_arcmin
-	    FROM
-	        gaiadr3.gaia_source AS gs
-	    WHERE
-	        CONTAINS(
-	            POINT(gs.ra, gs.dec),
-	            CIRCLE(132.825, 11.8167, 0.5)
-	        ) = 1
-	""") |> DataFrame
+# df_gaia = let
+# 	df = execute(TAPService(:gaia), """
+# 	    SELECT
+# 	        gs.source_id,
+# 	        gs.ra,
+# 	        gs.dec,
+# 	        gs.phot_g_mean_mag,
+# 	        gs.bp_rp,
+# 	        gs.parallax,
+# 	        gs.pmra,
+# 	        gs.pmdec,
+# 	        gs.ruwe,
+# 	        DISTANCE(POINT(gs.ra, gs.dec), POINT(132.825, 11.8167)) * 60 AS sep_arcmin
+# 	    FROM
+# 	        gaiadr3.gaia_source AS gs
+# 	    WHERE
+# 	        CONTAINS(
+# 	            POINT(gs.ra, gs.dec),
+# 	            CIRCLE(132.825, 11.8167, 0.5)
+# 	        ) = 1
+# 	""") |> DataFrame
 
+# 	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
+# end
+
+df_gaia = let
+	df = CSV.read(download("https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/src/asp_workshop/assets/M67/gaia_dr3.csv"), DataFrame)
 	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
 end
 
@@ -566,6 +571,7 @@ PlutoUI.TableOfContents()
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AstroImages = "fe3fc30c-9b16-11e9-1c73-17dabf39f4ad"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 CommonMark = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
 DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
@@ -580,6 +586,7 @@ VirtualObservatory = "d7ce213e-d3b9-4ed1-b00e-1146b7ac83e0"
 
 [compat]
 AstroImages = "~0.5.1"
+CSV = "~0.10.15"
 ColorTypes = "~0.11.5"
 CommonMark = "~0.10.0"
 DataFramesMeta = "~0.15.4"
@@ -599,7 +606,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.5"
 manifest_format = "2.0"
-project_hash = "ee0491d35e5752731fd525c26c3a289d5880aa6c"
+project_hash = "240850a8d04e55ac1b9c5005ebc36984d4a8e93d"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2705,7 +2712,7 @@ version = "17.7.0+0"
 # ╟─47d5448d-aab1-4713-bee6-4ea115f92870
 # ╟─84752e8c-44c0-4a1d-ab2d-223283afae6c
 # ╟─1d674c32-ed5c-4608-9cee-b9f12f2d5852
-# ╟─1aae0286-f934-4430-aaba-f1913d774669
+# ╠═1aae0286-f934-4430-aaba-f1913d774669
 # ╟─221c16ee-752a-4053-ae15-92b8f5f1ae55
 # ╟─36956041-4a1a-4b23-986a-6b78851e75e1
 # ╟─851a1a1f-56ec-4599-bc42-60f9f7984e78
