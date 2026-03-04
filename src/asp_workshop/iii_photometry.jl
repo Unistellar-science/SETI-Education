@@ -75,10 +75,13 @@ What are some things that you notice? Try doing the same analysis on one of your
 """
 
 # ╔═╡ b4e9e785-892f-4065-89eb-c353967396d1
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	reset
 	@bind img_local FilePicker([MIME("image/fits")])
 end
+  ╠═╡ =#
 
 # ╔═╡ 4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
 md"""
@@ -114,7 +117,7 @@ We now have one of the major fundamental tools in our roadmap to producing scien
 """
 
 # ╔═╡ 8afbee29-a332-4e52-925b-39a346cb6935
-cm"""
+md"""
 ## Extension - M67 CMD
 
 Astronomers make very similar measurements like this to estimate different properties of star systems, like age, distance, and temperature, via so called [color magnitude diagrams](https://apod.nasa.gov/apod/ap010223.html) (CMD)s. Here is an example of one below:
@@ -123,23 +126,38 @@ Astronomers make very similar measurements like this to estimate different prope
 
 For a given star, measuring the difference in observed flux measured between different filters (e.g., B and V) give an estimate of the star's temperature, while the flux measurement in a single filter gives an estimate of the star's luminosity. Plotting these together reveals an underlying relationship that ties all stars together.
 
-In this extensions exercise, we will recreate these measurements for the famouns M67 star cluster.
+In this extensions exercise, we will recreate these measurements for the famous M67 star cluster.
+"""
+
+# ╔═╡ 6b4b78ef-2012-48de-8678-e9aa25d5b9b7
+md"""
+### 1. Observe M67
+
+Observe M67 either in Science Mode or Enhanced vision mode and load the corresponding FITS file into this notebook. This target should be available in the catalog within the app.
 """
 
 # ╔═╡ f4ff8b45-8967-42a4-a004-30ce02761ff9
 md"""
-### 1. Upload FITS file to Astrometry.net
+### 2. Upload FITS file to Astrometry.net
 
-We start by uploading a FITS file of our observation (taken either in Science Mode or Enhanced Vision mode) to [Astrometry.net](https://nova.astrometry.net/upload). This is a handy service for performing plate solving (converting from pixel space to RA and Dec) and photometry routines on our image.
+We start by uploading a FITS file of our observation to [Astrometry.net](https://nova.astrometry.net/upload). This is a handy service for performing plate solving (converting from pixel space to RA and Dec) and photometry routines on our image.
 
-After clicking the upload button, you will see a page like this after ~ 30 seconds -- 1 minute
+After clicking on the link above, you should see a page like this:
+
+![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_upload_page.png?raw=true)
+
+Select your FITS file and then click "Upload". After ~ 30 seconds -- 1 minute, you should see a success page like the following:
+
+![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_success_page.png?raw=true)
+
+Clicking "Go to results page" should then show the following:
 
 !!! todo
 	Highlight that this is from your eVscope
 """
 
 # ╔═╡ 31805e2b-6cc6-4482-91da-5d004e512302
-
+@bind img_local FilePicker([MIME("image/fits")])
 
 # ╔═╡ ee425549-1080-49d8-ba3b-2ed5fb940bbe
 img_M67 = load("./M67/astrometry/new-image_stacked.fits")
@@ -152,7 +170,7 @@ end
 
 # ╔═╡ 34901b11-59a3-4b0e-95c0-90a5b63e738d
 md"""
-### 2. Load GAIA data
+### 3. Load GAIA data
 
 This will give us our color measurements
 """
@@ -185,7 +203,7 @@ end
 
 # ╔═╡ 572276ca-d5dd-4852-a6c6-f3564725ab47
 md"""
-### 3. Cross-match
+### 4. Cross-match
 """
 
 # ╔═╡ 47d5448d-aab1-4713-bee6-4ea115f92870
@@ -201,7 +219,7 @@ end
 
 # ╔═╡ 84752e8c-44c0-4a1d-ab2d-223283afae6c
 md"""
-### 4. Filter membership
+### 5. Filter membership
 """
 
 # ╔═╡ 36956041-4a1a-4b23-986a-6b78851e75e1
@@ -2600,15 +2618,16 @@ version = "17.7.0+0"
 # ╠═63187c16-c3b8-47a5-9086-02c1aad6b812
 # ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
 # ╟─8afbee29-a332-4e52-925b-39a346cb6935
+# ╟─6b4b78ef-2012-48de-8678-e9aa25d5b9b7
 # ╠═f4ff8b45-8967-42a4-a004-30ce02761ff9
 # ╠═31805e2b-6cc6-4482-91da-5d004e512302
 # ╠═ee425549-1080-49d8-ba3b-2ed5fb940bbe
 # ╟─28d26b7b-45c4-4307-8c35-9e0026ac5a65
-# ╟─34901b11-59a3-4b0e-95c0-90a5b63e738d
+# ╠═34901b11-59a3-4b0e-95c0-90a5b63e738d
 # ╟─58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
-# ╟─572276ca-d5dd-4852-a6c6-f3564725ab47
+# ╠═572276ca-d5dd-4852-a6c6-f3564725ab47
 # ╟─47d5448d-aab1-4713-bee6-4ea115f92870
-# ╟─84752e8c-44c0-4a1d-ab2d-223283afae6c
+# ╠═84752e8c-44c0-4a1d-ab2d-223283afae6c
 # ╟─1aae0286-f934-4430-aaba-f1913d774669
 # ╟─221c16ee-752a-4053-ae15-92b8f5f1ae55
 # ╟─36956041-4a1a-4b23-986a-6b78851e75e1
