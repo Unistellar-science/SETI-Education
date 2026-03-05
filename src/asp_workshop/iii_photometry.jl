@@ -102,7 +102,7 @@ We now have one of the major fundamental tools in our roadmap to producing scien
 md"""
 ## Extension - M67 CMD
 
-Astronomers make very similar measurements like this to estimate different properties of star systems, like age, distance, and temperature, via so called [color magnitude diagrams](https://apod.nasa.gov/apod/ap010223.html) (CMD)s. Here is an example of one below:
+Astronomers make very similar measurements like this to estimate different properties of star systems (e.g., age, distance, and temperature) via so called [color magnitude diagrams](https://apod.nasa.gov/apod/ap010223.html) (CMD)s. Here is an example of one below:
 
 ![](https://apod.nasa.gov/apod/image/0102/m55cmd_mochejska.jpg)
 
