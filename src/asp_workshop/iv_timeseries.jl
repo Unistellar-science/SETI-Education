@@ -138,12 +138,6 @@ md"""
 Here is a summary of the header information for each science frame taken:
 """
 
-# ╔═╡ 5321f774-67fc-4355-9411-2e624a00e724
-md"""
-!!! note
-	This can be a pretty large number of data files depending on the observation, so for simplicity we will just use a subset for our lab.
-"""
-
 # ╔═╡ 74197e45-3b80-44ad-b940-f2544f2f9b54
 Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/src/ucan/eclipsing_binary/assets/finder_WUMa.jpg?raw=true")
 
@@ -695,21 +689,37 @@ df_sci_all = let
 	@transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
 end
 
+# ╔═╡ 5321f774-67fc-4355-9411-2e624a00e724
+begin
+	N_max = 200
+	N_sci_all = nrow(df_sci_all)
+md"""
+!!! note
+	This can be a pretty large number of data files depending on the observation, so for simplicity we will just use a subset for our lab, which we can specify.
+"""
+end
+
 # ╔═╡ 1f3610da-f81e-4cdb-bad6-b2475497dc5f
 cm"""
 !!! note "File selection"
 	Move the slider below, then click `Select` to specify the total number of equally spaced observations in time to use:
 
-	$(@bind nrows_max confirm(let
-		# Don't select more than 200 files total, equally spaced. Can be less.
-		N = min(nrow(df_sci_all), 200)
-		Slider(2:N; show_value = true, default = N ÷ 2)
-	end; label = "Select"))
+	$(@bind nrows_max confirm(
+		Slider(2:N_sci_all;
+			show_value = true,
+			default = min(N_sci_all, 200),
+			# Heads up, as max_steps goes up, performance goes down
+			max_steps = 4_000,
+		);
+		label = "Select",
+	))
+
+	For safety, this will default to $(N_max) if you have more than this number of files to process, but you can of course raise this limit with the slider if your computer can handle it.
 """
 
 # ╔═╡ 777dcd30-70ba-4091-9075-4f1be4e309c0
 df_sci = let
-	rows_to_use = round.(Int, range(1, nrow(df_sci_all); length = nrows_max))
+	rows_to_use = round.(Int, range(1, N_sci_all; length = nrows_max))
 	df_sci_all[rows_to_use, :]
 end
 
