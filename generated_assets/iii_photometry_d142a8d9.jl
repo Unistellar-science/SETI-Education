@@ -179,36 +179,56 @@ md"""
 Since its launch in 2013, this flagship satellite from the ESA observed nearly two billion celestial objects over its 11 year mission duration. This has lead to a vast catalog of stellar flux measurements that we can then use to supply the x-axis of our CMD (the "red" and "blue" measurements that provide stellar color/temperature information). We start by loading in every Gaia observation in a 30 arcminute radius (our rough field of view) around M67:
 """
 
-# ╔═╡ 58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
-# df_gaia = let
-# 	df = execute(TAPService(:gaia), """
-# 	    SELECT
-# 	        gs.source_id,
-# 	        gs.ra,
-# 	        gs.dec,
-# 	        gs.phot_g_mean_mag,
-# 	        gs.bp_rp,
-# 	        gs.parallax,
-# 	        gs.pmra,
-# 	        gs.pmdec,
-# 	        gs.ruwe,
-# 	        DISTANCE(POINT(gs.ra, gs.dec), POINT(132.825, 11.8167)) * 60 AS sep_arcmin
-# 	    FROM
-# 	        gaiadr3.gaia_source AS gs
-# 	    WHERE
-# 	        CONTAINS(
-# 	            POINT(gs.ra, gs.dec),
-# 	            CIRCLE(132.825, 11.8167, 0.5)
-# 	        ) = 1
-# 	""") |> DataFrame
+# ╔═╡ 645211c4-d9e1-4c8e-be4d-6d71de01197f
+md"""
+!!! note
+	To query Gaia data for your own target, change the name supplied in the quotes above. If no results are returned, try double checking the name [on Simbad](https://simbad.u-strasbg.fr/simbad/sim-id?Ident=M67&NbIdent=1&Radius=2&Radius.unit=arcmin&submit=submit+id).
+"""
 
+# ╔═╡ f6dd306d-bb78-4579-9937-8553aa989ec1
+coords_simbad(name) = let
+    coords = execute(TAPService(:simbad), """
+	SELECT basic.ra, basic.dec
+	FROM ident JOIN basic ON ident.oidref = basic.oid
+	WHERE id = '$(name)';
+	""")
+	return first.((coords.ra, coords.dec))
+end
+
+# ╔═╡ 58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
+query_gaia(name) = let
+	ra, dec = coords_simbad(name)
+	df = execute(TAPService(:gaia), """
+	    SELECT
+	        gs.source_id,
+	        gs.ra,
+	        gs.dec,
+	        gs.phot_g_mean_mag,
+	        gs.bp_rp,
+	        gs.parallax,
+	        gs.pmra,
+	        gs.pmdec,
+	        gs.ruwe,
+	        DISTANCE(POINT(gs.ra, gs.dec), POINT($(ra), $(dec))) * 60 AS sep_arcmin
+	    FROM
+	        gaiadr3.gaia_source AS gs
+	    WHERE
+	        CONTAINS(
+	            POINT(gs.ra, gs.dec),
+	            CIRCLE($(ra), $(dec), 0.5)
+	        ) = 1
+	""") |> DataFrame
+
+	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
+end
+
+# df_gaia = let
+# 	df = CSV.read(download("https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/src/asp_workshop/assets/M67/gaia_dr3.csv"), DataFrame)
 # 	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
 # end
 
-df_gaia = let
-	df = CSV.read(download("https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/src/asp_workshop/assets/M67/gaia_dr3.csv"), DataFrame)
-	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
-end
+# ╔═╡ 01fbf7c7-be31-484c-b409-5d56422bba22
+df_gaia = query_gaia("M 67")
 
 # ╔═╡ 572276ca-d5dd-4852-a6c6-f3564725ab47
 md"""
@@ -2707,7 +2727,10 @@ version = "17.7.0+0"
 # ╟─03568d71-e7a2-4187-8650-e7e1cf98369e
 # ╟─88546560-491a-452a-8681-f877f319f804
 # ╟─34901b11-59a3-4b0e-95c0-90a5b63e738d
+# ╠═01fbf7c7-be31-484c-b409-5d56422bba22
+# ╟─645211c4-d9e1-4c8e-be4d-6d71de01197f
 # ╟─58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
+# ╟─f6dd306d-bb78-4579-9937-8553aa989ec1
 # ╟─572276ca-d5dd-4852-a6c6-f3564725ab47
 # ╟─47d5448d-aab1-4713-bee6-4ea115f92870
 # ╟─84752e8c-44c0-4a1d-ab2d-223283afae6c
