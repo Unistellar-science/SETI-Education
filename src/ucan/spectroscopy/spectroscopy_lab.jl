@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/jtinir2n/unistellar-spectroscopy-lab-2024_1.png"
@@ -138,6 +138,9 @@ md"""
 We now have an image that we can analyze. For starters, let's display some key characteristics about this image:
 """
 
+# ╔═╡ 256f479b-7c90-4ad4-a893-e3e5c2266516
+@debug eltype_dog
+
 # ╔═╡ 9014873e-5b1b-4605-9dd6-efb9840e5732
 md"""
 Even though this part is Julia specific, the underlying information is general enough to apply to most image processing libraries. Let's break down what each piece means: 
@@ -224,10 +227,16 @@ Now that we are able to access the underlying structure of our data, let's explo
 Try using the sliders below to specify a region of interest where we would like to build a spectrum from. *Note that this will only work in the locally downladed version of this notebook.*
 """
 
+# ╔═╡ fcc96529-3b20-4a59-9d2d-48612f4c16f3
+window_dog = @view gray_dog[row_range_dog, col_range_dog];
+
 # ╔═╡ 9e16a591-4d89-4d90-a96f-eed8f2078dad
 md"""
 Calling the `gray` function again, we have the following array of pixel values to work with:
 """
+
+# ╔═╡ 12c0a504-856d-40b0-aa01-bbb992167943
+window_dog_vals = gray.(window_dog)
 
 # ╔═╡ 14f83f54-f51c-4af4-b388-b76f188e7649
 md"""
@@ -235,6 +244,16 @@ To build a spectrum of this selection across a given direction, we next perform 
 
 Many libraries have this operation built in, typically with a `dims` or `axis` keyword to specify the direction to sum in, as shown below:
 """
+
+# ╔═╡ d0203d68-6a55-46ec-ab8f-8fdfc5b1356d
+prof_1D_dog_vals = sum(window_dog_vals; dims=1) |> vec
+
+# ╔═╡ d4ca722f-ebc8-411d-a2f1-48fb83373e54
+"""
+!!! warning "Heads up"
+
+	Be aware of potential [arithmetic overflow](https://juliaimages.org/latest/tutorials/arrays_colors/#A-note-on-arithmetic-overflow) when performing operations on your data. In this case, the function `sum` already takes care of this for us by first converting our pixel values to a larger data type **($(eltype(prof_1D_dog_vals)))**.
+""" |> Markdown.parse
 
 # ╔═╡ 2f5da861-2a83-4ed1-9b6b-f9081768ca05
 md"""
@@ -292,6 +311,18 @@ prof_1D_ev_live = sum(window_ev_live; dims=1) |> vec
 md"""
 These steps to produce a 1D spectrum are common enough to wrap into a general function so that they can be re-used for other targets.
 """
+
+# ╔═╡ b4f43581-09e8-45f8-bdc1-766dd88bdfc3
+"""
+	compute_spec1D(arr, region_lims)
+
+Given a rectangular region specified by `region_lims` inside a 2D image array `arr`, return its 1D spectrum computed along the horizontal axis. Also return the horizontal range of the region for convenience when plotting the 1D spectrum with its corresponding image array.
+"""
+function compute_spec1D(arr, region_lims)
+	xrange, yrange = get_lims(arr, region_lims)
+	region = @view arr[yrange, xrange]
+	return vec(sum(region; dims=1)), xrange
+end
 
 # ╔═╡ 7e60b93f-b57f-48fe-a196-a36c3d1f8cb6
 md"""
@@ -410,6 +441,9 @@ function img_info(img)
 	@debug "Image info" nrows ncols eltype_img
 	return nrows, ncols, eltype_img
 end
+
+# ╔═╡ 096b8d1e-9092-4110-95a7-7cff9210ba43
+nrows_window_dog, ncols_window_dog, _ = img_info(window_dog);
 
 # ╔═╡ e1ae334d-548b-4259-af7c-e13b773f7b3e
 msg(x) = details("Details", x)
@@ -540,18 +574,6 @@ function get_lims(arr, limits)
 	return xlo:xhi, ylo:yhi
 end
 
-# ╔═╡ b4f43581-09e8-45f8-bdc1-766dd88bdfc3
-"""
-	compute_spec1D(arr, region_lims)
-
-Given a rectangular region specified by `region_lims` inside a 2D image array `arr`, return its 1D spectrum computed along the horizontal axis. Also return the horizontal range of the region for convenience when plotting the 1D spectrum with its corresponding image array.
-"""
-function compute_spec1D(arr, region_lims)
-	xrange, yrange = get_lims(arr, region_lims)
-	region = @view arr[yrange, xrange]
-	return vec(sum(region; dims=1)), xrange
-end
-
 # ╔═╡ 7d1caf58-d1db-4fcb-a62b-5c2a16b56732
 stake! = String ∘ take!
 
@@ -575,9 +597,6 @@ nrows_dog, ncols_dog, eltype_dog = img_info(img_dog)
 md"""
 We see here that our image is $(nrows_dog) rows by $(ncols_dog) columns wide, and each cell (or pixel) of this image is represented by:
 """
-
-# ╔═╡ 256f479b-7c90-4ad4-a893-e3e5c2266516
-@debug eltype_dog
 
 # ╔═╡ 0d260f11-abcd-404d-885a-ba02f2692e36
 begin
@@ -620,19 +639,6 @@ md"""
 `columns`: $(@bind col_range_dog RangeSlider(1:size(gray_dog, 2)))
 """
 
-# ╔═╡ bb008a9b-8538-418d-9e70-50d9983c2074
-let
-	tmp = copy(gray_dog)
-	tmp[row_range_dog, col_range_dog] .= RGB(0, 0, 0)
-	tmp
-end
-
-# ╔═╡ fcc96529-3b20-4a59-9d2d-48612f4c16f3
-window_dog = @view gray_dog[row_range_dog, col_range_dog];
-
-# ╔═╡ 096b8d1e-9092-4110-95a7-7cff9210ba43
-nrows_window_dog, ncols_window_dog, _ = img_info(window_dog);
-
 # ╔═╡ fedb57fe-574c-4567-933a-052e9b8d50bd
 md"""
 Based on our selections, the black rectangular region of interest extends from row $(first(row_range_dog)) to $(last(row_range_dog)), and from column $(first(col_range_dog)) to $(last(col_range_dog)) of our original image, resulting in a slice that is $(nrows_window_dog) rows by $(ncols_window_dog) columns. We selected this range by using the following array syntax:
@@ -641,19 +647,6 @@ Based on our selections, the black rectangular region of interest extends from r
 array_slice = original_array[row_range, column_range]
 ```
 """
-
-# ╔═╡ 12c0a504-856d-40b0-aa01-bbb992167943
-window_dog_vals = gray.(window_dog)
-
-# ╔═╡ d0203d68-6a55-46ec-ab8f-8fdfc5b1356d
-prof_1D_dog_vals = sum(window_dog_vals; dims=1) |> vec
-
-# ╔═╡ d4ca722f-ebc8-411d-a2f1-48fb83373e54
-"""
-!!! warning "Heads up"
-
-	Be aware of potential [arithmetic overflow](https://juliaimages.org/latest/tutorials/arrays_colors/#A-note-on-arithmetic-overflow) when performing operations on your data. In this case, the function `sum` already takes care of this for us by first converting our pixel values to a larger data type **($(eltype(prof_1D_dog_vals)))**.
-""" |> Markdown.parse
 
 # ╔═╡ d3b6afc1-c29b-476a-90ed-721796af130f
 let
@@ -677,6 +670,13 @@ let
 			yaxis2 = attr(scaleanchor=:x, title="pixel row")
 		)
 	)
+end
+
+# ╔═╡ bb008a9b-8538-418d-9e70-50d9983c2074
+let
+	tmp = copy(gray_dog)
+	tmp[row_range_dog, col_range_dog] .= RGB(0, 0, 0)
+	tmp
 end
 
 # ╔═╡ baa00c8f-9fd4-44b7-bc79-669d17908c2d
