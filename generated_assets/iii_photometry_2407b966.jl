@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.23
+# v0.20.24
 
 #> [frontmatter]
 #> title = "III - Introduction to Photometry"
@@ -117,6 +117,36 @@ md"""
 
 Observe M67 either in Science Mode or Enhanced vision mode and load the corresponding FITS file into this notebook. This target should be available in the catalog within the app. Below is a sample EV observation taken by an eVscope 2:
 """
+
+# ╔═╡ 50c979a5-8a53-448e-9156-b743342ec5f4
+img_red = reverse(AstroImage([
+	1 0 1 0
+	0 0 0 0
+	1 0 1 0
+	0 0 0 0
+]); dims = Y)
+
+# ╔═╡ b25e7c62-e176-44b0-be70-1e78298266d1
+img_green = reverse(AstroImage([
+	0 1 0 1
+	1 0 1 0
+	0 1 0 1
+	1 0 1 0
+]); dims = Y)
+
+# ╔═╡ a42707fb-4e8a-4eb1-9e73-fd19a1372839
+img_blue = reverse(AstroImage([
+	0 0 0 0
+	0 1 0 1
+	0 0 0 0
+	0 1 0 1
+]); dims = Y)
+
+# ╔═╡ c192c784-ef29-4e67-893f-83aa46d5b9dd
+img_color = composecolors([img_red, img_green, img_blue];
+	# stretch = asinhstretch,   # gentle stretch for dim nebulae/galaxies
+    # clims   = Percent(99.5),
+)
 
 # ╔═╡ f600d462-5625-4e9a-ba57-d98e487f46d4
 @bind reset_M67 Button("Reset")
@@ -2719,6 +2749,10 @@ version = "17.7.0+0"
 # ╟─8afbee29-a332-4e52-925b-39a346cb6935
 # ╟─6b4b78ef-2012-48de-8678-e9aa25d5b9b7
 # ╟─6186c35c-04b5-4692-b34a-ff90dc5bab20
+# ╠═50c979a5-8a53-448e-9156-b743342ec5f4
+# ╠═b25e7c62-e176-44b0-be70-1e78298266d1
+# ╠═a42707fb-4e8a-4eb1-9e73-fd19a1372839
+# ╠═c192c784-ef29-4e67-893f-83aa46d5b9dd
 # ╟─f600d462-5625-4e9a-ba57-d98e487f46d4
 # ╟─373ccd7b-b1e3-43a2-93fc-413a67595ccc
 # ╟─f4ff8b45-8967-42a4-a004-30ce02761ff9
@@ -2729,7 +2763,7 @@ version = "17.7.0+0"
 # ╟─34901b11-59a3-4b0e-95c0-90a5b63e738d
 # ╠═01fbf7c7-be31-484c-b409-5d56422bba22
 # ╟─645211c4-d9e1-4c8e-be4d-6d71de01197f
-# ╟─58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
+# ╠═58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
 # ╟─f6dd306d-bb78-4579-9937-8553aa989ec1
 # ╟─572276ca-d5dd-4852-a6c6-f3564725ab47
 # ╟─47d5448d-aab1-4713-bee6-4ea115f92870
