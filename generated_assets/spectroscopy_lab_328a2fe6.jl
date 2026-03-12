@@ -558,6 +558,8 @@ md"""
 
 # ╔═╡ 75108863-4a62-4751-aeee-246250fbf8b8
 function get_lims(arr, limits)
+	# Guard against @bind run non-interactively (e.g., html export)
+	ismissing(limits) && return (1:size(arr, 2), 1:size(arr, 1))
 	ymax, xmax = size(arr)
 	xlims = limits["xaxis"] .|> (x -> round(Int, x))
 	xlo, xhi = xlims
