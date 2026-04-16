@@ -218,11 +218,126 @@ begin
 	@bind DATA_DIR_local confirm(TextField(); label = "Enter")
 end
 
+# ╔═╡ 7c078085-ff30-400d-a0ab-2680f468c415
+DATA_DIR = if isempty(DATA_DIR_local)
+	datadep"sample_data"
+else
+	joinpath(@__DIR__, DATA_DIR_local)
+end;
+
+# ╔═╡ 1356c02f-9ff2-491f-b55d-666ee76e6fae
+df_sci_all = let
+	df = fitscollection(DATA_DIR; abspath=false)
+	@transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
+end
+
+# ╔═╡ 5321f774-67fc-4355-9411-2e624a00e724
+begin
+	N_max = 200
+	N_sci_all = nrow(df_sci_all)
+md"""
+!!! note
+	This can be a pretty large number of data files depending on the observation, so for simplicity we will just use a subset for our lab, which we can specify.
+"""
+end
+
+# ╔═╡ 1f3610da-f81e-4cdb-bad6-b2475497dc5f
+cm"""
+!!! note "File selection"
+	Move the slider below, then click `Select` to specify the total number of equally spaced observations in time to use:
+
+	$(@bind nrows_max confirm(
+		Slider(2:N_sci_all;
+			show_value = true,
+			default = min(N_sci_all, 200),
+			# Heads up, as max_steps goes up, performance goes down
+			max_steps = 4_000,
+		);
+		label = "Select",
+	))
+
+	For safety, this will default to $(N_max) if you have more than this number of files to process, but you can of course raise this limit with the slider if your computer can handle it.
+"""
+
+# ╔═╡ 777dcd30-70ba-4091-9075-4f1be4e309c0
+df_sci = let
+	rows_to_use = round.(Int, range(1, N_sci_all; length = nrows_max))
+	df_sci_all[rows_to_use, :]
+end
+
+# ╔═╡ 035fcecb-f998-4644-9650-6aeaced3e41f
+imgs_sci = map(eachrow(df_sci)) do f
+	img = load(f.path)
+	mapwindow!(median!, similar(img), img, (3, 3)) # Good for catching hot pixels
+end;
+
+# ╔═╡ c06e64ef-4085-4bb5-9b8b-2ed244d5dbe8
+md"""
+Frame number: $(frame_slider = @bind frame_i Slider(1:length(imgs_sci); show_value=true))
+"""
+
+# ╔═╡ 06d26240-81b6-401b-8eda-eab3a9a0fb20
+let
+	obs_start, obs_end = df_sci[:, "DATE-OBS"] |> extrema .|> string
+md"""
+We see that we have $(nrow(df_sci)) fits files taken from $(obs_start) -- $(obs_end) UTC. Here's what that first image looks like compared to its [finder chart](https://astro.swarthmore.edu/transits/finding_charts.cgi):
+"""
+end
+
+# ╔═╡ 2b8c75f6-c148-4c70-be6a-c1a4b95d5849
+img_sci = load(first(df_sci).path); # The semicolon hides automatic output
+
+# ╔═╡ f6197e8e-3132-4ab5-86d7-32572e337c58
+img_size, img_eltype = size(img_sci), eltype(img_sci);
+
+# ╔═╡ 5abbcbe0-3ee6-4658-9c99-e4567a23e3f6
+md"""
+It looks like this image is $(first(img_size)) x $(last(img_size)) pixels, with the ADU counts for each pixel stored as a $(img_eltype) to reduce memory storage. Now that we know that we are pointing at the right place in the sky, let's take at look at how these images change over time. Drag the slider below to scroll through each of our science frames. (Note for the rest of this notebook that we will be using the default image orientation in the plotting software):
+"""
+
+# ╔═╡ 8f0e6529-bd67-47aa-9ddf-4032a5483a98
+begin
+	X_max, Y_max = img_size
+	X_mid, Y_mid = img_size .÷ 2
+	@bind coords PlutoUI.combine() do Child
+		md"""
+		| | X (pixels) | Y (pixels) | radius (pixels)
+		| :-: | :-: | :-: | :-: |
+		| target |$(Child("x", NumberField(1:X_max; default = 1029))) | $(Child("y", NumberField(1:Y_max; default = 779))) | $(Child("r", NumberField(1:1000; default = 50))) | ----
+		| comparison |$(Child("x_comp", NumberField(1:X_max; default = 1153))) | $(Child("y_comp", NumberField(1:Y_max; default = 711))) | $(Child("r_comp", NumberField(1:1000; default = 50)))
+
+		!!! note "Apertures and comparison stars"
+
+			To better show the frame to frame differences, we also added some sample target and comparison star aperturess (in green and orange, respectively) centered on the first frame in our image series. We use comparison stars to divide out common systematics like atmospheric turbulence and other changes in seeing conditions so that ideally only the target signal will be left.
+		"""
+	end
+end
+
+# ╔═╡ dbe812e2-a795-4caa-842d-07da5eabcade
+img_sci[reverse(begin:end), begin:end]
+
+# ╔═╡ 7d7cd508-be27-4f52-bc13-91c702450167
+header(img_sci)
+
+# ╔═╡ edf5f093-19cc-4802-a777-95d8492996a8
+h = header(img_sci);
+
 # ╔═╡ 1ede8642-1f36-4aad-bcad-383fd211d31a
 md"""
 !!! note
 	To reload the original sample data, clear the field above and click `Enter` again.
 """
+
+# ╔═╡ f1ed6484-8f6a-4fbf-9a3d-0fe20360ab3b
+# Aperture object that will be used for photometry
+# (x_center, y_center, radius)
+ap_target = CircularAperture(coords.x, coords.y, coords.r);
+
+# ╔═╡ 954c7918-7dd1-4967-a67b-7856f00dc498
+ap_comp1 = CircularAperture(coords.x_comp, coords.y_comp, coords.r_comp);
+
+# ╔═╡ 381d0147-264b-46f6-82ab-8c840c50c7d1
+aps = [ap_target, ap_comp1];
 
 # ╔═╡ e34ceb7c-1584-41ce-a5b5-3532fac3c03d
 md"""
@@ -386,6 +501,23 @@ end
 # ╔═╡ f2c89a20-09d5-47f4-8f83-e59477723d95
 nrow(df_all) # Total number of targets in our list
 
+# ╔═╡ 6c2a385c-5116-4aa9-9745-bea2326af593
+md"""
+# Notebook setup 🔧
+"""
+
+# ╔═╡ a984c96d-273e-4d6d-bab8-896f14a79103
+TableOfContents(; depth=4)
+
+# ╔═╡ f290d98e-5a8a-44f2-bee5-b93738abe9af
+# Keep these values untouched
+const baseline = (
+	v_mag = 11.7, # V (mag)
+	t_exp = 3200.0, # Exptime (ms)
+	gain = 25.0, # Gain (dB)
+	peak_px = 3000, # Peak Pixel ADU
+)
+
 # ╔═╡ e7f88515-305b-4899-8fa0-326e9e2097b5
 md"""
 ## Convenience functions
@@ -399,6 +531,74 @@ function align_frames(imgs; kwargs...)
 		shareheader(img, img_aligned)
 	end
 	return [fixed, frames_aligned...]
+end
+
+# ╔═╡ 1fe59945-8bce-44f3-b548-9646c2ce6bda
+imgs_sci_aligned = align_frames(imgs_sci);
+
+# ╔═╡ 79c924a7-f915-483d-aee6-94e749d3b004
+aperture_sums = map(imgs_sci_aligned) do img
+	# Returns (x_center, y_center, aperture_sum)
+	# for each aperture
+	p = photometry(aps, img)
+	
+	# Just store the aperture sum for each frame
+	p.aperture_sum
+end;
+
+# ╔═╡ 96dc5bbe-3284-43a0-8c04-c1bb51ad618b
+df_phot = let
+	# `stack` converts to a Matrix
+	# `:auto` names the columns for us
+	# `copycols` sets whether we want a view or copy of the source matrix 
+	data = stack(aperture_sums; dims=1)
+	data ./ median(data; dims=1)
+	
+	df = DataFrame(data, :auto; copycols=false)
+
+	@transform! df begin
+		:x1 = :x1 / median(:x1)
+		:x2 = :x2 / median(:x2)
+	end
+	
+	# Place the observation time in the first column
+	insertcols!(df, 1, :t => df_sci.:"DATE-OBS")
+end
+
+# ╔═╡ 6470b357-4dc6-4b2b-9760-93d64bab13e9
+let
+	# Switch to long "tidy" format to use convenient plotting syntax
+	p = plot(stack(df_phot);
+		x = :t,
+		y = :value,
+		color = :variable,
+		mode = :markers,
+	)
+
+	layout = Layout(
+		xaxis = attr(title="Date (UTC)"),
+		yaxis = attr(title="Relative aperture sum"),
+		title = "Raw light curves",
+		legend_title_text = "Source",
+	)
+	
+	relayout!(p, layout)
+
+	p
+end
+
+# ╔═╡ 59392770-f59e-4188-a675-89c2f2fc67d9
+let
+	sc = scatter(x=df_phot.t, y=df_phot.x1 ./ df_phot.x2, mode = :markers,)
+
+	layout = Layout(
+		xaxis = attr(title="Date (UTC)"),
+		yaxis = attr(title="Relative aperture sum"),
+		title = string("Divided light curve<br>", h["PURPOSE"], " observation: ",  h["DATE-OBS"]),
+		legend_title_text = "Source",
+	)
+	
+	plot(sc, layout)
 end
 
 # ╔═╡ 46e6bba9-0c83-47b7-be17-f41301efa18e
@@ -474,15 +674,6 @@ pretty(df) = DataFrames.PrettyTables.pretty_table(HTML, df;
 	maximum_column_width = "max-width",
 	nosubheader = true,
 	alignment = :c,
-)
-
-# ╔═╡ f290d98e-5a8a-44f2-bee5-b93738abe9af
-# Keep these values untouched
-const baseline = (
-	v_mag = 11.7, # V (mag)
-	t_exp = 3200.0, # Exptime (ms)
-	gain = 25.0, # Gain (dB)
-	peak_px = 3000, # Peak Pixel ADU
 )
 
 # ╔═╡ 3c601844-3bb9-422c-ab1e-b40f7e7cb0df
@@ -638,198 +829,6 @@ let
 	@debug "Observing params" gain_max gain_recommended
 end
 
-# ╔═╡ 7c078085-ff30-400d-a0ab-2680f468c415
-DATA_DIR = if isempty(DATA_DIR_local)
-	datadep"sample_data"
-else
-	joinpath(@__DIR__, DATA_DIR_local)
-end;
-
-# ╔═╡ 1356c02f-9ff2-491f-b55d-666ee76e6fae
-df_sci_all = let
-	df = fitscollection(DATA_DIR; abspath=false)
-	@transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
-end
-
-# ╔═╡ 5321f774-67fc-4355-9411-2e624a00e724
-begin
-	N_max = 200
-	N_sci_all = nrow(df_sci_all)
-md"""
-!!! note
-	This can be a pretty large number of data files depending on the observation, so for simplicity we will just use a subset for our lab, which we can specify.
-"""
-end
-
-# ╔═╡ 1f3610da-f81e-4cdb-bad6-b2475497dc5f
-cm"""
-!!! note "File selection"
-	Move the slider below, then click `Select` to specify the total number of equally spaced observations in time to use:
-
-	$(@bind nrows_max confirm(
-		Slider(2:N_sci_all;
-			show_value = true,
-			default = min(N_sci_all, 200),
-			# Heads up, as max_steps goes up, performance goes down
-			max_steps = 4_000,
-		);
-		label = "Select",
-	))
-
-	For safety, this will default to $(N_max) if you have more than this number of files to process, but you can of course raise this limit with the slider if your computer can handle it.
-"""
-
-# ╔═╡ 777dcd30-70ba-4091-9075-4f1be4e309c0
-df_sci = let
-	rows_to_use = round.(Int, range(1, N_sci_all; length = nrows_max))
-	df_sci_all[rows_to_use, :]
-end
-
-# ╔═╡ 06d26240-81b6-401b-8eda-eab3a9a0fb20
-let
-	obs_start, obs_end = df_sci[:, "DATE-OBS"] |> extrema .|> string
-md"""
-We see that we have $(nrow(df_sci)) fits files taken from $(obs_start) -- $(obs_end) UTC. Here's what that first image looks like compared to its [finder chart](https://astro.swarthmore.edu/transits/finding_charts.cgi):
-"""
-end
-
-# ╔═╡ 2b8c75f6-c148-4c70-be6a-c1a4b95d5849
-img_sci = load(first(df_sci).path); # The semicolon hides automatic output
-
-# ╔═╡ dbe812e2-a795-4caa-842d-07da5eabcade
-img_sci[reverse(begin:end), begin:end]
-
-# ╔═╡ 7d7cd508-be27-4f52-bc13-91c702450167
-header(img_sci)
-
-# ╔═╡ edf5f093-19cc-4802-a777-95d8492996a8
-h = header(img_sci);
-
-# ╔═╡ f6197e8e-3132-4ab5-86d7-32572e337c58
-img_size, img_eltype = size(img_sci), eltype(img_sci);
-
-# ╔═╡ 5abbcbe0-3ee6-4658-9c99-e4567a23e3f6
-md"""
-It looks like this image is $(first(img_size)) x $(last(img_size)) pixels, with the ADU counts for each pixel stored as a $(img_eltype) to reduce memory storage. Now that we know that we are pointing at the right place in the sky, let's take at look at how these images change over time. Drag the slider below to scroll through each of our science frames. (Note for the rest of this notebook that we will be using the default image orientation in the plotting software):
-"""
-
-# ╔═╡ 8f0e6529-bd67-47aa-9ddf-4032a5483a98
-begin
-	X_max, Y_max = img_size
-	X_mid, Y_mid = img_size .÷ 2
-	@bind coords PlutoUI.combine() do Child
-		md"""
-		| | X (pixels) | Y (pixels) | radius (pixels)
-		| :-: | :-: | :-: | :-: |
-		| target |$(Child("x", NumberField(1:X_max; default = 1029))) | $(Child("y", NumberField(1:Y_max; default = 779))) | $(Child("r", NumberField(1:1000; default = 50))) | ----
-		| comparison |$(Child("x_comp", NumberField(1:X_max; default = 1153))) | $(Child("y_comp", NumberField(1:Y_max; default = 711))) | $(Child("r_comp", NumberField(1:1000; default = 50)))
-
-		!!! note "Apertures and comparison stars"
-
-			To better show the frame to frame differences, we also added some sample target and comparison star aperturess (in green and orange, respectively) centered on the first frame in our image series. We use comparison stars to divide out common systematics like atmospheric turbulence and other changes in seeing conditions so that ideally only the target signal will be left.
-		"""
-	end
-end
-
-# ╔═╡ f1ed6484-8f6a-4fbf-9a3d-0fe20360ab3b
-# Aperture object that will be used for photometry
-# (x_center, y_center, radius)
-ap_target = CircularAperture(coords.x, coords.y, coords.r);
-
-# ╔═╡ 954c7918-7dd1-4967-a67b-7856f00dc498
-ap_comp1 = CircularAperture(coords.x_comp, coords.y_comp, coords.r_comp);
-
-# ╔═╡ 381d0147-264b-46f6-82ab-8c840c50c7d1
-aps = [ap_target, ap_comp1];
-
-# ╔═╡ 035fcecb-f998-4644-9650-6aeaced3e41f
-imgs_sci = map(eachrow(df_sci)) do f
-	img = load(f.path)
-	mapwindow!(median!, similar(img), img, (3, 3))
-end;
-#[load(f.path) for f in eachrow(df_sci)];
-
-# ╔═╡ c06e64ef-4085-4bb5-9b8b-2ed244d5dbe8
-md"""
-Frame number: $(frame_slider = @bind frame_i Slider(1:length(imgs_sci); show_value=true))
-"""
-
-# ╔═╡ 1fe59945-8bce-44f3-b548-9646c2ce6bda
-imgs_sci_aligned = align_frames(imgs_sci);
-
-# ╔═╡ 73e16c0e-873c-46a3-a0fd-d7ed5405ed7b
-md"""
-Frame number: $(frame_slider_aligned = @bind frame_i_aligned Slider(1:length(imgs_sci_aligned); show_value=true))
-"""
-
-# ╔═╡ 79c924a7-f915-483d-aee6-94e749d3b004
-aperture_sums = map(imgs_sci_aligned) do img
-	# Returns (x_center, y_center, aperture_sum)
-	# for each aperture
-	p = photometry(aps, img)
-	
-	# Just store the aperture sum for each frame
-	p.aperture_sum
-end;
-
-# ╔═╡ 96dc5bbe-3284-43a0-8c04-c1bb51ad618b
-df_phot = let
-	# `stack` converts to a Matrix
-	# `:auto` names the columns for us
-	# `copycols` sets whether we want a view or copy of the source matrix 
-	data = stack(aperture_sums; dims=1)
-	data ./ median(data; dims=1)
-	
-	df = DataFrame(data, :auto; copycols=false)
-
-	@transform! df begin
-		:x1 = :x1 / median(:x1)
-		:x2 = :x2 / median(:x2)
-	end
-	
-	# Place the observation time in the first column
-	insertcols!(df, 1, :t => df_sci.:"DATE-OBS")
-end
-
-# ╔═╡ 6470b357-4dc6-4b2b-9760-93d64bab13e9
-let
-	# Switch to long "tidy" format to use convenient plotting syntax
-	p = plot(stack(df_phot);
-		x = :t,
-		y = :value,
-		color = :variable,
-		mode = :markers,
-	)
-
-	layout = Layout(
-		xaxis = attr(title="Date (UTC)"),
-		yaxis = attr(title="Relative aperture sum"),
-		title = "Raw light curves",
-		legend_title_text = "Source",
-	)
-	
-	relayout!(p, layout)
-
-	p
-end
-
-# ╔═╡ 59392770-f59e-4188-a675-89c2f2fc67d9
-let
-	sc = scatter(x=df_phot.t, y=df_phot.x1 ./ df_phot.x2, mode = :markers,)
-
-	layout = Layout(
-		xaxis = attr(title="Date (UTC)"),
-		yaxis = attr(title="Relative aperture sum"),
-		title = string("Divided light curve<br>", h["PURPOSE"], " observation: ",  h["DATE-OBS"]),
-		legend_title_text = "Source",
-	)
-	
-	plot(sc, layout)
-end
-
-# ╔═╡ a984c96d-273e-4d6d-bab8-896f14a79103
-TableOfContents(; depth=4)
-
 # ╔═╡ 21e828e5-00e4-40ce-bff5-60a17439bf44
 # Helpful for not having ginormous plot objects
 r2(img) = (restrict ∘ restrict)(img)
@@ -906,13 +905,96 @@ let
 	p
 end
 
-# ╔═╡ f3683998-543c-4bc4-8b73-fc1de6a6a955
-let
-	zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs_sci))
-	p = plot_img(frame_i_aligned, imgs_sci_aligned[frame_i_aligned]; zmin, zmax)
-	relayout!(p; shapes)
-	p
+# ╔═╡ f41df561-85ff-484b-8188-883c1fea21c9
+function plot_anim(imgs)
+    N = length(imgs)
+    zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs))
+
+    frames = map(1:N) do i
+		p = plot_img(i, imgs[i]; zmin, zmax)
+		
+		frame(;
+			data = collect(p.data),
+			name = "frame_$(i)",
+			layout = attr(title_text = p.layout.title),
+			traces = [0],
+		)
+	end
+
+    layout = Layout(;
+		title = first(frames).layout.title,
+		shapes,
+        width = 500,
+		height = 500,
+		margin_b = 90,
+        updatemenus = [
+			attr(
+            	type = "buttons",
+				direction = "left",
+				x = 0.5,
+				y = 0,
+				xanchor = "center",
+				yanchor = "top",
+            	pad_t = 90,
+	            buttons = [
+	                attr(
+						label = "▶ Play",
+						method = "animate",
+	                    args = [
+							nothing,
+							attr(
+								fromcurrent = true,
+								transition_duration = 0,
+								frame = attr(duration = 200, redraw = true)
+							),
+						],
+					),
+	                attr(
+						label = "⏸ Pause",
+						method = "animate",
+	                    args = [
+							[nothing],
+							attr(
+								mode = "immediate",
+	                         	frame = attr(duration = 0, redraw = true)
+							),
+						],
+					),
+	            ],
+        	),
+		],
+        sliders = [
+			attr(
+				active = 0,
+				pad_t = 10,
+	            steps = [
+	                attr(
+						method = "animate",
+						label = "$(i)",
+	                    args = [
+							["frame_$(i)"],
+							attr(
+								mode = "immediate",
+								transition_duration = 0,
+								frame = attr(duration = 5, redraw = true))
+						],
+					)
+	                for i in 1:N
+	            ],
+        	),
+		],
+    )
+
+    plot(first(frames).data, layout, frames)
 end
+
+# ╔═╡ 5b34ed05-4181-4fca-a80e-161fa99bc26e
+plot_anim(imgs_sci_aligned)
+
+# ╔═╡ 637d7f71-e884-43df-be10-2a490486d0dd
+md"""
+## Packages
+"""
 
 # ╔═╡ Cell order:
 # ╟─ac2acb87-8515-41cf-a762-ca48d8cd269a
@@ -921,6 +1003,9 @@ end
 # ╟─aaaaa4d6-737b-4e53-a3a4-fcac09789d4e
 # ╟─c1bbb6a2-6996-4fee-a642-a0212b473474
 # ╟─abb9a9c8-5cac-4af3-b0a0-b7a3608dfe1a
+# ╠═f6197e8e-3132-4ab5-86d7-32572e337c58
+# ╠═7c078085-ff30-400d-a0ab-2680f468c415
+# ╠═035fcecb-f998-4644-9650-6aeaced3e41f
 # ╟─b360ad74-58b7-47b5-a8b0-437ef1119303
 # ╟─1356c02f-9ff2-491f-b55d-666ee76e6fae
 # ╟─5321f774-67fc-4355-9411-2e624a00e724
@@ -942,8 +1027,7 @@ end
 # ╠═1fe59945-8bce-44f3-b548-9646c2ce6bda
 # ╟─bdfc0804-b83a-470f-a6e0-1e030eac63d8
 # ╟─e7ad4e24-5dc9-4713-836a-be001304e45c
-# ╟─73e16c0e-873c-46a3-a0fd-d7ed5405ed7b
-# ╟─f3683998-543c-4bc4-8b73-fc1de6a6a955
+# ╠═5b34ed05-4181-4fca-a80e-161fa99bc26e
 # ╟─102ce649-e560-470e-afa5-699db577e148
 # ╟─d6d19588-9fa5-4b3e-987a-082345357fe7
 # ╟─96dc5bbe-3284-43a0-8c04-c1bb51ad618b
@@ -982,6 +1066,9 @@ end
 # ╠═f2c89a20-09d5-47f4-8f83-e59477723d95
 # ╟─8a39fbbb-6b5b-4744-a875-469c289242fb
 # ╠═3f548bb1-37b0-48b7-a35c-d7701405a64e
+# ╟─6c2a385c-5116-4aa9-9745-bea2326af593
+# ╠═a984c96d-273e-4d6d-bab8-896f14a79103
+# ╟─f290d98e-5a8a-44f2-bee5-b93738abe9af
 # ╟─e7f88515-305b-4899-8fa0-326e9e2097b5
 # ╟─bdc24b15-d14a-422c-a7aa-5335547fa53c
 # ╟─46e6bba9-0c83-47b7-be17-f41301efa18e
@@ -991,17 +1078,14 @@ end
 # ╟─2ea12676-7b5e-444e-8025-5bf9c05d0e2d
 # ╟─d359625e-5a95-49aa-86e4-bc65299dd92a
 # ╟─829cde81-be03-4a9f-a853-28f84923d493
-# ╟─f290d98e-5a8a-44f2-bee5-b93738abe9af
 # ╟─3c601844-3bb9-422c-ab1e-b40f7e7cb0df
 # ╟─f26f890b-5924-497c-85a3-eff924d0470b
 # ╟─95a67d04-0a32-4e55-ac2f-d004ecc9ca84
-# ╠═f6197e8e-3132-4ab5-86d7-32572e337c58
-# ╠═7c078085-ff30-400d-a0ab-2680f468c415
-# ╠═035fcecb-f998-4644-9650-6aeaced3e41f
-# ╠═a984c96d-273e-4d6d-bab8-896f14a79103
 # ╟─21e828e5-00e4-40ce-bff5-60a17439bf44
 # ╟─e35d4be7-366d-4ca5-a89a-5de24e4c6677
 # ╟─a3bcad72-0e6c-43f8-a08d-777a154190d8
 # ╟─8da80446-84d7-44bb-8122-874b4c9514f4
 # ╟─24256769-2274-4b78-8445-88ec4536c407
+# ╟─f41df561-85ff-484b-8188-883c1fea21c9
+# ╟─637d7f71-e884-43df-be10-2a490486d0dd
 # ╠═6bc5d30d-2051-4249-9f2a-c4354aa49198
