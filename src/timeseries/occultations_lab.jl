@@ -3,9 +3,9 @@
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/h3ejkrf3/image_0.png"
-#> title = "Occultations Lab"
+#> title = "Asteroid Occultations Lab"
 #> date = "2025-08-01"
-#> tags = ["ucan", "asteroids", "time series"]
+#> tags = ["time series", "asteroids"]
 #> description = "Observe a nearby asteroid occulting a background source."
 #> layout = "layout.jlhtml"
 
@@ -67,7 +67,7 @@ end;
 
 # ╔═╡ d7f0393d-e2fa-44ea-a812-8f85820e661e
 md"""
-# 🪨 Occultations Lab
+# 🪨 Asteroid Occultations Lab
 
 In this lab we will observe an asteroid passing in front of a star in real time and explore how to produce and analyze its resulting light curve. For more on taking these types of observations, see our [Unistellar Science page here](https://science.unistellar.com/asteroid-occultations/).
 

@@ -2,9 +2,9 @@
 # v0.20.21
 
 #> [frontmatter]
-#> title = "II - Introduction to Image Processing"
+#> title = "II - Array Operations"
 #> date = "2025-09-19"
-#> tags = ["asp", "images", "image processing", "arrays"]
+#> tags = ["image processing", "images", "arrays"]
 #> description = "Learn how to interpret and process images as an array of numbers."
 #> layout = "layout.jlhtml"
 
@@ -25,7 +25,7 @@ end;
 
 # ╔═╡ 23132c2d-56d6-4e9a-9eef-94f0b0742a00
 md"""
-# II - Introduction to Image Processing
+# Array Operations
 """
 
 # ╔═╡ 81f1863b-061b-4660-bb5d-c32b3e543d35

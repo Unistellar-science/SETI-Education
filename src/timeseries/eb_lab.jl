@@ -2,9 +2,9 @@
 # v0.20.24
 
 #> [frontmatter]
-#> title = "IV - Time Series"
+#> title = "Eclipsing Binaries Lab"
 #> date = "2025-10-03"
-#> tags = ["asp", "time series"]
+#> tags = ["time series"]
 #> description = "Measure light curves from your data. Example eclipsing binary use case included."
 #> layout = "layout.jlhtml"
 
@@ -70,14 +70,14 @@ end;
 
 # ╔═╡ ac2acb87-8515-41cf-a762-ca48d8cd269a
 md"""
-# IV - Introduction to Time Series
+# Eclipse Binaries Lab
 
 Using the photometric analysis tools developed in the previous notebook, we will now turn to the technique of generalizing this for images taken at multiple times to build a time series science product, aka a light curve. We will use sample eVscope data of an eclipsing binary system as a real life test case, and show how we can find additional targets to study from the American Association of Variable Star Observers ([AAVSO](https://www.aavso.org/)).
 """
 
 # ╔═╡ aa005b55-626e-41e0-8fe1-137bd7dd5599
 md"""
-## 1. Background 📖
+## Background 📖
 
 It turns out that the alien world described in the [3 Body Problem](https://www.netflix.com/tudum/articles/3-body-problem-teaser-release-date) is not too far off from what we see in reality. Star systems can be made up of just one star like in our system, three as in the tv show and book series from which the 3 Body Problem [draws its inspiration](https://en.wikipedia.org/wiki/Alpha_Centauri), or even as many as six different stars as in this [recently discovered system](https://science.nasa.gov/universe/exoplanets/discovery-alert-first-six-star-system-where-all-six-stars-undergo-eclipses/)! While these would make for some quite interesting sunsets, a system's stability decreases as more bodies are added. This is partly why the most common star systems we see are singular star systems, followed closely behind by binary systems, which have two stars and account for [nearly two-thirds of all star systems in the Milky Way](https://pweb.cfa.harvard.edu/news/most-milky-way-stars-are-single).
 
@@ -95,7 +95,7 @@ In this visualization, we see how the observed brightness of an eclipsing binary
 
 # ╔═╡ aaaaa4d6-737b-4e53-a3a4-fcac09789d4e
 md"""
-## 2. Introduction 🤝
+## Introduction 🤝
 
 [W Ursae Majoris (W UMa)](https://www.aavso.org/vsots_wuma) is an eclipsing binary system located in the [Ursa Major](https://en.wikipedia.org/wiki/Ursa_Major) constellation, and can be seen being chased across the sky by the Big Dipper throughout the night:
 
@@ -116,7 +116,7 @@ According to the [AAVSO ephemeris](https://milwaukeeastro.org/EB/MAS_EB_2025_10.
 
 # ╔═╡ abb9a9c8-5cac-4af3-b0a0-b7a3608dfe1a
 md"""
-## 3. Data inspection 🔎
+## Data inspection 🔎
 
 For this lab, we will be using eVscope 2 data collected for this target on the night of March 25th, 2024. Observations were taken in the [exoplanet science mode](https://science.unistellar.com/exoplanets/tutorial/) with the following observation parameters:
 
@@ -159,9 +159,30 @@ md"""
 Uh-oh, we see that our images are literally rotating out from under us! This [field rotation](https://calgary.rasc.ca/field_rotation.htm) and also some drift that needed to be manually corrected partway through the observation are normal effects of taking long duration observations on an alt-az mount. Fortunately, it is fairly manageable to handle this as we will see in the next section.
 """
 
+# ╔═╡ 1d14c32a-c0b5-4b3e-8a70-c50f539f6e69
+md"""
+### A note on image calibration
+
+A critical step in analyzing astronomical data is accounting for sources of noise that may impact our final image. This process is known as calibration, and its purpose is to increase the signal-to-noise ratio of our science images. Here is a nice summary modified from [Practical Astrophotography](https://practicalastrophotography.com/a-brief-guide-to-calibration-frames/) of three of the main sources of noise that we typically try to calibrate for:
+
+!!! note ""
+	**Bias frames:** "Your camera inherently has a base level of read-out noise as it reads the values of each pixel of the sensor, called bias. When averaged out, basically it’s an inherent gradient to the sensor. Bias Frames are meant to capture this so it can be removed."
+
+	**Dark frames:** "When taking a long exposure, the chip will introduce "thermal" noise. Its level is magnified by three things – temperature, exposure time, and ISO. Dark frames are used to subtract this sensor noise from your image and mitigate "hot or cold" pixels. (Some modern sensors automatically calculate dark levels and don't need dark frames). Dark Frames also will calibrate the chip so all pixels give the same value when not exposed to light."
+
+	**Flat frames:** "I've seen people say flats help with light pollution. NOT TRUE AT ALL. Flat frames allow you to calculate the correction factor for each pixel so they all give the same value when exposed to the same quantity of light for a given optical path. Things like dust motes, lens vignetting consistently reduce the light to a given pixel, flat frames allow you to mathematically remove them to give a smooth evenly illuminated image."
+"""
+
+# ╔═╡ e94b7436-462b-4d34-b721-990c8682ee6e
+md"""
+Different flat fielding techniques are being examined by our team, but in general this has not been oberserved to be a significant source of noise in science mode observations. In practice, the [sensor calibration](https://help.unistellar.com/hc/en-us/articles/360011333600-Sensor-calibration-Dark-Frame-How-and-Why) step that is required at the end of science observations are set to the same gain and exposure time as your science images. By doing this, the bias frame is automatically built into the dark frames collected during this step, so no separate bias acquisition is needed.
+
+We find that the contribution from dark noise does not impact our observations significantly, so we have excluded this calibration step for simplicity. Stay tuned for a future calibration notebook though where we will explore these procedures in more detail!
+"""
+
 # ╔═╡ 1df329a0-629a-4527-8e5d-1dbac9ed8497
 md"""
-## 4. Image alignment 📐
+## Image alignment 📐
 
 A typical astronomical observation might use the know RA and Dec of the field to [plate solve](https://astrobackyard.com/plate-solving/) each frame against background sources (see, e.g., [astrometry.net](https://astrometry.net/)). This then gives a coordinate transformation (e.g., with the [World Coordinate System (WCS) standard](https://fits.gsfc.nasa.gov/fits_wcs.html)) that can be applied to each frame to align them to a common grid with open source tools like [AstroImageJ](https://www.astro.louisville.edu/software/astroimagej/). Unfortunately, plate solving is a computationally expensive process that can take quite a while, especially if we have a large number of frames. Fortunately, there is a nice alternative that we can use if we do not care about the WCS information: [asterisms](https://en.wikipedia.org/wiki/Asterism_(astronomy)).
 
@@ -188,7 +209,7 @@ Nice! The rotation looks to have been successfuly transformed out. We turn next 
 
 # ╔═╡ d6d19588-9fa5-4b3e-987a-082345357fe7
 md"""
-## 5. Aperture photometry 🔾
+## Aperture photometry 🔾
 
 This process is very similar to what was shown in our previous notebook. Only now, instead of computing the photometry for a single image, we will compute it for a series of images and store the results:
 """
@@ -345,7 +366,7 @@ Since the total period for this system is about 8 hours, we only caught one of t
 
 # ╔═╡ 276ff16f-95f1-44eb-971d-db65e8821e59
 md"""
-## 6. Extensions 🌱
+## Extensions 🌱
 """
 
 # ╔═╡ 934b1888-0e5c-4dcb-a637-5c2f813161d4
@@ -1012,6 +1033,8 @@ md"""
 # ╟─009f2c3f-bc8f-4874-9545-f18d6722284b
 # ╟─8f0e6529-bd67-47aa-9ddf-4032a5483a98
 # ╟─7d54fd96-b268-4964-929c-d62c7d89b4b2
+# ╟─1d14c32a-c0b5-4b3e-8a70-c50f539f6e69
+# ╠═e94b7436-462b-4d34-b721-990c8682ee6e
 # ╟─1df329a0-629a-4527-8e5d-1dbac9ed8497
 # ╠═1fe59945-8bce-44f3-b548-9646c2ce6bda
 # ╟─bdfc0804-b83a-470f-a6e0-1e030eac63d8

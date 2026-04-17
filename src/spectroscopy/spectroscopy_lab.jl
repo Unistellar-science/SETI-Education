@@ -5,7 +5,7 @@
 #> image = "https://www.seti.org/media/jtinir2n/unistellar-spectroscopy-lab-2024_1.png"
 #> title = "Spectroscopy Lab"
 #> date = "2025-08-01"
-#> tags = ["ucan", "spectroscopy", "wavelength calibration"]
+#> tags = ["spectroscopy", "wavelength calibration"]
 #> description = "Collect and analyze the spectra of bright stars."
 #> layout = "layout.jlhtml"
 

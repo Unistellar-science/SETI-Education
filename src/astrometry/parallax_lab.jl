@@ -5,7 +5,7 @@
 #> image = "https://www.seti.org/media/mrlmn0lr/image_2-parallax.png"
 #> title = "Parallax Lab"
 #> date = "2025-08-01"
-#> tags = ["ucan", "parallax", "asteroids"]
+#> tags = ["astrometry", "parallax", "asteroids"]
 #> description = "Measure the distance to a nearby asteroid with the parallax method."
 #> layout = "layout.jlhtml"
 

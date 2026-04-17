@@ -2,9 +2,9 @@
 # v0.20.21
 
 #> [frontmatter]
-#> title = "I - Introduction to Astronomical Images"
+#> title = "I - Images as Data"
 #> date = "2025-09-19"
-#> tags = ["asp", "images", "rgb", "image processing", "FITS"]
+#> tags = ["image processing", "images", "rgb", "FITS"]
 #> description = "Learn how to install the software needed to interpret astronomical images."
 #> layout = "layout.jlhtml"
 
@@ -38,7 +38,7 @@ end;
 # ╔═╡ 8e324690-373d-4139-8350-add89a86c9b0
 md"""
 
-# Day 1 - Introduction to Astronomical Images
+# Images as Data
 
 $(Resource("https://imgs.xkcd.com/comics/painbow_award.png"))
 
@@ -47,30 +47,6 @@ _Image credit: [xkcd](https://xkcd.com/2537/). Alt text: "This year, our team to
 ---
 
 What's in an image? Turns out just a nice, orderly set of numbers. In this workshop, we will explore how astronomers use scientific programming to interpret these numbers. Along the way, we will cover the following key concepts in astronomical imaging:
-
-**Day 1 - Introduction to Astronomical Images**
-
-1. Software tools
-1. Image formats
-
-**Day 2 - Introduction to Image Processing**
-
-1. Array representations
-1. Color maps and color scales
-1. Image stacking
-
-**Day 3 - Introduction to Photometry**
-
-1. Aperture photometry
-
-**Day 4 - Introduction to Time Series**
-
-1. Background
-1. Introduction
-1. Data inspection
-1. Image alignment
-1. Aperture photometry
-1. Extensions
 
 !!! note "Coffee? ☕"
 	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
