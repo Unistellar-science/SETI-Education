@@ -271,11 +271,6 @@ imgs_sci = map(eachrow(df_sci)) do f
 	mapwindow!(median!, similar(img), img, (3, 3)) # Good for catching hot pixels
 end;
 
-# ╔═╡ c06e64ef-4085-4bb5-9b8b-2ed244d5dbe8
-md"""
-Frame number: $(frame_slider = @bind frame_i Slider(1:length(imgs_sci); show_value=true))
-"""
-
 # ╔═╡ 06d26240-81b6-401b-8eda-eab3a9a0fb20
 let
 	obs_start, obs_end = df_sci[:, "DATE-OBS"] |> extrema .|> string
@@ -292,7 +287,7 @@ img_size, img_eltype = size(img_sci), eltype(img_sci);
 
 # ╔═╡ 5abbcbe0-3ee6-4658-9c99-e4567a23e3f6
 md"""
-It looks like this image is $(first(img_size)) x $(last(img_size)) pixels, with the ADU counts for each pixel stored as a $(img_eltype) to reduce memory storage. Now that we know that we are pointing at the right place in the sky, let's take at look at how these images change over time. Drag the slider below to scroll through each of our science frames. (Note for the rest of this notebook that we will be using the default image orientation in the plotting software):
+It looks like this image is $(first(img_size)) x $(last(img_size)) pixels, with the ADU counts for each pixel stored as a $(img_eltype) to reduce memory storage. Now that we know that we are pointing at the right place in the sky, let's take at look at how these images change over time. Use the display below to scroll through each of our science frames. (Note for the rest of this notebook that we will be using the default image orientation in the plotting software):
 """
 
 # ╔═╡ 8f0e6529-bd67-47aa-9ddf-4032a5483a98
@@ -897,14 +892,6 @@ function plot_img(i, img; zmin=2400, zmax=3200, restrict=true)
 	plot(hm, l)
 end
 
-# ╔═╡ 86e53a41-ab0d-4d9f-8a80-855949847ba2
-let
-	zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs_sci))
-	p = plot_img(frame_i, imgs_sci[frame_i]; zmin, zmax)
-	relayout!(p; shapes)
-	p
-end
-
 # ╔═╡ f41df561-85ff-484b-8188-883c1fea21c9
 function plot_anim(imgs)
     N = length(imgs)
@@ -988,6 +975,9 @@ function plot_anim(imgs)
     plot(first(frames).data, layout, frames)
 end
 
+# ╔═╡ 86e53a41-ab0d-4d9f-8a80-855949847ba2
+plot_anim(imgs_sci)
+
 # ╔═╡ 5b34ed05-4181-4fca-a80e-161fa99bc26e
 plot_anim(imgs_sci_aligned)
 
@@ -1018,8 +1008,7 @@ md"""
 # ╟─a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
 # ╟─7d7cd508-be27-4f52-bc13-91c702450167
 # ╟─5abbcbe0-3ee6-4658-9c99-e4567a23e3f6
-# ╟─c06e64ef-4085-4bb5-9b8b-2ed244d5dbe8
-# ╟─86e53a41-ab0d-4d9f-8a80-855949847ba2
+# ╠═86e53a41-ab0d-4d9f-8a80-855949847ba2
 # ╟─009f2c3f-bc8f-4874-9545-f18d6722284b
 # ╟─8f0e6529-bd67-47aa-9ddf-4032a5483a98
 # ╟─7d54fd96-b268-4964-929c-d62c7d89b4b2
