@@ -42,7 +42,7 @@ md"""
 
 # ╔═╡ 59f8b374-4db2-416c-bedc-652f5de7ca7e
 md"""
-## Aperture photometry
+## Aperture photometry 🎯
 
 Now that we have a handle on working with [FITS files](#FITS) and treating images as [arrays of numbers](#3.-Array-representations-%F0%9F%94%A2), let's turn next to one of the fundamental steps of producing a science product from one of our Unistellar science campaigns, [aperture photometry](https://lco.global/spacebook/telescopes/what-is-photometry/). Photometry is the the measurement of the amount of light that falls on our sensor. The aperture is the shape of the imaginary boundary that we are measuring the light within.
 
@@ -95,214 +95,32 @@ where ``\color{darkcyan}R_\text{target}`` is the radius of our target aperture, 
 
 # ╔═╡ 8eb8326f-b226-42fd-9582-de0744cdc0f1
 md"""
-We now have one of the major fundamental tools in our roadmap to producing science products from our Unistellar science campaigns: Photometry. For those interested, the relevant programming commands are shown below:
+We now have one of the major fundamental tools in our roadmap to producing science products from our Unistellar science campaigns: Photometry.
 """
 
-# ╔═╡ 8afbee29-a332-4e52-925b-39a346cb6935
+# ╔═╡ aad7a3b3-3186-4c7c-bfd8-d74371607849
 md"""
-## Extension - M67 CMD
+### Code
 
-Astronomers make very similar measurements like this to estimate different properties of star systems (e.g., age, distance, and temperature) via so called [color magnitude diagrams](https://apod.nasa.gov/apod/ap010223.html) (CMD)s. Here is an example of one below:
-
-![](https://apod.nasa.gov/apod/image/0102/m55cmd_mochejska.jpg)
-
-For a given star, measuring the difference in observed flux measured between different filters (e.g., B and V) give an estimate of the star's temperature, while the flux measurement in a single filter gives an estimate of the star's luminosity. Plotting these together reveals an underlying relationship that ties all stars together.
-
-In this extensions exercise, we will recreate these measurements for the famous M67 star cluster.
+For those interested, the relevant programming commands are shown below:
 """
 
-# ╔═╡ 6b4b78ef-2012-48de-8678-e9aa25d5b9b7
+# ╔═╡ b0bc4199-b29d-4955-a309-f2eb66f2872d
 md"""
-### 1. Observe M67
-
-Observe M67 either in Science Mode or Enhanced vision mode and load the corresponding FITS file into this notebook. This target should be available in the catalog within the app. Below is a sample EV observation taken by an eVscope 2:
+# Notebook setup 🔧
 """
 
-# ╔═╡ 50c979a5-8a53-448e-9156-b743342ec5f4
-img_red = reverse(AstroImage([
-	1 0 1 0
-	0 0 0 0
-	1 0 1 0
-	0 0 0 0
-]); dims = Y)
+# ╔═╡ 93ba05ff-09c3-49f6-ba63-d97fb341325c
+PlutoUI.TableOfContents()
 
-# ╔═╡ b25e7c62-e176-44b0-be70-1e78298266d1
-img_green = reverse(AstroImage([
-	0 1 0 1
-	1 0 1 0
-	0 1 0 1
-	1 0 1 0
-]); dims = Y)
-
-# ╔═╡ a42707fb-4e8a-4eb1-9e73-fd19a1372839
-img_blue = reverse(AstroImage([
-	0 0 0 0
-	0 1 0 1
-	0 0 0 0
-	0 1 0 1
-]); dims = Y)
-
-# ╔═╡ c192c784-ef29-4e67-893f-83aa46d5b9dd
-img_color = composecolors([img_red, img_green, img_blue];
-	# stretch = asinhstretch,   # gentle stretch for dim nebulae/galaxies
-    # clims   = Percent(99.5),
-)
-
-# ╔═╡ f600d462-5625-4e9a-ba57-d98e487f46d4
-@bind reset_M67 Button("Reset")
-
-# ╔═╡ 373ccd7b-b1e3-43a2-93fc-413a67595ccc
-begin
-reset_M67
+# ╔═╡ b58f653c-e707-4254-a87e-7703ee555ba3
 md"""
-!!! note "Load your own data"
-	Select "Browse" below you would like to visualize your own data before moving on with the rest of this notebook:
-	
-	$(@bind img_M67_local FilePicker([MIME("image/fits")]))
+## Data
 """
-end
 
-# ╔═╡ f4ff8b45-8967-42a4-a004-30ce02761ff9
+# ╔═╡ 8d82e459-0a05-4b90-8213-0a12b131c084
 md"""
-### 2. Upload FITS file to Astrometry.net
-
-Next, we upload our FITS file to [Astrometry.net](https://nova.astrometry.net/upload). This is a handy service for performing plate solving (converting from pixel space to RA and Dec) and photometry routines on our image.
-
-After clicking on the link above, you should see an upload page like this:
-
-![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_upload_page.png?raw=true)
-
-About 30 seconds - 1 minute after uploading our data following the instruction above, we should see a success page like the following:
-
-![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_success_page.png?raw=true)
-
-Clicking "Go to results page" should then show the following:
-
-![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_results_page.png?raw=true)
-
-There are a variety of different calibration products that we can download. For our purposes, we will just need the `image-radec.fits` file shown in the box above. We click on this link to save the file into the same directory as this notebook. Once complete, we load this new file, which should look similar to the table below:
-"""
-
-# ╔═╡ 25ba46a8-c53d-4a78-8e9b-0317cd3154bf
-md"""
-This FITS file is a table of photometric measurements made by Astrometry.net, including the RA (`ra`), Dec (`dec`), and aperture flux (`flux`) of each source identified in our image. We will next combine this information with data from the [Gaia mission](https://www.esa.int/Science_Exploration/Space_Science/Gaia) to produce our CMD.
-"""
-
-# ╔═╡ 88546560-491a-452a-8681-f877f319f804
-@bind reset_M67_phot_local Button("Reset")
-
-# ╔═╡ 03568d71-e7a2-4187-8650-e7e1cf98369e
-begin
-reset_M67_phot_local
-md"""
-!!! note "Load your own data"
-	Select "Browse" below you would like to visualize your own data before moving on with the rest of this notebook:
-	
-	$(@bind img_M67_phot_local FilePicker([MIME("image/fits")]))
-"""
-end
-
-# ╔═╡ 34901b11-59a3-4b0e-95c0-90a5b63e738d
-md"""
-### 3. Load Gaia data
-
-Since its launch in 2013, this flagship satellite from the ESA observed nearly two billion celestial objects over its 11 year mission duration. This has lead to a vast catalog of stellar flux measurements that we can then use to supply the x-axis of our CMD (the "red" and "blue" measurements that provide stellar color/temperature information). We start by loading in every Gaia observation in a 30 arcminute radius (our rough field of view) around M67:
-"""
-
-# ╔═╡ 645211c4-d9e1-4c8e-be4d-6d71de01197f
-md"""
-!!! note
-	To query Gaia data for your own target, change the name supplied in the quotes above. If no results are returned, try double checking the name [on Simbad](https://simbad.u-strasbg.fr/simbad/sim-id?Ident=M67&NbIdent=1&Radius=2&Radius.unit=arcmin&submit=submit+id).
-"""
-
-# ╔═╡ f6dd306d-bb78-4579-9937-8553aa989ec1
-coords_simbad(name) = let
-    coords = execute(TAPService(:simbad), """
-	SELECT basic.ra, basic.dec
-	FROM ident JOIN basic ON ident.oidref = basic.oid
-	WHERE id = '$(name)';
-	""")
-	return first.((coords.ra, coords.dec))
-end
-
-# ╔═╡ 58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
-query_gaia(name) = let
-	ra, dec = coords_simbad(name)
-	df = execute(TAPService(:gaia), """
-	    SELECT
-	        gs.source_id,
-	        gs.ra,
-	        gs.dec,
-	        gs.phot_g_mean_mag,
-	        gs.bp_rp,
-	        gs.parallax,
-	        gs.pmra,
-	        gs.pmdec,
-	        gs.ruwe,
-	        DISTANCE(POINT(gs.ra, gs.dec), POINT($(ra), $(dec))) * 60 AS sep_arcmin
-	    FROM
-	        gaiadr3.gaia_source AS gs
-	    WHERE
-	        CONTAINS(
-	            POINT(gs.ra, gs.dec),
-	            CIRCLE($(ra), $(dec), 0.5)
-	        ) = 1
-	""") |> DataFrame
-
-	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
-end
-
-# df_gaia = let
-# 	df = CSV.read(download("https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/src/asp_workshop/assets/M67/gaia_dr3.csv"), DataFrame)
-# 	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
-# end
-
-# ╔═╡ 01fbf7c7-be31-484c-b409-5d56422bba22
-df_gaia = query_gaia("M 67")
-
-# ╔═╡ 572276ca-d5dd-4852-a6c6-f3564725ab47
-md"""
-### 4. Cross-match
-
-Next, we match all entries in the table above to our table from Astrometry.net, where a match is considered to be any object within 2 arcseconds of each other. For various reasons, the coordinates estimated in our image will not always satifsy this constraint, so the total number of cross-matched sources will be fewer:
-"""
-
-# ╔═╡ 84752e8c-44c0-4a1d-ab2d-223283afae6c
-md"""
-### 5. Filter membership
-"""
-
-# ╔═╡ 1d674c32-ed5c-4608-9cee-b9f12f2d5852
-cm"""
-Finally, we only select for sources with similar parallax and proper motion to each other. Plotting our measured eVscope fluxes against the difference in the associated flux between Gaia's "blue" and "red" filters (G<sub>BP</sub> and G<sub>RP</sub>, respectively) then forms the CMD for our cluster.
-
-Use the sliders below to explore how different cut-offs for the parallax and proper motion affect the plot:
-"""
-
-# ╔═╡ 36956041-4a1a-4b23-986a-6b78851e75e1
-@bind reset_cmd Button("Reset")
-
-# ╔═╡ 221c16ee-752a-4053-ae15-92b8f5f1ae55
-begin
-reset_cmd
-
-@bind cmd_cuts PlutoUI.combine() do Child
-	cm"""
-	| Parallax <br> (mas) | RA proper motion <br> (mas/yr) | Dec proper motion <br> (mas/yr) |
-	| :-: | :-: | :-: |
-	| $(Child("plx", RangeSlider(-5:10))) | $(Child("pmra", RangeSlider(-36:24))) | $(Child("pmdec", RangeSlider(-60:12))) |
-	"""
-	end
-end
-
-# ╔═╡ db078f1d-9d00-4532-934e-65bb17a18996
-md"""
-Scroll over the reference image below to see how close your guesses were to the reported values for this cluster.
-"""
-
-# ╔═╡ 8e978211-57ef-43f1-bc1e-9ae6f9b1890d
-md"""
-Try this with your own data following the steps above!
+## Helper functions
 """
 
 # ╔═╡ 6d2c1121-2547-4125-8709-cd4d11480726
@@ -314,7 +132,7 @@ function tiny(img)
 	end
 
 	return imgv
-end;
+end
 
 # ╔═╡ d388fd60-3884-4944-b30b-61cc8edf544d
 # Julia photometry aperture object --> plotly shape object
@@ -326,7 +144,7 @@ function circ(ap, r=ap.r; line_color=:lightgreen)
 		ap.y + r; # y_max
 		line_color,
 	)
-end;
+end
 
 # ╔═╡ 829636f7-3d2b-4a30-8c92-523427335fc9
 # Plotly heatmap trace of img
@@ -352,7 +170,7 @@ function htrace(img;
 		colorbar = attr(; title),
 		colorscale = "Cividis",
 	)
-end;
+end
 
 # ╔═╡ 10e72b6f-8261-4093-af4c-c3bd698db7d2
 # Combines plotly trace and layout into a plot object
@@ -372,23 +190,26 @@ function plot_img(img; zlims=Percent(99.5)(img), restrict = true)
 	)
 
 	plot(hm, l)
-end;
+end
 
-# ╔═╡ eb63b8dc-644d-4b91-85a2-72e927fd1f1d
-img_sci = if isnothing(img_local)
-	let
-		img = (load ∘ download)("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png")
-		img_data = img .|> Gray .|> gray
-		img_data_corner = img_data[1:500, 1:500]
-		AstroImage(img_data_corner)
-	end
-else
-	let
-		path = tempname() * img_local["name"]
-		write(path, img_local["data"])
-		load(path)
-	end
-end;
+# ╔═╡ 5a49d878-bba3-4232-8a62-59848f1c77cb
+# Default from FilePicker
+function load_img(data::Nothing)
+	img = (load ∘ download)("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png")
+	img_data = img .|> Gray .|> gray
+	img_data_corner = img_data[1:500, 1:500]
+	AstroImage(img_data_corner)
+end
+
+# ╔═╡ 5aee58df-40b4-4ec3-a947-4039c2dddad0
+function load_img(data)
+	path = tempname() * data["name"]
+	write(path, data["data"])
+	load(path)
+end
+
+# ╔═╡ da18d71f-06af-40f1-b006-d9adad909012
+img_sci = load_img(img_local);
 
 # ╔═╡ 01f950ec-fb20-4b6f-837c-a8cfaeada5de
 begin
@@ -476,146 +297,10 @@ flux_net = flux_total - flux_bg
 	| $(round(Int, phot.aperture_sum)) | $(round(Int, phot_bg.aperture_sum)) | $(round(Int, flux_net))
 """ |> Markdown.parse
 
-# ╔═╡ 4476fb48-fa34-4b07-9349-d1fd1c0782ac
-img_M67 = if isnothing(img_M67_local)
-	let
-		img = (load ∘ download)("https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/src/asp_workshop/assets/M67/20260303T060902_911_StackInput.fits")
-	end
-else
-	let
-		path = tempname() * img_M67_local["name"]
-		write(path, img_M67_local["data"])
-		load(path)
-	end
-end;
-
-# ╔═╡ 6186c35c-04b5-4692-b34a-ff90dc5bab20
-plot_img(img_M67)
-
-# ╔═╡ 1c45af42-d8bc-4fd5-b297-66dac6420287
-df_phot = if isnothing(img_M67_phot_local)
-	let
-		df = load(download("https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/src/asp_workshop/assets/M67/image-radec_stacked.fits"), 2) |> DataFrame
-		@transform! df :coords = ICRSCoords.(deg2rad.(:ra), deg2rad.(:dec))
-	end;
-else
-	let
-	path = tempname() * img_M67_phot_local["name"]
-	write(path, img_M67_phot_local["data"])
-	df = load(path, 2) |> DataFrame
-	@transform! df :coords = ICRSCoords.(deg2rad.(:ra), deg2rad.(:dec))
-	end
-end;
-
-# ╔═╡ 28d26b7b-45c4-4307-8c35-9e0026ac5a65
-df_phot
-
-# ╔═╡ 47d5448d-aab1-4713-bee6-4ea115f92870
-df_matched = let
-	df = innerjoin((df_phot, df_gaia), by_distance(
-		:coords,
-		SkyCoords.separation,
-		≤(2u"arcsecond"))
-	)
-	dropmissing!(df, [:parallax, :pmra, :pmdec, :ruwe])
-end
-
-# df_matched = let
-# 	ids, sep = SkyCoords.match(df_gaia.coords, df_phot.coords)
-# 	df = hcat(df_phot, df_gaia[ids, :]; makeunique = true)
-# 	df.arcsec_diff_coords = @. rad2deg(sep) * 3600.0
-# 	@rsubset! df :arcsec_diff_coords < 2.0
-# 	dropmissing!(df, [:parallax, :pmra, :pmdec, :ruwe])
-# 	df
-# end
-
-# ╔═╡ dba5efce-e846-4f58-baca-4a38db9191bf
-df_ans = @chain df_matched begin
-	@rsubset begin
-		0.5 ≤ :parallax
-		:parallax ≤ 1.7
-		
-		-12 ≤ :pmra
-		:pmra ≤ -10
-		
-		-4 ≤ :pmdec
-		:pmdec ≤ -2
-	
-		:ruwe ≤ 1.4 # Hard-coded quality indicator
-	end
-end;
-
-# ╔═╡ e50227eb-39bf-4a37-98b8-094b9b20a1ae
-cm"""
-!!! hint "Comparison to Gaia"
-
-	$(plot(
-		scatter(;
-			x = df_ans.:var"bp_rp",
-			y = df_ans.phot_g_mean_mag,
-			mode = :markers,
-		),
-		Layout(;
-			xaxis_title = "G<sub>BP</sub> - G<sub>RP</sub>",
-			xaxis_range = [0, 2],
-			xaxis_autorange = false,
-			yaxis_title = "G",
-			yaxis_range = [16, 8],
-			yaxis_autorange = :reverse,
-			title = "M67 Color Magnitude Diagram -- Gaia DR3",
-			uirevision = 1,
-		),
-	))
-
-	**Parallax** ≈ 1.1 mas | **RA proper motion** ≈ -11.0 mas/yr | **Dec Proper motion** ≈ -3.0 mas/yr
+# ╔═╡ 35627e36-291f-4622-8853-7324cfdf2247
+md"""
+## Packages
 """
-
-# ╔═╡ d165a0db-1c18-4f10-ac11-c8e3c9323ce0
-df_cluster = @chain df_matched begin
-	@rsubset begin
-		first(cmd_cuts.plx) ≤ :parallax
-		:parallax ≤ last(cmd_cuts.plx)
-		
-		first(cmd_cuts.pmra) ≤ :pmra
-		:pmra ≤ last(cmd_cuts.pmra)
-		
-		first(cmd_cuts.pmdec) ≤ :pmdec
-		:pmdec ≤ last(cmd_cuts.pmdec)
-	
-		:ruwe ≤ 1.4 # Hard-coded quality indicator
-	end
-end;
-
-# ╔═╡ 1aae0286-f934-4430-aaba-f1913d774669
-plot(
-	scatter(; x = df_cluster.bp_rp, y = log10.(df_cluster.flux), mode = :markers),
-	Layout(;
-		xaxis_title = "G<sub>BP</sub> - G<sub>RP</sub> (Gaia DR3)",
-		xaxis_range = [0, 2],
-		xaxis_autorange = false,
-		yaxis_title = "log F (Unistellar)",
-		yaxis_range = [2.5, 5],
-		yaxis_autorange = false,
-		title = "M67 Color Magnitude Diagram -- N: $(nrow(df_cluster))",
-		uirevision = 1,
-	),
-)
-
-# ╔═╡ 851a1a1f-56ec-4599-bc42-60f9f7984e78
-let
-	p = plot_img(img_M67)
-
-	aps = CircularAperture.(df_cluster.x, df_cluster.y, 20)
-	
-	shapes = [circ(ap) for ap in aps]
-	
-	relayout!(p; shapes, title = "Sources selected")
-
-	p
-end
-
-# ╔═╡ 93ba05ff-09c3-49f6-ba63-d97fb341325c
-PlutoUI.TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -654,7 +339,7 @@ VirtualObservatory = "~0.1.14"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.5"
+julia_version = "1.12.6"
 manifest_format = "2.0"
 project_hash = "240850a8d04e55ac1b9c5005ebc36984d4a8e93d"
 
@@ -2735,7 +2420,8 @@ version = "17.7.0+0"
 # ╟─b4e9e785-892f-4065-89eb-c353967396d1
 # ╠═4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
 # ╟─fb72c498-2e47-40cc-bdf4-1b9511b8e85f
-# ╟─8eb8326f-b226-42fd-9582-de0744cdc0f1
+# ╠═8eb8326f-b226-42fd-9582-de0744cdc0f1
+# ╟─aad7a3b3-3186-4c7c-bfd8-d74371607849
 # ╠═17d9d7e6-1082-4053-97f7-60e72d16f61b
 # ╠═e92ec2b0-ec60-4088-896b-95817b865f46
 # ╠═c6f3eceb-19f5-4e97-80bd-deadb7573807
@@ -2746,46 +2432,18 @@ version = "17.7.0+0"
 # ╠═4583909c-7171-49c2-aff6-71d45860072d
 # ╠═63187c16-c3b8-47a5-9086-02c1aad6b812
 # ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
-# ╟─8afbee29-a332-4e52-925b-39a346cb6935
-# ╟─6b4b78ef-2012-48de-8678-e9aa25d5b9b7
-# ╟─6186c35c-04b5-4692-b34a-ff90dc5bab20
-# ╠═50c979a5-8a53-448e-9156-b743342ec5f4
-# ╠═b25e7c62-e176-44b0-be70-1e78298266d1
-# ╠═a42707fb-4e8a-4eb1-9e73-fd19a1372839
-# ╠═c192c784-ef29-4e67-893f-83aa46d5b9dd
-# ╟─f600d462-5625-4e9a-ba57-d98e487f46d4
-# ╟─373ccd7b-b1e3-43a2-93fc-413a67595ccc
-# ╟─f4ff8b45-8967-42a4-a004-30ce02761ff9
-# ╟─28d26b7b-45c4-4307-8c35-9e0026ac5a65
-# ╟─25ba46a8-c53d-4a78-8e9b-0317cd3154bf
-# ╟─03568d71-e7a2-4187-8650-e7e1cf98369e
-# ╟─88546560-491a-452a-8681-f877f319f804
-# ╟─34901b11-59a3-4b0e-95c0-90a5b63e738d
-# ╠═01fbf7c7-be31-484c-b409-5d56422bba22
-# ╟─645211c4-d9e1-4c8e-be4d-6d71de01197f
-# ╠═58c9aa49-55aa-4f6f-bab4-7ea1baa68ae7
-# ╟─f6dd306d-bb78-4579-9937-8553aa989ec1
-# ╟─572276ca-d5dd-4852-a6c6-f3564725ab47
-# ╟─47d5448d-aab1-4713-bee6-4ea115f92870
-# ╟─84752e8c-44c0-4a1d-ab2d-223283afae6c
-# ╟─1d674c32-ed5c-4608-9cee-b9f12f2d5852
-# ╟─1aae0286-f934-4430-aaba-f1913d774669
-# ╟─221c16ee-752a-4053-ae15-92b8f5f1ae55
-# ╟─36956041-4a1a-4b23-986a-6b78851e75e1
-# ╟─851a1a1f-56ec-4599-bc42-60f9f7984e78
-# ╟─db078f1d-9d00-4532-934e-65bb17a18996
-# ╟─e50227eb-39bf-4a37-98b8-094b9b20a1ae
-# ╟─8e978211-57ef-43f1-bc1e-9ae6f9b1890d
-# ╟─dba5efce-e846-4f58-baca-4a38db9191bf
-# ╟─d165a0db-1c18-4f10-ac11-c8e3c9323ce0
+# ╠═b0bc4199-b29d-4955-a309-f2eb66f2872d
+# ╠═93ba05ff-09c3-49f6-ba63-d97fb341325c
+# ╟─b58f653c-e707-4254-a87e-7703ee555ba3
+# ╠═da18d71f-06af-40f1-b006-d9adad909012
+# ╟─8d82e459-0a05-4b90-8213-0a12b131c084
 # ╟─6d2c1121-2547-4125-8709-cd4d11480726
 # ╟─d388fd60-3884-4944-b30b-61cc8edf544d
 # ╟─829636f7-3d2b-4a30-8c92-523427335fc9
 # ╟─10e72b6f-8261-4093-af4c-c3bd698db7d2
-# ╟─eb63b8dc-644d-4b91-85a2-72e927fd1f1d
-# ╟─4476fb48-fa34-4b07-9349-d1fd1c0782ac
-# ╟─1c45af42-d8bc-4fd5-b297-66dac6420287
-# ╟─93ba05ff-09c3-49f6-ba63-d97fb341325c
-# ╟─a084aedc-31c3-49b0-aa7a-fc5088deaca8
+# ╟─5a49d878-bba3-4232-8a62-59848f1c77cb
+# ╟─5aee58df-40b4-4ec3-a947-4039c2dddad0
+# ╟─35627e36-291f-4622-8853-7324cfdf2247
+# ╠═a084aedc-31c3-49b0-aa7a-fc5088deaca8
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
