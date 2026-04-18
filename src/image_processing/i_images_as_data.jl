@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 #> [frontmatter]
 #> title = "I - Images as Data"
@@ -29,7 +29,7 @@ begin
 	using PlutoUI
 
 	# Analysis tools
-	using AstroImages, ColorTypes
+	using AstroImages, Colors
 	
 	# Colormap default settings
 	AstroImages.set_cmap!(nothing)
@@ -38,7 +38,7 @@ end;
 # ╔═╡ 8e324690-373d-4139-8350-add89a86c9b0
 md"""
 
-# Images as Data
+# 📷 Images as Data
 
 $(Resource("https://imgs.xkcd.com/comics/painbow_award.png"))
 
@@ -46,81 +46,21 @@ _Image credit: [xkcd](https://xkcd.com/2537/). Alt text: "This year, our team to
 
 ---
 
-What's in an image? Turns out just a nice, orderly set of numbers. In this workshop, we will explore how astronomers use scientific programming to interpret these numbers. Along the way, we will cover the following key concepts in astronomical imaging:
-
-!!! note "Coffee? ☕"
-	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
+What's in an image? Turns out just a nice, orderly set of numbers. We will explore how astronomers use scientific programming to interpret these numbers.
 """
-
-# ╔═╡ 13204b29-8bb9-42cc-b828-074fdf716087
-md"""
-With this requisite information out of the way, let's get started!
-"""
-
-# ╔═╡ c1885a59-367e-46dc-a954-4507a4278e5e
-msg_adding_colors = md"""
-##### Adding colors in Julia 🎨
-This makes magenta!
-
-```julia
-using ColorTypes
-
-RGB(1, 0, 0) + RGB(0, 0, 1)
-```
-
-$(RGB(1, 0, 0) + RGB(0, 0, 1))
-"""; md"---"
-
-# ╔═╡ 03eb2bc6-0ff0-46f1-880b-eb702bfe9f70
-details("Using this notebook 🌱", md"""
-!!! note "First time running"
-	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
-
-	If you have a Pluto session running already, you can also just paste the url for this notebook into the **Open a notebook** section of your Pluto landing page:
-
-	```
-	https://github.com/Unistellar-science/SETI-Education/blob/main/labs/intro/i_astronomical_images.jl
-	```
-	
-	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
-
-!!! tip "Advanced: bring your own editor"
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/intro/i_astronomical_images.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
-
-	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
-
-	```julia-repl
-	julia> using Pluto
-	
-	julia> Pluto.run(auto_reload_from_file=true)
-	
-	# This will be on by default in an upcoming release =]
-	```
-
-	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
-
-
-!!! warning "Diving deeper"
-	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
-
-$(details("Details", msg_adding_colors))
-
-!!! warning " "
-	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
-""")
 
 # ╔═╡ d23819bc-ddae-4de7-83b1-58453848d266
 md"""
-## 1. Software tools 💻
+## Software tools 💻
 
-Today, there are a wide range of tools to select from when doing astronomical research. For this workshop series we will use [Julia](https://julialang.org/), a modern programming language geared towards [science and engineering applications](https://juliahub.com/industries/case-studies). A growing list of astronomy and astrophysics applications can be found on the [JuliaAstro case studies page](https://juliaastro.org/home/case_studies/).
+Today, there are a wide range of tools to select from when doing astronomical research. We will use [Julia](https://julialang.org/), a modern programming language geared towards [science and engineering applications](https://juliahub.com/industries/case-studies). A growing list of astronomy and astrophysics applications can be found on the [JuliaAstro case studies page](https://juliaastro.org/home/case_studies/).
 
-To promote best practices in modern science software developement (e.g., reproducibility, maintainability, and literacy), we will be using the [Pluto.jl](https://plutojl.org/) notebook environment (also written in Julia) to share and work with real code used by professional astronomers throughout this workshop. This notebook you are currently reading is also a Pluto.jl notebook!
+To promote best practices in modern science software developement (e.g., reproducibility, maintainability, and literacy), we will be using the [Pluto.jl](https://plutojl.org/) notebook environment (also written in Julia) to share and work with real code used by professional astronomers.
 
 !!! tip
 	* For folks approaching programming for the first time: [What is a notebook?](https://en.wikipedia.org/wiki/Notebook_interface)
 
-	* For folks coming from a Python background: Julia is to Python as Pluto.jl is to Jupyter
+	* For folks coming from a Python background: Julia is to Python as Pluto.jl is to Jupyter.
 """
 
 # ╔═╡ 1a9ae0d8-9da7-4c60-a088-e242565b4534
@@ -143,7 +83,7 @@ Additional resources:
 
 # ╔═╡ af1b84fc-cc08-45e0-a849-fa11c1267b91
 md"""
-## 2. Image formats 📚
+## Image formats 📚
 
 Astronomical images start their lives as a box of numbers. This box can be represented in a variety of different formats, the most popular currently being the [Flexible Image Transport System](https://en.wikipedia.org/wiki/FITS) (FITS) format. We will explore FITS files shortly, but let's start with another common format that you might use every day, [Portable Network Graphics](https://en.wikipedia.org/wiki/PNG) (PNG), to get an idea of how image data is represented and how these different formats relate to each other.
 """
@@ -326,27 +266,29 @@ Here are some additional resources that may be of interest for taking a deeper d
 	[Images as Data and Arrays](https://computationalthinking.mit.edu/Fall24/images_abstractions/images/) _-- Julia / MIT_
 """
 
+# ╔═╡ 14544ad7-ad18-4144-b85e-7bd01d6cda0c
+md"""
+# 🔧 Notebook setup
+"""
+
 # ╔═╡ 1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
 TableOfContents(depth = 4)
 
-# ╔═╡ 3e9f7a17-b6cb-4c50-b38b-e39f437a5c30
-# Align html tables to the left side of the page by default
-html"""
-<style>
-	table { float: left }
-</style>
+# ╔═╡ 0ad9b462-07c0-4910-8d5c-d20f5e46c0e8
+md"""
+## Packages
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AstroImages = "fe3fc30c-9b16-11e9-1c73-17dabf39f4ad"
-ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 AstroImages = "~0.5.1"
-ColorTypes = "~0.11.5"
+Colors = "~0.13.1"
 PlutoUI = "~0.7.71"
 """
 
@@ -354,9 +296,9 @@ PlutoUI = "~0.7.71"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.4"
+julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "e8d073a2795ce85082fefd600dcb18876dc42694"
+project_hash = "f9c46b12fe51c2975d157ae99612bd6e96414a7f"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -504,9 +446,9 @@ version = "0.10.0"
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
-git-tree-sha1 = "362a287c3aa50601b0bc359053d5c2468f0e7ce0"
+git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
-version = "0.12.11"
+version = "0.13.1"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1238,9 +1180,6 @@ version = "17.7.0+0"
 
 # ╔═╡ Cell order:
 # ╟─8e324690-373d-4139-8350-add89a86c9b0
-# ╟─03eb2bc6-0ff0-46f1-880b-eb702bfe9f70
-# ╟─13204b29-8bb9-42cc-b828-074fdf716087
-# ╟─c1885a59-367e-46dc-a954-4507a4278e5e
 # ╟─d23819bc-ddae-4de7-83b1-58453848d266
 # ╟─1a9ae0d8-9da7-4c60-a088-e242565b4534
 # ╟─af1b84fc-cc08-45e0-a849-fa11c1267b91
@@ -1270,8 +1209,9 @@ version = "17.7.0+0"
 # ╟─3805d078-f4d0-485a-897d-82b3ea3da4ee
 # ╟─94dae9e9-9eb5-406d-b777-976db28d6631
 # ╟─98e95070-f5a9-4d5a-b2c2-14d1b489febe
-# ╟─926ae0c8-5dd2-11f0-3c63-e540d51a756c
-# ╟─1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
-# ╟─3e9f7a17-b6cb-4c50-b38b-e39f437a5c30
+# ╟─14544ad7-ad18-4144-b85e-7bd01d6cda0c
+# ╠═1ddf2e92-a35d-4f24-87e0-2ca04bb4059e
+# ╟─0ad9b462-07c0-4910-8d5c-d20f5e46c0e8
+# ╠═926ae0c8-5dd2-11f0-3c63-e540d51a756c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

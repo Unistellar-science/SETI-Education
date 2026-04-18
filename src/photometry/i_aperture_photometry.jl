@@ -35,16 +35,11 @@ begin
 	AstroImages.set_cmap!(nothing)
 end;
 
-# ╔═╡ 0c0aebab-c9c2-41a0-931d-c687e2a961f1
-md"""
-# Aperture Photometry
-"""
-
 # ╔═╡ 59f8b374-4db2-416c-bedc-652f5de7ca7e
 md"""
-## Aperture photometry 🎯
+# 🎯 Aperture photometry 
 
-Now that we have a handle on working with [FITS files](#FITS) and treating images as [arrays of numbers](#3.-Array-representations-%F0%9F%94%A2), let's turn next to one of the fundamental steps of producing a science product from one of our Unistellar science campaigns, [aperture photometry](https://lco.global/spacebook/telescopes/what-is-photometry/). Photometry is the the measurement of the amount of light that falls on our sensor. The aperture is the shape of the imaginary boundary that we are measuring the light within.
+Now that we have a handle on working with [FITS files](/image_processing/i_images_as_data/#FITS) and treating images as [arrays of numbers](/image_processing/ii_array_operations/#Array-representations-🔢), let's turn next to one of the fundamental steps of producing a science product from one of our Unistellar science campaigns, [aperture photometry](https://lco.global/spacebook/telescopes/what-is-photometry/). Photometry is the the measurement of the amount of light that falls on our sensor. The aperture is the shape of the imaginary boundary that we are measuring the light within.
 
 A typical example would be placing an aperture around an imaged star or background part of the sky, and then counting up the total flux within that region. Brighter stars have more flux, and dimmer stars have less flux. For our purposes, each number in our "box-of-numbers" model will be a proxy for our flux measurement at that particular pixel.
 
@@ -74,7 +69,7 @@ md"""
 
 # ╔═╡ fb72c498-2e47-40cc-bdf4-1b9511b8e85f
 md"""
-### Estimating net flux
+## Estimating net flux 💡
 
 To compute the net flux (i.e., counts) reported in our table above, we need to determine the flux coming from just the target within our circular aperture. To accomplish this, we subtract off the contributions from the background to the total observed flux. There are many ways to do this, but one common method is to estimate the average number of counts per pixel coming from the background within our annulus, and then use this to subtract the average background flux from the total counts measured from within our target aperture.
 
@@ -91,23 +86,20 @@ Using the reported numbers above, we have:
 ```
 
 where ``\color{darkcyan}R_\text{target}`` is the radius of our target aperture, and ``\color{darkcyan}R_\text{outer, bg}`` and ``\color{darkcyan}R_\text{inner, bg}`` are the outer and inner radius of our background annulus aperture, respectively. Try plugging the numbers in your tables above into this formula to confirm that they are consistent with the reported net flux measured.
-"""
 
-# ╔═╡ 8eb8326f-b226-42fd-9582-de0744cdc0f1
-md"""
 We now have one of the major fundamental tools in our roadmap to producing science products from our Unistellar science campaigns: Photometry.
 """
 
 # ╔═╡ aad7a3b3-3186-4c7c-bfd8-d74371607849
 md"""
-### Code
+## Code 💻
 
 For those interested, the relevant programming commands are shown below:
 """
 
 # ╔═╡ b0bc4199-b29d-4955-a309-f2eb66f2872d
 md"""
-# Notebook setup 🔧
+# 🔧 Notebook setup
 """
 
 # ╔═╡ 93ba05ff-09c3-49f6-ba63-d97fb341325c
@@ -120,7 +112,7 @@ md"""
 
 # ╔═╡ 8d82e459-0a05-4b90-8213-0a12b131c084
 md"""
-## Helper functions
+## Plotting functions
 """
 
 # ╔═╡ 6d2c1121-2547-4125-8709-cd4d11480726
@@ -174,16 +166,16 @@ end
 
 # ╔═╡ 10e72b6f-8261-4093-af4c-c3bd698db7d2
 # Combines plotly trace and layout into a plot object
-function plot_img(img; zlims=Percent(99.5)(img), restrict = true)
+function plot_img(img; zlims = Percent(99.5)(img), restrict = true)
 	imgv = (tiny ∘ AstroImage)(img)
 	# imgv = img
 	
 	hm = htrace(imgv; zlims, restrict)
 	
 	l = Layout(;
-		# width,
-		# height,
-		# title = timestamp(img),
+		width = 500,
+		height = 500,
+		title = "Photometry example",
 		xaxis = attr(title = "X", constrain = "domain"),
 		yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
 		uirevision = 1,
@@ -2410,7 +2402,6 @@ version = "17.7.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─0c0aebab-c9c2-41a0-931d-c687e2a961f1
 # ╟─59f8b374-4db2-416c-bedc-652f5de7ca7e
 # ╟─01de070f-9672-47e1-b4c0-cfefe711decb
 # ╟─2172fb04-0eb2-4270-8d13-611803e10d21
@@ -2420,7 +2411,6 @@ version = "17.7.0+0"
 # ╟─b4e9e785-892f-4065-89eb-c353967396d1
 # ╠═4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
 # ╟─fb72c498-2e47-40cc-bdf4-1b9511b8e85f
-# ╠═8eb8326f-b226-42fd-9582-de0744cdc0f1
 # ╟─aad7a3b3-3186-4c7c-bfd8-d74371607849
 # ╠═17d9d7e6-1082-4053-97f7-60e72d16f61b
 # ╠═e92ec2b0-ec60-4088-896b-95817b865f46
@@ -2432,7 +2422,7 @@ version = "17.7.0+0"
 # ╠═4583909c-7171-49c2-aff6-71d45860072d
 # ╠═63187c16-c3b8-47a5-9086-02c1aad6b812
 # ╠═a67b9093-e47f-423e-9bac-7c16d4b4d2eb
-# ╠═b0bc4199-b29d-4955-a309-f2eb66f2872d
+# ╟─b0bc4199-b29d-4955-a309-f2eb66f2872d
 # ╠═93ba05ff-09c3-49f6-ba63-d97fb341325c
 # ╟─b58f653c-e707-4254-a87e-7703ee555ba3
 # ╠═da18d71f-06af-40f1-b006-d9adad909012

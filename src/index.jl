@@ -2,377 +2,122 @@
 # v0.20.24
 
 #> [frontmatter]
-#> title = "II - Array Operations"
-#> date = "2025-09-19"
-#> tags = ["image processing", "images", "arrays"]
-#> description = "Learn how to interpret and process images as an array of numbers."
+#> title = "Intro"
+#> date = "2026-04-17"
+#> tags = ["intro"]
+#> description = "Intro to using these notebooks."
 #> layout = "layout.jlhtml"
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 48d0a70b-62dc-426e-93c4-b21aa20acbfd
-begin
-	# Notebook widgets
-	using PlutoUI
+# ╔═╡ a6bd433e-86e5-48dc-a129-4314825363f6
+using AstroImages, Colors, PlutoUI
 
-	# Analysis tools
-	using AstroImages, ColorTypes
+# ╔═╡ 35bd8370-3ac3-11f1-9c70-a9ae70668f3d
+md"""
+# SETI / Unistellar / ASP Labs
+
+Originally developed for the [Unistellar College Astronomy Network (UCAN)](https://www.seti.org/education/ucan/).
+
+Below are a few pointers for working with these labs.
+"""
+
+# ╔═╡ 34e67453-b9db-4c49-aa61-84f519f3c1f4
+md"""
+## Quickstart
+
+To get started, please follow the instructions in the following two steps below:
+
+1. [Install Julia](https://julialang.org/install/)
+1. [Install Pluto.jl](https://plutojl.org/#install)
+
+Additional resources:
+
+* Learn Julia: [Julia website](https://julialang.org/learning/)
+* Learn Pluto: [Pluto.jl manual](https://plutojl.org/en/docs/)
+* Noteworthy Differences from other Languages: [Julia manual](https://docs.julialang.org/en/v1/manual/noteworthy-differences/)
+* Handy cheatsheets: [JuliaDocs](https://cheatsheet.juliadocs.org/), [MATLAB--Python--Julia](https://cheatsheets.quantecon.org/)
+* [Featured Pluto.jl notebooks](https://featured.plutojl.org/)
+"""
+
+# ╔═╡ 71d5bdb6-7ba6-4ddf-8ac1-515c67132a8b
+md"""
+## Running a notebook
+
+Each notebook to the left is a self-contained exploration in a different astronomy topic. Here are some useful details for how to interact with them.
+"""
+
+# ╔═╡ cc0c75c0-6028-4437-8de3-d8fc1eeb27c6
+md"""
+
+!!! note "Getting around"
+	Some parts of these [Pluto notebooks](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
 	
-	# Colormap default settings
-	AstroImages.set_cmap!(nothing)
-end;
+	**Note**: Each notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
 
-# ╔═╡ 23132c2d-56d6-4e9a-9eef-94f0b0742a00
-md"""
-# Array Operations
+!!! note " "
+	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
+
+!!! note "Coffee? ☕"
+	The first time a notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
 """
 
-# ╔═╡ 81f1863b-061b-4660-bb5d-c32b3e543d35
-md"""
-## Array representations 🔢
-
-Now that we have this mathematical representation of our image, shown below, let's explore a few key operations that we can perform on it:
-
-1. Indexing
-2. Slicing
-3. Reducing
-"""
-
-# ╔═╡ 43f2ecb7-e601-4231-85fe-451e1f22e3a1
-md"""
-### Indexing
-
-We actually saw this earlier already when looking at individual pixels in our image. Indexing is just another way of saying selecting a subset of our image. For example,
-"""
-
-# ╔═╡ d9e3ad1b-b7cc-45c9-9355-3ee508361775
-md"""
-selects the element in the first row and first column of our image. We can also use generic keywords like `begin` and `end` to select the first or last element of our matrix, respectively.
-"""
-
-# ╔═╡ 9358d43e-819e-4321-a5b9-064cafbcb9d7
-md"""
-!!! tip "Question"
-	What does indexing with only a single number, e.g., `img_data[10]` return? Why is this?
-"""
-
-# ╔═╡ d0796c62-f843-495a-928a-108807d819a9
-md"""
-👉 Your notes here
-
-
-"""
-
-# ╔═╡ 8640a069-7cab-44ad-abe1-487fce5cde66
-md"""
-!!! hint
-	See [here](https://docs.julialang.org/en/v1/manual/arrays/#Linear-indexing) and [here](https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-column-major) in the manual.
-"""
-
-# ╔═╡ 75331c88-12e8-4352-9e23-823c25c6751f
-md"""
-### Slicing
-
-Selecting multiple elements that are next to each other (contiguous) is known as slicing. For example,
-"""
-
-# ╔═╡ ca1abb68-1afd-477d-8429-e9f714c92294
-md"""
-selects every column in the first row of `img_data` while,
-"""
-
-# ╔═╡ 8bfd0688-49c9-4ed0-9616-8a526c09d638
-details(md"What does `|>` do?",
-md"""
-!!! note ""
-	Known as the [pipe operator](https://docs.julialang.org/en/v1/manual/functions/#Function-composition-and-piping), this is a convenient way to pass the output of one function as input to another. For example,
-
+# ╔═╡ 56a4ef63-9e22-47e0-b6b1-3ac0f8dd426e
+let
+	msg_adding_colors = md"""
+	##### Adding colors in Julia 🎨
+	This makes magenta!
+	
 	```julia
-	sqrt(sum([1, 4, 5, 6])) # 4.0
+	using Colors
+	
+	RGB(1, 0, 0) + RGB(0, 0, 1)
+	```
+	
+	$(RGB(1, 0, 0) + RGB(0, 0, 1))
+	"""
+	
+md"""
+!!! tip "Diving deeper"
+	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
+
+	$(details("Details", msg_adding_colors))
+"""
+end
+
+# ╔═╡ ba35b210-eb78-44c7-bb3c-c27beb382f5d
+md"""
+!!! warning "Advanced: bring your own editor"
+	These notebooks are fully hackable, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebooks are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+
+	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
+
+	```julia-repl
+	julia> using Pluto
+	
+	julia> Pluto.run(; auto_reload_from_file = true)
+	
+	# This will be on by default in an upcoming release =]
 	```
 
-	is equivalent to:
-
-	```julia
-	[1, 4, 5, 6] |> sum |> sqrt # 4.0
-	```
-
-	Note how this seamlessly composes with the dot operator in our image example above.
-""")
-
-# ╔═╡ 850418f5-a286-4e78-929f-01247eb34c50
-md"""
-!!! tip "Question"
-	Try going back to your original color image `img`. Using slices, try to produce the following image:
+	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
 """
 
-# ╔═╡ 012ff98b-b211-43be-95af-33bc56f6bf7a
-md"""
-For reference, here is the original color image:
-"""
-
-# ╔═╡ 1a4e2100-9253-45a5-bc98-4d69d2a5834a
-img = (load ∘ download)("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png")
-
-# ╔═╡ 73132792-b67a-41d8-b9c9-d47d52a4660e
-img_data = img .|> Gray .|> gray
-
-# ╔═╡ 4932a8ce-f62e-4649-ad1f-68eb7eb055a5
-img_data[1, 1]
-
-# ╔═╡ b17aac5d-407f-4a7f-8bb7-95025eaa4b48
-img_data_row = img_data[1, :]
-
-# ╔═╡ b20b026e-1b9f-48a7-8c6e-31bb94442750
-img_data_corner = img_data[1:500, 1:500]
-
-# ╔═╡ 51426bfb-ee8b-42de-b110-b8dadea70462
-md"""
-returns the first $(size(img_data_corner, 1)) rows and first $(size(img_data_corner, 2)) columns, i.e., the top-left corner:
-"""
-
-# ╔═╡ 5a93fca5-efa8-46f4-ad6f-cba498680eeb
-img_corner_gray = img_data_corner .|> Gray
-
-# ╔═╡ a65e988a-84e2-4f99-b350-1866163062d5
-img[1:60, :]
-
-# ╔═╡ 5a8e80e1-8e59-487b-872e-f85a1600ad1a
-md"""
-👉 Your notes here
-
-
-"""
-
-# ╔═╡ e4131b85-bb1d-4055-ae6d-49a9e457f235
-md"""
-👇 Your code here
-"""
-
-# ╔═╡ 390ecfb7-cb91-45cc-9284-c7089098fe18
-
-
-# ╔═╡ b5b063c8-d575-4574-b1cd-fea7ae04ddfb
-md"""
-### Reducing
-
-Often, we would like to know summary statistics about a given region in our image. Applying functions that boil down our box of numbers to a smaller representative set is known as reduction. For example, to get the total pixel value in each column of our above slice, shown below,
-"""
-
-# ╔═╡ bf33e9ce-159c-4367-b462-c966c88f9adf
-img_data[1:60, :]
-
-# ╔═╡ 99e846f2-f139-4b69-91c2-9d170201da90
-md"""
-we could do the following:
-"""
-
-# ╔═╡ 4d8c748a-6469-4b45-bc9b-268c35a7dc7b
-sum(img_data[1:60, :]; dims=1)
-
-# ╔═╡ 0a39d848-fbe9-4a61-9c5b-7df6376b5387
-md"""
-!!! tip "Question"
-	What does the `dims` keyword do? Try it out on a simpler matrix like:
-
-	```julia
-	arr = [
-		1 2
-		3 4
-	]
-	```
-
-	Note: You can pull up the documentation for any function by selecting the `Live Docs` button in the bottom right corner of this notebook.
-"""
-
-# ╔═╡ f535460d-ff47-4108-a561-7e993669b0f7
-md"""
-👉 Your notes here
-
-
-"""
-
-# ╔═╡ f4cf7cce-6d86-47cc-afb2-05c7ec46ee3a
-md"""
-## Color maps and color scales 🌈
-
-So far, we have been using general purpose tools for displaying images. We now transition to a more specialized tool named [AstroImages.jl](https://juliaastro.org/AstroImages/stable/), which extends the functionality we have already used to work with astronomical images.
-
-
-$(details("Aside", md" 
-This method of extending functionality in separate packages is a core part of the Julia language. It allows for ecosystems of tools to form naturally in different fields of study, which then compose seamlessly with each other thanks to the [multiple dispatch](https://docs.julialang.org/en/v1/manual/methods/#Methods) paradigm that underpins the language. For more on this, see [this talk](https://www.youtube.com/watch?v=kc9HwsxE1OY) by one of the Julia creators."
-))
-
-To start, let's wrap our underlying image data in `img_data_corner` in an `AstroImage` type:
-"""
-
-# ╔═╡ eb913b0f-06e5-4915-b89c-53c5812abaab
-img_astro_gray = AstroImage(img_data_corner)
-
-# ╔═╡ ed3474d3-0a7b-4ac3-a723-5abb077200f2
-details("Why do things looks flipped?",
-md"""
-You may notice that `img_astro` looks transposed and flipped relative to `img_data`. This is to comply with the [FITS convention](https://juliaastro.org/AstroImages/stable/manual/conventions/) of placing the origin of an image in the bottom left corner, instead of the top left.
-"""
-)
-
-# ╔═╡ f0809836-33ce-4ed6-a4ae-a485f0604cb5
-md"""
-We now have all of the usual benefits of working with image data that we have seen already, along with additional features specific to FITS files, like headers and WCS information if available. We will explore these features more later in the workshop. For now, we will use the [`imview`](https://juliaastro.org/AstroImages/stable/api/#AstroImages.imview) function that comes with AstroImages.jl to explore different ways to visualize our given data.
-
-We called:
-
-```julia
-AstroImages.set_cmap!(nothing)
-```
-
-at the bottom of this notebook to set the default grayscale colormap (the relationship between the given pixel value and associated color) that our AstroImage.jl images are displayed in. We can override this mapping by passing the `cmap` keyword to `imview`:
-"""
-
-# ╔═╡ b21dbe98-0731-471f-a68c-2a081d34449c
-imview(img_astro_gray; cmap = :cividis)
-
-# ╔═╡ 3770ca9f-c891-4b05-af57-b6a33c8c3656
-md"""
-This now our image using the Cividis colormap, which can be a good choice for people with color vision deficiencies to help make accurate interpretations of scientific data.
-
-To help bring out features of interest, we can also control the functional mapping between pixel value and color via the `stretch` keyword:
-"""
-
-# ╔═╡ b3587a50-9937-4ac4-a8c0-0c5eed0ee595
-imview(img_astro_gray; cmap = :cividis, stretch = powstretch)
-
-# ╔═╡ 2f473051-e5fb-460d-b4b0-3c5965fe0092
-md"""
-!!! tip "Question"
-
-	What is `powstretch`? What other functions can be passed?
-
-!!! hint
-	AstroImages.jl follows the colorscale specifications [defined in DS9](https://ds9.si.edu/doc/ref/how.html).
-"""
-
-# ╔═╡ fdac0d23-be08-45da-b9a4-90f94cff73cf
-md"""
-👉 Your notes here
-
-
-"""
-
-# ╔═╡ 5493b2e6-36cd-4c07-b684-1e14dac2c6f8
-md"""
-Now that we have a handle on working with AstroImages.jl data, let's turn next to combining some real FITS data to make a full color image.
-"""
-
-# ╔═╡ 292dc021-1da0-4459-9f0f-9b0ae7685eae
-md"""
-## Image stacking 🥞
-
-Let's start by pulling in some data. We'll use an example from the [AstroImages.jl documentation](https://juliaastro.org/AstroImages/stable/manual/converting-to-rgb/), which uses images of the colliding [Antennae galaxies](https://www.nasa.gov/image-article/antennae-galaxies/) provided by NASA/ESA.
-"""
-
-# ╔═╡ 4f4e5d63-fb00-4128-8ffb-220ecee9f365
-md"""
-### RGB
-
-Below are images taken in the visible portion of the spectrum in red, green, and blue light, respectively. Data product information [here](https://esahubble.org/projects/fits_liberator/antennaedata/).
-"""
-
-# ╔═╡ c26c62a8-b013-47b6-868d-8e06cd5cd558
-antred = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/red.fits"))[:, begin+14:end];
-
-# ╔═╡ 79c158b8-6fd7-48bb-a6b7-7f5ff6e4d987
-antgreen = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/green.fits"));
-
-# ╔═╡ d27284e3-f118-4ffb-b2f7-48eeb4bce66b
-antblue = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/blue.fits"))[:, begin+14:end];
-
-# ╔═╡ 874103b8-140e-41b3-88be-d316ed9f9d85
-img_channels = antred, antgreen, antblue
-
-# ╔═╡ 0a8fd090-36db-4319-86af-32ed69030268
-md"""
-!!! note
-	We array slice some of the images to help line things up before stacking. We'll discuss more methodical ways for aligning astronomical images later in the workshop.
-"""
-
-# ╔═╡ ad234863-91ed-4a29-a679-1de130d36092
-md"""
-We next call the `composecolors` function from AstroImages.jl to combine these three different color channels:
-"""
-
-# ╔═╡ 91f63c0e-fed1-460a-8309-6bd728872a07
-img_rgb = composecolors(img_channels;
-	stretch = [
-		asinhstretch,
-		asinhstretch,
-		asinhstretch,
-	],
-	multiplier = [1, 1.7, 1],
-)
-
-# ╔═╡ a7201a02-ec80-47b1-ab60-daa483cca97d
-md"""
-!!! tip "Question"
-	Explore the documentation for `composecolors`. What keywords can be passed to it? Try adding your own modified version of the above image using these keywords.
-"""
-
-# ╔═╡ 676ba2d0-d543-49f1-acc7-4bb9b2d2ebac
-md"""
-👉 Your notes here
-"""
-
-# ╔═╡ 82082413-ed77-4da5-89f9-503e021a2e8e
-md"""
-👇 Your code here
-"""
-
-# ╔═╡ 9299b703-39bf-456e-a4d6-dca649d55b10
-
-
-# ╔═╡ 1f3ef930-d1e7-459c-b4d7-53d43211db3d
-md"""
-### H-alpha
-
-We aren't limited to just the light that we can see though. Now that we know about colormaps, we can apply arbitrary color assingments to the underlying data to help us gain insight. For example, let's overlay another image of the Antennae galaxy taken with a Hydrogen filter to highlight active star-forming regions that glow brightly in the H-alpha portion of the spectrum. We'll assign this activity to the color maroon:
-"""
-
-# ╔═╡ a676032f-9b71-4ba7-8855-85504e7e28da
-anthalph = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/hydrogen.fits"))[:, begin+14:end];
-
-# ╔═╡ ae89b95c-a0ea-4422-afb9-f3d4359c63d2
-img_rgbh = composecolors(
-    [antred, antgreen, antblue, anthalph],
-    ["red", "green", "blue", "maroon1"],
-    stretch = [
-        asinhstretch,
-        asinhstretch,
-        asinhstretch,
-        identity,
-    ],
-    multiplier = [1, 1.7, 1, 0.8],
-)
-
-# ╔═╡ ea3bf49a-4c43-4581-9313-813b6dd7281e
-md"""
-And with that, we now have a scientific image that we can use for future analysis.
-"""
-
-# ╔═╡ 9d69e2c0-fa7e-46f6-ba9c-9467eb271524
-TableOfContents()
+# ╔═╡ 114eaff2-b20e-4200-9bf2-73d498b574f0
+PlutoUI.TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AstroImages = "fe3fc30c-9b16-11e9-1c73-17dabf39f4ad"
-ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 AstroImages = "~0.5.1"
-ColorTypes = "~0.12.1"
-PlutoUI = "~0.7.71"
+Colors = "~0.13.1"
+PlutoUI = "~0.7.80"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -381,7 +126,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "a956e433ff9dd49f25caafaada94ec166f3f4d83"
+project_hash = "3cd3b05ce9d79ecb3dd0b87804c26c1140b968d3"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -403,57 +148,9 @@ git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
 
-[[deps.Adapt]]
-deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "f7817e2e585aa6d924fd714df1e2a84be7896c60"
-uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.3.0"
-
-    [deps.Adapt.extensions]
-    AdaptSparseArraysExt = "SparseArrays"
-    AdaptStaticArraysExt = "StaticArrays"
-
-    [deps.Adapt.weakdeps]
-    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.2"
-
-[[deps.ArrayInterface]]
-deps = ["Adapt", "LinearAlgebra"]
-git-tree-sha1 = "dbd8c3bbbdbb5c2778f85f4422c39960eac65a42"
-uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "7.20.0"
-
-    [deps.ArrayInterface.extensions]
-    ArrayInterfaceBandedMatricesExt = "BandedMatrices"
-    ArrayInterfaceBlockBandedMatricesExt = "BlockBandedMatrices"
-    ArrayInterfaceCUDAExt = "CUDA"
-    ArrayInterfaceCUDSSExt = "CUDSS"
-    ArrayInterfaceChainRulesCoreExt = "ChainRulesCore"
-    ArrayInterfaceChainRulesExt = "ChainRules"
-    ArrayInterfaceGPUArraysCoreExt = "GPUArraysCore"
-    ArrayInterfaceMetalExt = "Metal"
-    ArrayInterfaceReverseDiffExt = "ReverseDiff"
-    ArrayInterfaceSparseArraysExt = "SparseArrays"
-    ArrayInterfaceStaticArraysCoreExt = "StaticArraysCore"
-    ArrayInterfaceTrackerExt = "Tracker"
-
-    [deps.ArrayInterface.weakdeps]
-    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
-    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
-    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-    CUDSS = "45b445bb-4962-46a0-9369-b4df9d0f772e"
-    ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
-    Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
-    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
-    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -499,9 +196,15 @@ version = "1.7.2"
 
 [[deps.CFITSIO_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "15e80be798d7711411f4ac4273144cdb2a89eb2f"
+git-tree-sha1 = "98810ce932373ec43ef72cd4ae373640808a79c3"
 uuid = "b3e40c51-02ae-5482-8a39-3ace5868dcf4"
-version = "4.6.2+0"
+version = "4.6.3+0"
+
+[[deps.CodecZstd]]
+deps = ["TranscodingStreams", "Zstd_jll"]
+git-tree-sha1 = "da54a6cd93c54950c15adf1d336cfd7d71f51a56"
+uuid = "6b39b394-51ab-5f42-8807-6242bab2b4c2"
+version = "0.8.7"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
@@ -564,9 +267,9 @@ version = "1.16.0"
 
 [[deps.DataStructures]]
 deps = ["OrderedCollections"]
-git-tree-sha1 = "6c72198e6a101cccdd4c9731d3985e904ba26037"
+git-tree-sha1 = "e86f4a2805f7f19bec5129bc9150c38208e5dc23"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.19.1"
+version = "0.19.4"
 
 [[deps.DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -579,32 +282,38 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 version = "1.11.0"
 
 [[deps.DimensionalData]]
-deps = ["Adapt", "ArrayInterface", "ConstructionBase", "DataAPI", "Dates", "Extents", "Interfaces", "IntervalSets", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "OrderedCollections", "PrecompileTools", "Random", "RecipesBase", "Statistics", "TableTraits", "Tables"]
-git-tree-sha1 = "b95dbd2110c6ad146085f67335f01bab30b70c92"
+deps = ["ConstructionBase", "DataAPI", "Dates", "Extents", "Interfaces", "IntervalSets", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "OrderedCollections", "PrecompileTools", "Random", "Statistics", "TableTraits", "Tables"]
+git-tree-sha1 = "7ad5fa0affdbdb7c0db39ff6d437c724934ea459"
 uuid = "0703355e-b756-11e9-17c0-8b28908087d0"
-version = "0.29.24"
+version = "0.29.27"
 
     [deps.DimensionalData.extensions]
     DimensionalDataAbstractFFTsExt = "AbstractFFTs"
+    DimensionalDataAdaptExt = "Adapt"
     DimensionalDataAlgebraOfGraphicsExt = "AlgebraOfGraphics"
+    DimensionalDataArrayInterfaceExt = "ArrayInterface"
     DimensionalDataCategoricalArraysExt = "CategoricalArrays"
     DimensionalDataChainRulesCoreExt = "ChainRulesCore"
     DimensionalDataDiskArraysExt = "DiskArrays"
-    DimensionalDataMakie = "Makie"
+    DimensionalDataMakieExt = "Makie"
     DimensionalDataNearestNeighborsExt = "NearestNeighbors"
-    DimensionalDataPythonCall = "PythonCall"
+    DimensionalDataPythonCallExt = "PythonCall"
+    DimensionalDataRecipesBaseExt = "RecipesBase"
     DimensionalDataSparseArraysExt = "SparseArrays"
-    DimensionalDataStatsBase = "StatsBase"
+    DimensionalDataStatsBaseExt = "StatsBase"
 
     [deps.DimensionalData.weakdeps]
     AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+    Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
     AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+    ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
     CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     DiskArrays = "3c3547ce-8d99-4f5e-a174-61eb10b00ae3"
     Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
     NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
     PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
@@ -636,9 +345,9 @@ version = "0.17.5"
 
 [[deps.FileIO]]
 deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "b66970a70db13f45b7e57fbda1736e1cf72174ea"
+git-tree-sha1 = "6522cfb3b8fe97bec632252263057996cbd3de20"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.17.0"
+version = "1.18.0"
 
     [deps.FileIO.extensions]
     HTTPExt = "HTTP"
@@ -670,15 +379,15 @@ version = "0.0.5"
 
 [[deps.HypertextLiteral]]
 deps = ["Tricks"]
-git-tree-sha1 = "7134810b1afce04bbc1045ca1985fbe81ce17653"
+git-tree-sha1 = "d1a86724f81bcd184a38fd284ce183ec067d71a0"
 uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-version = "0.9.5"
+version = "1.0.0"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
-git-tree-sha1 = "b6d6bfdd7ce25b0f9b2f6b3dd56b2673a66c8770"
+git-tree-sha1 = "0ee181ec08df7d7c911901ea38baf16f755114dc"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.5"
+version = "1.0.0"
 
 [[deps.ImageAxes]]
 deps = ["AxisArrays", "ImageBase", "ImageCore", "Reexport", "SimpleTraits"]
@@ -718,9 +427,9 @@ version = "0.3.8"
 
 [[deps.Imath_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "0936ba688c6d201805a83da835b55c61a180db52"
+git-tree-sha1 = "dcc8d0cd653e55213df9b75ebc6fe4a8d3254c65"
 uuid = "905a6f67-0a94-5f89-b386-d35d92009cd1"
-version = "3.1.11+0"
+version = "3.2.2+0"
 
 [[deps.IndirectArrays]]
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
@@ -743,9 +452,9 @@ uuid = "85a1e053-f937-4924-92a5-1367d23b7b87"
 version = "0.3.2"
 
 [[deps.IntervalSets]]
-git-tree-sha1 = "5fbb102dcb8b1a858111ae81d56682376130517d"
+git-tree-sha1 = "79d6bd28c8d9bccc2229784f1bd637689b256377"
 uuid = "8197267c-284f-5f27-9208-e0e47529a953"
-version = "0.7.11"
+version = "0.7.14"
 weakdeps = ["Random", "RecipesBase", "Statistics"]
 
     [deps.IntervalSets.extensions]
@@ -774,12 +483,6 @@ git-tree-sha1 = "0533e564aae234aff59ab625543145446d8b6ec2"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.7.1"
 
-[[deps.JSON]]
-deps = ["Dates", "Mmap", "Parsers", "Unicode"]
-git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
-uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-version = "0.21.4"
-
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
 git-tree-sha1 = "9496de8fb52c224a2e3f9ff403947674517317d9"
@@ -788,9 +491,9 @@ version = "0.1.6"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "4255f0032eafd6451d707a51d5f0248b8a165e4d"
+git-tree-sha1 = "c0c9b76f3520863909825cbecdef58cd63de705a"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "3.1.3+0"
+version = "3.1.5+0"
 
 [[deps.JuliaSyntaxHighlighting]]
 deps = ["StyledStrings"]
@@ -799,9 +502,9 @@ version = "1.12.0"
 
 [[deps.LERC_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "aaafe88dccbd957a8d82f7d05be9b69172e0cee3"
+git-tree-sha1 = "17b94ecafcfa45e8360a4fc9ca6b583b049e4e37"
 uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
-version = "4.0.1+0"
+version = "4.1.0+0"
 
 [[deps.LazyModules]]
 git-tree-sha1 = "a560dd966b386ac9ae60bdd3a3d3a326062d3c3e"
@@ -845,9 +548,9 @@ version = "1.7.1+1"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
-git-tree-sha1 = "4ab7581296671007fc33f07a721631b8855f4b1d"
+git-tree-sha1 = "f04133fe05eff1667d2054c53d59f9122383fe05"
 uuid = "89763e89-9b03-5906-acba-b20f662cd828"
-version = "4.7.1+0"
+version = "4.7.2+0"
 
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
@@ -869,9 +572,9 @@ uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.16"
 
 [[deps.MappedArrays]]
-git-tree-sha1 = "2dab0221fe2b0f2cb6754eaa743cc266339f527e"
+git-tree-sha1 = "0ee4497a4e80dbd29c058fcee6493f5219556f40"
 uuid = "dbb5928d-eab1-5f90-85c2-b9b0edb7c900"
-version = "0.4.2"
+version = "0.4.3"
 
 [[deps.Markdown]]
 deps = ["Base64", "JuliaSyntaxHighlighting", "StyledStrings"]
@@ -906,10 +609,12 @@ version = "1.3.0"
 git-tree-sha1 = "117432e406b5c023f665fa73dc26e79ec3630151"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 version = "1.17.0"
-weakdeps = ["Adapt"]
 
     [deps.OffsetArrays.extensions]
     OffsetArraysAdaptExt = "Adapt"
+
+    [deps.OffsetArrays.weakdeps]
+    Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
@@ -924,9 +629,9 @@ version = "0.3.3"
 
 [[deps.OpenEXR_jll]]
 deps = ["Artifacts", "Imath_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "8292dd5c8a38257111ada2174000a33745b06d4e"
+git-tree-sha1 = "9ac7c730c53b3b5d9a73fb900ac4b4fc263774db"
 uuid = "18a262bb-aa17-5467-a713-aee519bc75cb"
-version = "3.2.4+0"
+version = "3.4.9+0"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -950,12 +655,6 @@ git-tree-sha1 = "0fac6313486baae819364c52b4f483450a9d793f"
 uuid = "5432bcbf-9aad-5242-b902-cca2824c8663"
 version = "0.5.12"
 
-[[deps.Parsers]]
-deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "7d2f8f21da5db6a806faf7b9b292296da42b2810"
-uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.8.3"
-
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
@@ -973,27 +672,27 @@ version = "0.3.3"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "StableRNGs", "Statistics"]
-git-tree-sha1 = "3ca9a356cd2e113c420f2c13bea19f8d3fb1cb18"
+git-tree-sha1 = "26ca162858917496748aad52bb5d3be4d26a228a"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "1.4.3"
+version = "1.4.4"
 
 [[deps.PlutoUI]]
-deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "8329a3a4f75e178c11c1ce2342778bcbbbfa7e3c"
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
+git-tree-sha1 = "fbc875044d82c113a9dee6fc14e16cf01fd48872"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.71"
+version = "0.7.80"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
+git-tree-sha1 = "07a921781cab75691315adc645096ed5e370cb77"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.2.1"
+version = "1.3.3"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "0f27480397253da18fe2c12a4ba4eb9eb208bf3d"
+git-tree-sha1 = "8b770b60760d4451834fe79dd483e318eee709c4"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.5.0"
+version = "1.5.2"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1008,9 +707,9 @@ version = "1.11.0"
 
 [[deps.QOI]]
 deps = ["ColorTypes", "FileIO", "FixedPointNumbers"]
-git-tree-sha1 = "8b3fc30bc0390abdce15f8822c889f669baed73d"
+git-tree-sha1 = "472daaa816895cb7aee81658d4e7aec901fa1106"
 uuid = "4b34888f-f399-49d4-9bb3-47ed5cae4e65"
-version = "1.0.1"
+version = "1.0.2"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
@@ -1050,9 +749,9 @@ version = "0.7.0"
 
 [[deps.SIMD]]
 deps = ["PrecompileTools"]
-git-tree-sha1 = "fea870727142270bdf7624ad675901a1ee3b4c87"
+git-tree-sha1 = "e24dc23107d426a096d3eae6c165b921e74c18e4"
 uuid = "fdea26ae-647d-5447-a871-4b548cad5224"
-version = "3.7.1"
+version = "3.7.2"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -1076,9 +775,9 @@ version = "1.11.0"
 
 [[deps.StableRNGs]]
 deps = ["Random"]
-git-tree-sha1 = "95af145932c2ed859b63329952ce8d633719f091"
+git-tree-sha1 = "4f96c596b8c8258cc7d3b19797854d368f243ddc"
 uuid = "860ef19b-820b-49d6-a774-d7a799459cd3"
-version = "1.0.3"
+version = "1.0.4"
 
 [[deps.StackViews]]
 deps = ["OffsetArrays"]
@@ -1136,15 +835,20 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 version = "1.11.0"
 
 [[deps.TiffImages]]
-deps = ["ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedPointNumbers", "IndirectArrays", "Inflate", "Mmap", "OffsetArrays", "PkgVersion", "PrecompileTools", "ProgressMeter", "SIMD", "UUIDs"]
-git-tree-sha1 = "98b9352a24cb6a2066f9ababcc6802de9aed8ad8"
+deps = ["CodecZstd", "ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedPointNumbers", "IndirectArrays", "Inflate", "Mmap", "OffsetArrays", "PkgVersion", "PrecompileTools", "ProgressMeter", "SIMD", "UUIDs"]
+git-tree-sha1 = "9ca5f1f2d42f80df4b8c9f6ab5a64f438bbd9976"
 uuid = "731e570b-9d59-4bfa-96dc-6df516fadf69"
-version = "0.11.6"
+version = "0.11.9"
+
+[[deps.TranscodingStreams]]
+git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.11.3"
 
 [[deps.Tricks]]
-git-tree-sha1 = "372b90fe551c019541fafc6ff034199dc19c8436"
+git-tree-sha1 = "311349fd1c93a31f783f977a71e8b062a57d4101"
 uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
-version = "0.1.12"
+version = "0.1.13"
 
 [[deps.URIs]]
 git-tree-sha1 = "bef26fb046d031353ef97a82e3fdb6afe7f21b1a"
@@ -1162,9 +866,9 @@ version = "1.11.0"
 
 [[deps.WCS]]
 deps = ["ConstructionBase", "WCS_jll"]
-git-tree-sha1 = "858cf2784ff27d908df7a3fe22fcd5fbf02f508b"
+git-tree-sha1 = "c12065744b66adfed32d24c2a13a3053cc235ea7"
 uuid = "15f3aee2-9e10-537f-b834-a6fb8bdb944d"
-version = "0.6.2"
+version = "0.6.3"
 
 [[deps.WCS_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1180,15 +884,15 @@ version = "0.1.3"
 
 [[deps.XZ_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "fee71455b0aaa3440dfdd54a9a36ccef829be7d4"
+git-tree-sha1 = "b29c22e245d092b8b4e8d3c09ad7baa586d9f573"
 uuid = "ffd25f8a-64ca-5728-b0f7-c24cf3aae800"
-version = "5.8.1+0"
+version = "5.8.3+0"
 
 [[deps.Xorg_libX11_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
-git-tree-sha1 = "b5899b25d17bf1889d25906fb9deed5da0c15b3b"
+git-tree-sha1 = "808090ede1d41644447dd5cbafced4731c56bd2f"
 uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
-version = "1.8.12+0"
+version = "1.8.13+0"
 
 [[deps.Xorg_libXau_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1204,9 +908,9 @@ version = "1.1.6+0"
 
 [[deps.Xorg_libXext_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
-git-tree-sha1 = "a4c0ee07ad36bf8bbce1c3bb52d21fb1e0b987fb"
+git-tree-sha1 = "1a4a26870bf1e5d26cd585e38038d399d7e65706"
 uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
-version = "1.3.7+0"
+version = "1.3.8+0"
 
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
@@ -1238,9 +942,9 @@ version = "5.15.0+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "07b6a107d926093898e82b3b1db657ebe33134ec"
+git-tree-sha1 = "e51150d5ab85cee6fc36726850f0e627ad2e4aba"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
-version = "1.6.50+0"
+version = "1.6.58+0"
 
 [[deps.libsixel_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "libpng_jll"]
@@ -1266,63 +970,13 @@ version = "17.7.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─23132c2d-56d6-4e9a-9eef-94f0b0742a00
-# ╟─81f1863b-061b-4660-bb5d-c32b3e543d35
-# ╠═73132792-b67a-41d8-b9c9-d47d52a4660e
-# ╟─43f2ecb7-e601-4231-85fe-451e1f22e3a1
-# ╠═4932a8ce-f62e-4649-ad1f-68eb7eb055a5
-# ╟─d9e3ad1b-b7cc-45c9-9355-3ee508361775
-# ╟─9358d43e-819e-4321-a5b9-064cafbcb9d7
-# ╠═d0796c62-f843-495a-928a-108807d819a9
-# ╟─8640a069-7cab-44ad-abe1-487fce5cde66
-# ╟─75331c88-12e8-4352-9e23-823c25c6751f
-# ╠═b17aac5d-407f-4a7f-8bb7-95025eaa4b48
-# ╟─ca1abb68-1afd-477d-8429-e9f714c92294
-# ╠═b20b026e-1b9f-48a7-8c6e-31bb94442750
-# ╟─51426bfb-ee8b-42de-b110-b8dadea70462
-# ╠═5a93fca5-efa8-46f4-ad6f-cba498680eeb
-# ╟─8bfd0688-49c9-4ed0-9616-8a526c09d638
-# ╟─850418f5-a286-4e78-929f-01247eb34c50
-# ╟─a65e988a-84e2-4f99-b350-1866163062d5
-# ╟─012ff98b-b211-43be-95af-33bc56f6bf7a
-# ╟─1a4e2100-9253-45a5-bc98-4d69d2a5834a
-# ╠═5a8e80e1-8e59-487b-872e-f85a1600ad1a
-# ╟─e4131b85-bb1d-4055-ae6d-49a9e457f235
-# ╠═390ecfb7-cb91-45cc-9284-c7089098fe18
-# ╟─b5b063c8-d575-4574-b1cd-fea7ae04ddfb
-# ╟─bf33e9ce-159c-4367-b462-c966c88f9adf
-# ╟─99e846f2-f139-4b69-91c2-9d170201da90
-# ╠═4d8c748a-6469-4b45-bc9b-268c35a7dc7b
-# ╟─0a39d848-fbe9-4a61-9c5b-7df6376b5387
-# ╠═f535460d-ff47-4108-a561-7e993669b0f7
-# ╟─f4cf7cce-6d86-47cc-afb2-05c7ec46ee3a
-# ╠═eb913b0f-06e5-4915-b89c-53c5812abaab
-# ╟─ed3474d3-0a7b-4ac3-a723-5abb077200f2
-# ╟─f0809836-33ce-4ed6-a4ae-a485f0604cb5
-# ╠═b21dbe98-0731-471f-a68c-2a081d34449c
-# ╟─3770ca9f-c891-4b05-af57-b6a33c8c3656
-# ╠═b3587a50-9937-4ac4-a8c0-0c5eed0ee595
-# ╟─2f473051-e5fb-460d-b4b0-3c5965fe0092
-# ╠═fdac0d23-be08-45da-b9a4-90f94cff73cf
-# ╟─5493b2e6-36cd-4c07-b684-1e14dac2c6f8
-# ╟─292dc021-1da0-4459-9f0f-9b0ae7685eae
-# ╟─4f4e5d63-fb00-4128-8ffb-220ecee9f365
-# ╠═c26c62a8-b013-47b6-868d-8e06cd5cd558
-# ╠═79c158b8-6fd7-48bb-a6b7-7f5ff6e4d987
-# ╠═d27284e3-f118-4ffb-b2f7-48eeb4bce66b
-# ╠═874103b8-140e-41b3-88be-d316ed9f9d85
-# ╟─0a8fd090-36db-4319-86af-32ed69030268
-# ╟─ad234863-91ed-4a29-a679-1de130d36092
-# ╠═91f63c0e-fed1-460a-8309-6bd728872a07
-# ╟─a7201a02-ec80-47b1-ab60-daa483cca97d
-# ╠═676ba2d0-d543-49f1-acc7-4bb9b2d2ebac
-# ╟─82082413-ed77-4da5-89f9-503e021a2e8e
-# ╠═9299b703-39bf-456e-a4d6-dca649d55b10
-# ╟─1f3ef930-d1e7-459c-b4d7-53d43211db3d
-# ╠═a676032f-9b71-4ba7-8855-85504e7e28da
-# ╠═ae89b95c-a0ea-4422-afb9-f3d4359c63d2
-# ╟─ea3bf49a-4c43-4581-9313-813b6dd7281e
-# ╠═9d69e2c0-fa7e-46f6-ba9c-9467eb271524
-# ╠═48d0a70b-62dc-426e-93c4-b21aa20acbfd
+# ╟─35bd8370-3ac3-11f1-9c70-a9ae70668f3d
+# ╟─34e67453-b9db-4c49-aa61-84f519f3c1f4
+# ╟─71d5bdb6-7ba6-4ddf-8ac1-515c67132a8b
+# ╟─cc0c75c0-6028-4437-8de3-d8fc1eeb27c6
+# ╟─56a4ef63-9e22-47e0-b6b1-3ac0f8dd426e
+# ╟─ba35b210-eb78-44c7-bb3c-c27beb382f5d
+# ╟─114eaff2-b20e-4200-9bf2-73d498b574f0
+# ╟─a6bd433e-86e5-48dc-a129-4314825363f6
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

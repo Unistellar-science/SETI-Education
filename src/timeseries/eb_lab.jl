@@ -4,7 +4,7 @@
 #> [frontmatter]
 #> title = "Eclipsing Binaries Lab"
 #> date = "2025-10-03"
-#> tags = ["time series"]
+#> tags = ["time series", "eclipsing binaries"]
 #> description = "Measure light curves from your data. Example eclipsing binary use case included."
 #> layout = "layout.jlhtml"
 

@@ -37,7 +37,7 @@ end;
 
 # ╔═╡ 8616ef80-e4f2-4121-8463-f83e3594ac91
 md"""
-# Color Magnitude Diagram Lab
+# 🔵🟡🔴 Color Magnitude Diagram Lab
 
 In this lab, we will explore how astronomers take photometric measurements to estimate different properties of star (e.g., age, distance, and temperature) via so called [color magnitude diagrams](https://apod.nasa.gov/apod/ap010223.html) (CMD)s. Here is an example of one below:
 
@@ -79,15 +79,15 @@ Next, we upload our FITS file to [Astrometry.net](https://nova.astrometry.net/up
 
 After clicking on the link above, you should see an upload page like this:
 
-![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_upload_page.png?raw=true)
+![](https://github.com/Unistellar-science/SETI-Education/blob/main/data/photometry/M67/astrometry-net_upload_page.png?raw=true)
 
 About 30 seconds - 1 minute after uploading our data following the instruction above, we should see a success page like the following:
 
-![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_success_page.png?raw=true)
+![](https://github.com/Unistellar-science/SETI-Education/blob/main/data/photometry/M67/astrometry-net_success_page.png?raw=true)
 
 Clicking "Go to results page" should then show the following:
 
-![](https://github.com/Unistellar-science/SETI-Education/blob/main/src/asp_workshop/assets/M67/astrometry-net_results_page.png?raw=true)
+![](https://github.com/Unistellar-science/SETI-Education/blob/main/data/photometry/M67/astrometry-net_results_page.png?raw=true)
 
 There are a variety of different calibration products that we can download. For our purposes, we will just need the `image-radec.fits` file shown in the box above. We click on this link to save the file into the same directory as this notebook. Once complete, we load this new file, which should look similar to the table below:
 """
@@ -212,93 +212,27 @@ Scroll over the reference image below to see how close your guesses were to the 
 # ╔═╡ 72ddeeae-4cb0-4268-bbe8-c60f5be6bdb2
 md"""
 Try this with your own data following the steps above!
+
+!!! tip "Coming soon"
+	Extracting color information directly from your images instead of relying on Gaia archives.
 """
 
 # ╔═╡ d5ac78a4-70c3-4a35-95c1-1d58f403facd
 md"""
-# Notebook setup
+# 🔧 Notebook setup
 """
 
 # ╔═╡ e4b279ba-bbe5-4c1c-a346-ab70a1b61cc6
 PlutoUI.TableOfContents()
 
-# ╔═╡ 0468013d-5283-4b48-8729-e833b3d2f8f8
+# ╔═╡ 55817d19-9b84-4e52-8e9d-44275a425269
 md"""
-## Helper functions
+## Data
 """
-
-# ╔═╡ 2b52be49-eb95-4d11-adc4-c0b64a818872
-function tiny(img)
-	imgv = copy(img)
-	
-	while length(eachindex(imgv)) > 10^6
-		imgv = AstroImages.restrict(imgv)
-	end
-
-	return imgv
-end;
-
-# ╔═╡ 1d81674b-67f5-4c9c-a351-b2fda419aba3
-# Julia photometry aperture object --> plotly shape object
-function circ(ap, r=ap.r; line_color=:lightgreen)
-	circle(
-		ap.x - r, # x_min
-		ap.x + r, # x_max
-		ap.y - r, # y_min
-		ap.y + r; # y_max
-		line_color,
-	)
-end;
-
-# ╔═╡ 4a2e1f66-d637-476f-8f80-e5c46798e4bd
-# Plotly heatmap trace of img
-function htrace(img;
-	zlims,
-	title = "ADU",
-	restrict = true,
-)
-		
-	# Account for plotly orientation convention
-	img = permutedims(img)
-	
-	# dims is used here to convert back from an offset array
-	# to a simple array that JS can ingest
-	zmin, zmax = zlims
-	
-	heatmap(;
-		x = dims(img, X).val,
-		y = dims(img, Y).val,
-		z = Matrix{Float32}(img.data),
-		zmin,
-		zmax,
-		colorbar = attr(; title),
-		colorscale = "Cividis",
-	)
-end;
-
-# ╔═╡ f70883db-74cb-485e-a426-f334dce178b2
-# Combines plotly trace and layout into a plot object
-function plot_img(img; zlims=Percent(99.5)(img), restrict = true)
-	imgv = (tiny ∘ AstroImage)(img)
-	# imgv = img
-	
-	hm = htrace(imgv; zlims, restrict)
-	
-	l = Layout(;
-		# width,
-		# height,
-		# title = timestamp(img),
-		xaxis = attr(title = "X", constrain = "domain"),
-		yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
-		uirevision = 1,
-	)
-
-	plot(hm, l)
-end;
 
 # ╔═╡ e24420c8-2c85-468a-92df-814ba619e575
 # Default from FilePicker
-load_img(data::Nothing) = (load ∘ download)("https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/src/asp_workshop/assets/M67/20260303T060902_911_StackInput.fits")
+load_img(data::Nothing) = (load ∘ download)("https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/data/photometry/M67/20260303T060902_911_StackInput.fits")
 
 # ╔═╡ db733129-28e0-49e0-811f-f38f670fda38
 function load_img(data)
@@ -310,15 +244,12 @@ end
 # ╔═╡ e15a8d41-41b8-4f55-b364-9586dc729bc3
 img_M67 = load_img(img_M67_local);
 
-# ╔═╡ ea3dd7a0-7ecc-4063-8a3e-0e46a470f80c
-plot_img(img_M67)
-
 # ╔═╡ fa0d3f2f-3ce2-4e19-bb8e-874bdd7028bc
 # Default from FilePicker
 function load_phot(data::Nothing)
 	df = load(
 		download(
-			"https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/src/asp_workshop/assets/M67/image-radec_stacked.fits"
+			"https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/data/photometry/M67/image-radec_stacked.fits"
 		),
 	2) |> DataFrame
 	@transform! df :coords = ICRSCoords.(deg2rad.(:ra), deg2rad.(:dec))
@@ -356,6 +287,37 @@ end
 # 	dropmissing!(df, [:parallax, :pmra, :pmdec, :ruwe])
 # 	df
 # end
+
+# ╔═╡ 1ad86cd6-415e-432a-adec-366cb9a54bba
+df_cluster = @chain df_matched begin
+	@rsubset begin
+		first(cmd_cuts.plx) ≤ :parallax
+		:parallax ≤ last(cmd_cuts.plx)
+		
+		first(cmd_cuts.pmra) ≤ :pmra
+		:pmra ≤ last(cmd_cuts.pmra)
+		
+		first(cmd_cuts.pmdec) ≤ :pmdec
+		:pmdec ≤ last(cmd_cuts.pmdec)
+	
+		:ruwe ≤ 1.4 # Hard-coded quality indicator
+	end
+end;
+
+# ╔═╡ f37c9963-ed1b-4784-a0df-3745bcadd1b1
+plot(
+	scatter(; x = df_cluster.bp_rp, y = log10.(df_cluster.flux), mode = :markers),
+	Layout(;
+		xaxis_title = "G<sub>BP</sub> - G<sub>RP</sub> (Gaia DR3)",
+		xaxis_range = [0, 2],
+		xaxis_autorange = false,
+		yaxis_title = "log F (Unistellar)",
+		yaxis_range = [2.5, 5],
+		yaxis_autorange = false,
+		title = "M67 Color Magnitude Diagram -- N: $(nrow(df_cluster))",
+		uirevision = 1,
+	),
+)
 
 # ╔═╡ f3d465f2-1b09-4c24-985a-9696d13699b2
 df_ans = @chain df_matched begin
@@ -398,36 +360,82 @@ cm"""
 	**Parallax** ≈ 1.1 mas | **RA proper motion** ≈ -11.0 mas/yr | **Dec Proper motion** ≈ -3.0 mas/yr
 """
 
-# ╔═╡ 1ad86cd6-415e-432a-adec-366cb9a54bba
-df_cluster = @chain df_matched begin
-	@rsubset begin
-		first(cmd_cuts.plx) ≤ :parallax
-		:parallax ≤ last(cmd_cuts.plx)
-		
-		first(cmd_cuts.pmra) ≤ :pmra
-		:pmra ≤ last(cmd_cuts.pmra)
-		
-		first(cmd_cuts.pmdec) ≤ :pmdec
-		:pmdec ≤ last(cmd_cuts.pmdec)
-	
-		:ruwe ≤ 1.4 # Hard-coded quality indicator
-	end
-end;
+# ╔═╡ 0468013d-5283-4b48-8729-e833b3d2f8f8
+md"""
+## Plotting functions
+"""
 
-# ╔═╡ f37c9963-ed1b-4784-a0df-3745bcadd1b1
-plot(
-	scatter(; x = df_cluster.bp_rp, y = log10.(df_cluster.flux), mode = :markers),
-	Layout(;
-		xaxis_title = "G<sub>BP</sub> - G<sub>RP</sub> (Gaia DR3)",
-		xaxis_range = [0, 2],
-		xaxis_autorange = false,
-		yaxis_title = "log F (Unistellar)",
-		yaxis_range = [2.5, 5],
-		yaxis_autorange = false,
-		title = "M67 Color Magnitude Diagram -- N: $(nrow(df_cluster))",
-		uirevision = 1,
-	),
+# ╔═╡ 2b52be49-eb95-4d11-adc4-c0b64a818872
+function tiny(img)
+	imgv = copy(img)
+	
+	while length(eachindex(imgv)) > 10^6
+		imgv = AstroImages.restrict(imgv)
+	end
+
+	return imgv
+end
+
+# ╔═╡ 1d81674b-67f5-4c9c-a351-b2fda419aba3
+# Julia photometry aperture object --> plotly shape object
+function circ(ap, r=ap.r; line_color=:lightgreen)
+	circle(
+		ap.x - r, # x_min
+		ap.x + r, # x_max
+		ap.y - r, # y_min
+		ap.y + r; # y_max
+		line_color,
+	)
+end
+
+# ╔═╡ 4a2e1f66-d637-476f-8f80-e5c46798e4bd
+# Plotly heatmap trace of img
+function htrace(img;
+	zlims,
+	title = "ADU",
+	restrict = true,
 )
+		
+	# Account for plotly orientation convention
+	img = permutedims(img)
+	
+	# dims is used here to convert back from an offset array
+	# to a simple array that JS can ingest
+	zmin, zmax = zlims
+	
+	heatmap(;
+		x = dims(img, X).val,
+		y = dims(img, Y).val,
+		z = Matrix{Float32}(img.data),
+		zmin,
+		zmax,
+		colorbar = attr(; title),
+		colorscale = "Cividis",
+	)
+end
+
+# ╔═╡ f70883db-74cb-485e-a426-f334dce178b2
+# Combines plotly trace and layout into a plot object
+function plot_img(img; zlims = Percent(99.5)(img), restrict = true)
+	imgv = (tiny ∘ AstroImage)(img)
+	# imgv = img
+	
+	hm = htrace(imgv; zlims, restrict)
+	
+	l = Layout(;
+		# width,
+		# height,
+		# title = timestamp(img),
+		xaxis = attr(title = "X", constrain = "domain"),
+		yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
+		uirevision = 1,
+	)
+
+	plot(hm, l)
+end
+
+# ╔═╡ ea3dd7a0-7ecc-4063-8a3e-0e46a470f80c
+plot_img(img_M67)
 
 # ╔═╡ edb99047-cdea-4149-ab67-640ddbd7aec5
 let
@@ -2611,28 +2619,29 @@ version = "17.7.0+0"
 # ╟─b1c2555a-39aa-4ba1-8203-da85b6221c96
 # ╟─00413909-645e-4207-8f29-d1caa278ccc4
 # ╟─a6db9de8-1ee3-4b4e-9034-09aa43e3d972
-# ╟─f37c9963-ed1b-4784-a0df-3745bcadd1b1
+# ╠═f37c9963-ed1b-4784-a0df-3745bcadd1b1
 # ╟─ecec680f-5536-4798-861f-6f0945e6c175
 # ╟─ccbb091b-19c2-4bfb-9e04-4f77f395fdba
 # ╟─edb99047-cdea-4149-ab67-640ddbd7aec5
 # ╟─73335835-def4-4a1c-a6fa-61158f445dcb
 # ╟─17de112e-91a8-4b55-93da-cecd0d9ca89f
 # ╟─72ddeeae-4cb0-4268-bbe8-c60f5be6bdb2
-# ╠═f3d465f2-1b09-4c24-985a-9696d13699b2
 # ╠═1ad86cd6-415e-432a-adec-366cb9a54bba
-# ╠═d5ac78a4-70c3-4a35-95c1-1d58f403facd
+# ╠═f3d465f2-1b09-4c24-985a-9696d13699b2
+# ╟─d5ac78a4-70c3-4a35-95c1-1d58f403facd
 # ╠═e4b279ba-bbe5-4c1c-a346-ab70a1b61cc6
-# ╠═0468013d-5283-4b48-8729-e833b3d2f8f8
-# ╠═2b52be49-eb95-4d11-adc4-c0b64a818872
-# ╠═1d81674b-67f5-4c9c-a351-b2fda419aba3
-# ╠═4a2e1f66-d637-476f-8f80-e5c46798e4bd
-# ╠═f70883db-74cb-485e-a426-f334dce178b2
+# ╟─55817d19-9b84-4e52-8e9d-44275a425269
 # ╠═e15a8d41-41b8-4f55-b364-9586dc729bc3
-# ╠═e24420c8-2c85-468a-92df-814ba619e575
-# ╠═db733129-28e0-49e0-811f-f38f670fda38
-# ╠═fa0d3f2f-3ce2-4e19-bb8e-874bdd7028bc
-# ╠═a877a885-d771-407d-9a29-d13f384c4ae5
 # ╠═2a2e0c2e-7397-4255-98c1-267b93ed4e55
+# ╟─e24420c8-2c85-468a-92df-814ba619e575
+# ╟─db733129-28e0-49e0-811f-f38f670fda38
+# ╟─fa0d3f2f-3ce2-4e19-bb8e-874bdd7028bc
+# ╟─a877a885-d771-407d-9a29-d13f384c4ae5
+# ╟─0468013d-5283-4b48-8729-e833b3d2f8f8
+# ╟─2b52be49-eb95-4d11-adc4-c0b64a818872
+# ╟─1d81674b-67f5-4c9c-a351-b2fda419aba3
+# ╟─4a2e1f66-d637-476f-8f80-e5c46798e4bd
+# ╟─f70883db-74cb-485e-a426-f334dce178b2
 # ╟─b2a5ce6c-34fd-4d50-92d0-5d35df4447af
 # ╠═760e3f79-d623-4544-af77-5250d61f4854
 # ╟─00000000-0000-0000-0000-000000000001
