@@ -20,7 +20,7 @@ md"""
 !!! warning "Heads up"
 	This lab is currently under construction 🏗️.
 
-# Stellar Puslators Lab
+# Stellar Pulsators Lab
 
 While out observing a pulsating star, we notice something odd. The time of maximum brightness that we measure from our telescope is several minutes behind the expected time reported by the AAVSO ephemeris. After carefully accounting for potential sources of error, we find that this discrepancy is real, and that it has a physically meaningful interpretation.
 
@@ -53,7 +53,7 @@ P = 0.12053525u"d"
 md"""
 ## Introduction
 
-Our target, [SZ Lyn](https://vsx.aavso.org/index.php?view=detail.top&oid=17922), is part of a well-studied class of pulsating stars known as [Delta Scutis](https://www.nasa.gov/universe/nasas-tess-enables-breakthrough-study-of-perplexing-stellar-pulsations/). These stars can rotate at least a dozen times faster than our own Sun, which contributes to complex patterns in the expansion and contraction of its outer layers, akin to a jumble of different musical chords.
+Our target, [SZ Lyn](https://vsx.aavso.org/index.php?view=detail.top&oid=17922), is part of a well-studied class of pulsating stars known as [Delta Scuti](https://www.nasa.gov/universe/nasas-tess-enables-breakthrough-study-of-perplexing-stellar-pulsations/). These stars can rotate at least a dozen times faster than our own Sun, which contributes to complex patterns in the expansion and contraction of its outer layers, akin to a jumble of different musical chords.
 
 Out of this chaos, order can emerge in the form of regular pulsation periods, as seen in SZ Lyn's approximately $(round(u"hr", P; digits = 3)) period between times of maximum brightness. This period is so regular in fact, that we can set our clocks to it, as we will see next.
 """
@@ -98,12 +98,10 @@ md"""
 !!! note "Observations"
 	Consistent observations from two of our [ASP workshop](https://astrosociety.org/education-outreach/amateur-astronomers/smartscopes101/asp-unistellar-smartscope.html) participants.
 
-	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)
-	
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)\
 	_Credit: Anouchka N._
-	
-	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)
-	
+
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)\
 	_Credit: Ingo B._
 
 Based on the measurements made above, we see that the time of maximum brightness occurred at approximately $(t_obs_UTC) UTC, which corresponds to $(N_obs) cycles since ``t_0``.
@@ -126,14 +124,16 @@ Perhaps this is due to the light travel time between the Sun and the Earth, whic
 md"""
 ## HJD
 
-![](https://www.mathpages.com/home/kmath203/kmath203_files/image001.png)
+It turns out that _where_ a measurement was taken can be just as important as _when_.
 
+![](https://www.mathpages.com/home/kmath203/kmath203_files/image001.png)\
 _[KMath203](https://www.mathpages.com/home/kmath203/kmath203.htm)_
 
 !!! todo
-	Outline Rømer Delay, relevant time standards (UTI, TAI, TDB, etc.).
+	Outline Rømer Delay, relevant time standards (UTI, TAI, TDB, etc.). [Eastman et al. (2010)](https://arxiv.org/pdf/1005.4415), Section 2.2.
 
 	Jason's calculator [lost hosting at OSU](https://lweb.cfa.harvard.edu/~jeastman/astroutils.html), but a non-functional version is still available on the [Wayback machine](https://web.archive.org/web/20260209055926/https://astroutils.astronomy.osu.edu/time/). Alternative shared: <https://arbiter.nextastro.org/toolkit/bjd-converter> 
+
 """
 
 # ╔═╡ e66f86e5-002b-4d28-9ca1-480048dba9a2
@@ -161,7 +161,7 @@ function ltt_corrected(t, ra, dec; kind = :heliocentric)
     # Store results
     jd_corrected = jdtdb + Δt
     ep = TDBEpoch(jd_corrected * days; origin = :julian)
-    return ep #to_utc(DateTime, ep)
+    return ep
 end
 
 # ╔═╡ 680e564f-9d82-44f0-8340-e07e2b35446e
@@ -198,8 +198,6 @@ After accounting for the different timescales at play, we seem no closer to our 
 
 ![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/aavso_note.png)
 
-**Porb**.
-
 This note indicates that our pulsating star is actually part of a binary! And not only that, the [General Catalog of Variable Stars](https://heasarc.gsfc.nasa.gov/w3browse/all/gcvs.html) Team was nice enough to leave a correction term that we can apply to AAVSO's reported ephemeris, copied below:
 
 ```
@@ -235,9 +233,13 @@ from our measured observation time. Not bad!
 # ╔═╡ 193adfcc-3ab9-11f1-b7d0-5b93798eec02
 md"""
 !!! tip "Extension projects"
+	See the [Eclipsing Binaries Lab](https://unistellar-science.github.io/SETI-Education/timeseries/eb_lab/) for more on observing your own variable star systems. Below are a couple extensions ideas based on what was explored in this lab.
+
 	1. Reproduce the GCVS Team note. This appears to be an empirical approximation that they use. We could always do better by considering the elliptical motion of Sz Lyn about its barycenter based on updated orbital elements from, e.g., Table 3 Gazeas+ 2004
 
 	1. There also appears to be a slight slowing in the pulsation period over time for this target (discussed there as well, much smaller contribution than we can likely readily measure).
+
+	1. Visualize the 3D orientation of the Earth, Sun, and variable star system to help visualize the impact of light travel time. [EphemerisSources.jl](https://juliaastro.org/EphemerisSources.jl/docs/stable/) may be useful for this.
 """
 
 # ╔═╡ 790a8ef6-01c0-44ae-b394-6fa2db413db7
@@ -255,14 +257,11 @@ t_obs_diff_UTC = (t_obs_UTC - t_expected_UTC); canonicalize(t_obs_diff_UTC)
 
 # ╔═╡ 8bd261d0-8c75-4412-a445-39dbf03daf49
 md"""
-While this matches the time reported by AAVSO, this differs from our observed time by almost $(round(t_obs_diff_UTC, Minute))!
+While this matches the time reported by AAVSO, this differs from our observed time by almost $(round(t_obs_diff_UTC, Minute)).
 """
 
 # ╔═╡ bcefa0ac-3391-499c-a762-3d15552efa2d
 t_obs_diff = (t_obs - t_aavso); t_obs_diff |> canonicalize
-
-# ╔═╡ fef47275-c1de-4dc5-b936-17dae6fa5828
-ephem_correction |> canonicalize
 
 # ╔═╡ 51b65a18-c431-4395-9769-e89ca636c0c1
 t_obs - t_expected_corrected |> canonicalize
@@ -832,7 +831,6 @@ version = "17.7.0+0"
 # ╟─4dd01935-6aa6-407d-9433-28253e9cb7cc
 # ╟─629ea555-8904-48af-a9a9-dbb08dcbac75
 # ╠═bfbdbf32-a430-4fad-bd1e-8092f2a0ec9e
-# ╠═fef47275-c1de-4dc5-b936-17dae6fa5828
 # ╠═cb925d1d-e860-4f64-8926-4d17a6cda907
 # ╟─de132051-9cfd-404c-b41a-edcbc9296dd9
 # ╠═51b65a18-c431-4395-9769-e89ca636c0c1
