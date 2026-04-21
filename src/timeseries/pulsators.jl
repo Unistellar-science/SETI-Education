@@ -88,10 +88,34 @@ Now that we have a handle on working with ephemerides, we turn next to applying 
 # ╔═╡ 4c8a4ee6-58b8-4c89-9154-7493904976e0
 t_obs_UTC = DateTime(2026, 02, 21, 23, 0, 0)
 
+# ╔═╡ 734ba824-78dd-4375-90a0-556f0895e2bc
+N_obs = N(t_obs_UTC, t0, P)
+
+# ╔═╡ 2d3d2121-d8d4-466d-9d03-ca14059fd46d
+md"""
+## Data
+
+!!! note "Observations"
+	Consistent observations from two of our [ASP workshop](https://astrosociety.org/education-outreach/amateur-astronomers/smartscopes101/asp-unistellar-smartscope.html) participants.
+
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)
+	
+	_Credit: Anouchka N._
+	
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)
+	
+	_Credit: Ingo B._
+
+Based on the measurements made above, we see that the time of maximum brightness occurred at approximately $(t_obs_UTC) UTC, which corresponds to $(N_obs) cycles since ``t_0``.
+"""
+
 # ╔═╡ fd4315ff-670f-48ef-829d-612619a4c677
 md"""
 Taking a look at the corresponding predicted time in our ephemeris, we hit a problem:
 """
+
+# ╔═╡ be9182f2-8f43-4a4b-a91e-97d7bf23ef1b
+t_expected_UTC = ephem(N_obs, t0, P)
 
 # ╔═╡ f39d2fa6-8e7c-4ac3-872d-c643f28452bf
 md"""
@@ -111,19 +135,6 @@ _[KMath203](https://www.mathpages.com/home/kmath203/kmath203.htm)_
 
 	Jason's calculator [lost hosting at OSU](https://lweb.cfa.harvard.edu/~jeastman/astroutils.html), but a non-functional version is still available on the [Wayback machine](https://web.archive.org/web/20260209055926/https://astroutils.astronomy.osu.edu/time/). Alternative shared: <https://arbiter.nextastro.org/toolkit/bjd-converter> 
 """
-
-# ╔═╡ 680e564f-9d82-44f0-8340-e07e2b35446e
-md"""
-Converting to HJD, we get the following (time displayed in UTC for convenience):
-
-!!! note "📜 Historical note"
-	HJD was actually deprecated by the IAU in favor of BJD back in 1991. AAVSO just uses HJD for historical and pragmatic reasons: easier to calculate, precise enough (within ~ 8 seconds) for most variable star needs.
-
-	For our particular system, HJD and BJD differ by less than 2 seconds, so we will continue with HJD for consistency.
-"""
-
-# ╔═╡ fc87b16e-882a-4bda-9723-488345e03044
-t_aavso_HJD = to_utc(DateTime, TDBEpoch(2461093.454 * days; origin = :julian))
 
 # ╔═╡ e66f86e5-002b-4d28-9ca1-480048dba9a2
 # Convert UTC --> BJD (TDB) or HJD (TDB)
@@ -150,50 +161,33 @@ function ltt_corrected(t, ra, dec; kind = :heliocentric)
     # Store results
     jd_corrected = jdtdb + Δt
     ep = TDBEpoch(jd_corrected * days; origin = :julian)
-    return to_utc(DateTime, ep)
+    return ep #to_utc(DateTime, ep)
 end
 
+# ╔═╡ 680e564f-9d82-44f0-8340-e07e2b35446e
+md"""
+Converting to HJD, we get the following:
+
+!!! note "📜 Historical note"
+	HJD was actually deprecated by the IAU in favor of BJD back in 1991. AAVSO just uses HJD for historical and pragmatic reasons: easier to calculate, precise enough (within ~ 8 seconds) for most variable star needs.
+
+	For our particular system, HJD and BJD differ by less than 2 seconds, so we will continue with HJD for consistency.
+"""
+
 # ╔═╡ 25825708-7d46-475d-9086-f8a33d678b0d
-t_obs_HJD = ltt_corrected(t_obs_UTC, 122.39896, 44.47156)
+t_obs = ltt_corrected(t_obs_UTC, 122.39896, 44.47156)
 
-# ╔═╡ 734ba824-78dd-4375-90a0-556f0895e2bc
-N_obs = N(t_obs_HJD, t0, P)
-
-# ╔═╡ 2d3d2121-d8d4-466d-9d03-ca14059fd46d
-md"""
-## Data
-
-!!! note "Observations"
-	Consistent observations from two our of ASP workshop participants.
-
-	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)
-	
-	_Credit: Anouchka N._
-	
-	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)
-	
-	_Credit: Ingo B._
-
-Based on the measurements made above, we see that the time of maximum brightness occurred at approximately $(t_obs_UTC) UTC, which corresponds to $(N_obs) cycles since ``t_0``.
-"""
-
-# ╔═╡ be9182f2-8f43-4a4b-a91e-97d7bf23ef1b
-t_expected_UTC = ephem(N_obs, t0, P)
-
-# ╔═╡ 637ca1ca-e71e-41d2-b326-1cb0a46994f6
-t_obs_diff = (t_obs_UTC - t_expected_UTC); canonicalize(t_obs_diff)
-
-# ╔═╡ 8bd261d0-8c75-4412-a445-39dbf03daf49
-md"""
-While this matches the time reported by AAVSO, this differs from our observed time by almost $(round(t_obs_diff, Minute))!
-"""
-
-# ╔═╡ bcefa0ac-3391-499c-a762-3d15552efa2d
-t_obs_diff_HJD = (t_obs_HJD - t_aavso_HJD); t_obs_diff_HJD |> canonicalize
+# ╔═╡ fc87b16e-882a-4bda-9723-488345e03044
+t_aavso = TDBEpoch(2461093.454 * days; origin = :julian)
 
 # ╔═╡ 40bd2218-1cb4-4991-a645-9740e0026989
 md"""
-This corresponds to a discrepancy of over $(round(t_obs_diff_HJD, Minute)). Clearly something else is up.
+This corresponds to a discrepancy of:
+"""
+
+# ╔═╡ 5d368585-7b33-452d-bbb4-6fc85997d93d
+md"""
+Clearly, something else is up.
 """
 
 # ╔═╡ 4dd01935-6aa6-407d-9433-28253e9cb7cc
@@ -206,7 +200,7 @@ After accounting for the different timescales at play, we seem no closer to our 
 
 **Porb**.
 
-This note indicates that our pulsating star is part of a binary! And not only that, the [General Catalog of Variable Stars](https://heasarc.gsfc.nasa.gov/w3browse/all/gcvs.html) Team were nice enough to leave a correction term that we can apply to AAVSO's reported ephemeris, copied below:
+This note indicates that our pulsating star is actually part of a binary! And not only that, the [General Catalog of Variable Stars](https://heasarc.gsfc.nasa.gov/w3browse/all/gcvs.html) Team was nice enough to leave a correction term that we can apply to AAVSO's reported ephemeris, copied below:
 
 ```
 There is a periodical term in the elements: -0.00573d cos 2pi (EP0/P1 + 0.007); P0 = 0.120534920d, P1 = 1150d.
@@ -214,35 +208,28 @@ There is a periodical term in the elements: -0.00573d cos 2pi (EP0/P1 + 0.007); 
 """
 
 # ╔═╡ bfbdbf32-a430-4fad-bd1e-8092f2a0ec9e
-ephem_correction_HJD = let
+ephem_correction = let
 	P0 = 0.120534920 # Pulsation period [days]
 	P1 = 1150 # Binary period [days]
-    -0.00573 * cos(2π * (N_obs * P0/P1 + 0.007)) * u"d"
+    -0.00573 * cos(2π * (N_obs * P0/P1 + 0.007)) * days
 end
 
 # ╔═╡ 629ea555-8904-48af-a9a9-dbb08dcbac75
 md"""
-This corresponds to an additional correction of $(ephem_correction_HJD) to our initial linear ephemeris estimate.
+This corresponds to an additional correction of $(ephem_correction) to our initial linear ephemeris estimate.
 """
 
-# ╔═╡ 7e6b3241-0e88-4bc3-bf58-d6dde172c82e
-ephem_correction_HJD
-
 # ╔═╡ cb925d1d-e860-4f64-8926-4d17a6cda907
-t_expected_corrected = t_aavso_HJD + ephem_correction_HJD
+t_expected_corrected = t_aavso + ephem_correction
 
-# ╔═╡ 47cc5bdc-952f-4b57-bece-5eecc3eca49b
-t_obs_UTC - t_expected_corrected |> canonicalize
-
-# ╔═╡ fe48f3ec-c9d7-4aad-9dd2-4577e151c738
-t_obs_HJD - t_expected_corrected |> canonicalize
-
-# ╔═╡ c9abaafa-9155-414a-95ca-b80c14c311d8
-to_utc(DateTime, TDBEpoch((2461093.454 + 0.004126166965614164) * days; origin = :julian)) - t_expected_corrected
+# ╔═╡ de132051-9cfd-404c-b41a-edcbc9296dd9
+md"""
+This is a difference of:
+"""
 
 # ╔═╡ 1db3770d-f3fd-418c-9d8e-2d0cb9922304
 md"""
-Not bad at all!
+from our measured observation time. Not bad!
 """
 
 # ╔═╡ 193adfcc-3ab9-11f1-b7d0-5b93798eec02
@@ -250,11 +237,35 @@ md"""
 !!! tip "Extension projects"
 	1. Reproduce the GCVS Team note. This appears to be an empirical approximation that they use. We could always do better by considering the elliptical motion of Sz Lyn about its barycenter based on updated orbital elements from, e.g., Table 3 Gazeas+ 2004
 
-	1. There also appears to be a slight slowing in the pulsation period over time for this target (discussed there as well, much smaller contribution than we can readily measure), but this is plenty precise enough as-is.
+	1. There also appears to be a slight slowing in the pulsation period over time for this target (discussed there as well, much smaller contribution than we can likely readily measure).
 """
 
 # ╔═╡ 790a8ef6-01c0-44ae-b394-6fa2db413db7
 TableOfContents()
+
+# ╔═╡ 9d020761-d37c-4e0e-a8eb-9ed6ba2d9bc5
+# Maybe upstream this
+function Dates.canonicalize(dt::AstroTime.AstroPeriod)
+	ms = (value ∘ seconds)(dt) * 1_000
+	round(Int, ms) |> Millisecond |> canonicalize
+end
+
+# ╔═╡ 637ca1ca-e71e-41d2-b326-1cb0a46994f6
+t_obs_diff_UTC = (t_obs_UTC - t_expected_UTC); canonicalize(t_obs_diff_UTC)
+
+# ╔═╡ 8bd261d0-8c75-4412-a445-39dbf03daf49
+md"""
+While this matches the time reported by AAVSO, this differs from our observed time by almost $(round(t_obs_diff_UTC, Minute))!
+"""
+
+# ╔═╡ bcefa0ac-3391-499c-a762-3d15552efa2d
+t_obs_diff = (t_obs - t_aavso); t_obs_diff |> canonicalize
+
+# ╔═╡ fef47275-c1de-4dc5-b936-17dae6fa5828
+ephem_correction |> canonicalize
+
+# ╔═╡ 51b65a18-c431-4395-9769-e89ca636c0c1
+t_obs - t_expected_corrected |> canonicalize
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -811,23 +822,24 @@ version = "17.7.0+0"
 # ╠═637ca1ca-e71e-41d2-b326-1cb0a46994f6
 # ╟─f39d2fa6-8e7c-4ac3-872d-c643f28452bf
 # ╟─bc750fa0-47be-4556-83a4-81c25780884d
+# ╠═e66f86e5-002b-4d28-9ca1-480048dba9a2
 # ╟─680e564f-9d82-44f0-8340-e07e2b35446e
 # ╠═25825708-7d46-475d-9086-f8a33d678b0d
 # ╠═fc87b16e-882a-4bda-9723-488345e03044
 # ╟─40bd2218-1cb4-4991-a645-9740e0026989
 # ╠═bcefa0ac-3391-499c-a762-3d15552efa2d
-# ╠═e66f86e5-002b-4d28-9ca1-480048dba9a2
+# ╟─5d368585-7b33-452d-bbb4-6fc85997d93d
 # ╟─4dd01935-6aa6-407d-9433-28253e9cb7cc
 # ╟─629ea555-8904-48af-a9a9-dbb08dcbac75
 # ╠═bfbdbf32-a430-4fad-bd1e-8092f2a0ec9e
-# ╠═7e6b3241-0e88-4bc3-bf58-d6dde172c82e
+# ╠═fef47275-c1de-4dc5-b936-17dae6fa5828
 # ╠═cb925d1d-e860-4f64-8926-4d17a6cda907
-# ╠═47cc5bdc-952f-4b57-bece-5eecc3eca49b
-# ╠═fe48f3ec-c9d7-4aad-9dd2-4577e151c738
-# ╠═c9abaafa-9155-414a-95ca-b80c14c311d8
+# ╟─de132051-9cfd-404c-b41a-edcbc9296dd9
+# ╠═51b65a18-c431-4395-9769-e89ca636c0c1
 # ╟─1db3770d-f3fd-418c-9d8e-2d0cb9922304
 # ╟─193adfcc-3ab9-11f1-b7d0-5b93798eec02
 # ╠═790a8ef6-01c0-44ae-b394-6fa2db413db7
+# ╠═9d020761-d37c-4e0e-a8eb-9ed6ba2d9bc5
 # ╠═92a929e2-ed4d-41cd-a95e-4e64a7c27367
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
