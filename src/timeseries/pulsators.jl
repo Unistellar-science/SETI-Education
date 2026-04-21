@@ -82,63 +82,79 @@ md"""
 Now that we have a handle on working with ephemerides, we turn next to applying it to our observations.
 
 !!! note
-	Technically, we should be taking things like leap seconds and light travel time into account when dealing with timescales in astronomy, but for a quick estimate liek the above, this is fine. We will give a more careful treatment later in this notebook.
-"""
-
-# ╔═╡ 2d3d2121-d8d4-466d-9d03-ca14059fd46d
-md"""
-## Data
-
-![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)
-
-_Credit: Anouchka N._
-
-![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)
-
-_Credit: Ingo B._
-"""
-
-# ╔═╡ 3b6e69c4-e659-4b98-8ffc-6d4f0cf2dbb9
-md"""
-[Wayback machine](https://web.archive.org/web/20260209055926/https://astroutils.astronomy.osu.edu/time/) for <https://astroutils.astronomy.osu.edu/time/>. Alternative shared by author: <https://arbiter.nextastro.org/toolkit/bjd-converter> 
-"""
-
-# ╔═╡ c6223040-9cdb-4b7e-b102-ff78beae1edd
-md"""
-From the observations, we see that the time of max brightness occurs around 23:00 UTC:
+	Technically, we should be taking things like leap seconds and light travel time into account when dealing with timescales in astronomy, but for quick estimates like the above, this is fine. We will give a more careful treatment later in this notebook.
 """
 
 # ╔═╡ 4c8a4ee6-58b8-4c89-9154-7493904976e0
 t_obs_UTC = DateTime(2026, 02, 21, 23, 0, 0)
 
-# ╔═╡ 40daf3e0-5bb2-493e-a94e-3c39e9e92d28
+# ╔═╡ 734ba824-78dd-4375-90a0-556f0895e2bc
+N_obs = N(t_obs_BJD, t0, P)
+
+# ╔═╡ 2d3d2121-d8d4-466d-9d03-ca14059fd46d
 md"""
-This corresponds to:
+## Data
+
+!!! note "Observations"
+	Consistent observations from two our of ASP workshop participants.
+
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)
+	
+	_Credit: Anouchka N._
+	
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)
+	
+	_Credit: Ingo B._
+
+Based on the measurements made above, we see that the time of maximum brightness occurred at approximately $(t_obs_UTC) UTC, which corresponds to $(N_obs) cycles since ``t_0``.
 """
 
-# ╔═╡ 734ba824-78dd-4375-90a0-556f0895e2bc
-N_obs = N(t_obs_UTC, t0, P)
-
-# ╔═╡ 5797274a-6512-462a-b96b-ce130452fe3a
+# ╔═╡ fd4315ff-670f-48ef-829d-612619a4c677
 md"""
-but this would imply:
+Taking a look at the corresponding predicted time in our ephemeris, we hit a problem:
 """
 
 # ╔═╡ be9182f2-8f43-4a4b-a91e-97d7bf23ef1b
 t_expected_UTC = ephem(N_obs, t0, P)
 
 # ╔═╡ 637ca1ca-e71e-41d2-b326-1cb0a46994f6
-(t_obs_UTC - t_expected_UTC) |> canonicalize
+t_obs_diff = (t_obs_UTC - t_expected_UTC); canonicalize(t_obs_diff)
 
-# ╔═╡ 430607f6-91e9-4661-90fc-6e6ac868c7c3
+# ╔═╡ 8bd261d0-8c75-4412-a445-39dbf03daf49
 md"""
-which matches the published AAVSO ephemeris. Where did the 7 minutes go? Let's try and convert our observed time to HJD (well, BJD, but that's super close to HJD, up to 4 seconds) first (maybe the extra light travel time can account for this):
+While this matches the time reported by AAVSO, this differs from our observed time by almost $(round(t_obs_diff, Minute))!
+"""
+
+# ╔═╡ f39d2fa6-8e7c-4ac3-872d-c643f28452bf
+md"""
+Perhaps this is due to the light travel time between the Sun and the Earth, which can take up to ~ 8 minutes. This is the purpose of working in Heliocentric Julian Date (HJD), which is the date format used by AAVSO. Let's try converting our observed time of maximum brightness from UTC to HJD to see if this can account for the missing time.
+"""
+
+# ╔═╡ bc750fa0-47be-4556-83a4-81c25780884d
+md"""
+## HJD
+
+![](https://www.mathpages.com/home/kmath203/kmath203_files/image001.png)
+
+_[KMath203](https://www.mathpages.com/home/kmath203/kmath203.htm)_
+
+!!! todo
+	Outline Rømer Delay, relevant time standards (UTI, TAI, TDB, etc.).
+
+	Jason's calculator [lost hosting at OSU](https://lweb.cfa.harvard.edu/~jeastman/astroutils.html), but a non-functional version is still available on the [Wayback machine](https://web.archive.org/web/20260209055926/https://astroutils.astronomy.osu.edu/time/). Alternative shared: <https://arbiter.nextastro.org/toolkit/bjd-converter> 
+"""
+
+# ╔═╡ 680e564f-9d82-44f0-8340-e07e2b35446e
+md"""
+Converting to HJD, we get the following:
 """
 
 # ╔═╡ 272de940-e16e-4cf4-9f3a-1d1536ba99e7
 md"""
 !!! note "📜 Historical note"
-	HJD was actually deprecated by the IAU in favor of BJD back in 1991. AAVSO just uses HJD for historical and pragmatic reasons (easier to calculate, precise enough (within ~ 8 seconds) for most circumstances).
+	HJD was actually deprecated by the IAU in favor of BJD back in 1991. AAVSO just uses HJD for historical and pragmatic reasons: easier to calculate, precise enough (within ~ 8 seconds) for most variable star needs.
+
+	For our particular system, HJD and BJD differ by less than 2 seconds, so we will continue with HJD for consistency.
 """
 
 # ╔═╡ fc87b16e-882a-4bda-9723-488345e03044
@@ -177,12 +193,6 @@ t_obs_HJD = ltt_corrected(t_obs_UTC, 122.39896, 44.47156)
 
 # ╔═╡ bcefa0ac-3391-499c-a762-3d15552efa2d
 (t_obs_HJD - t_aavso_HJD) |> canonicalize
-
-# ╔═╡ b1c4b72a-0e08-45eb-941d-337afcab3b09
-t_obs_BJD = ltt_corrected(t_obs_UTC, 122.39896, 44.47156; kind = :barycentric)
-
-# ╔═╡ bfeea570-7500-4380-b321-8f746e0fdf8e
-(t_obs_HJD - t_obs_BJD)
 
 # ╔═╡ e73732cf-23c3-4e33-82cb-ace3929d51f8
 md"""
@@ -768,22 +778,20 @@ version = "17.7.0+0"
 # ╠═4166dc50-171b-4f50-a031-33b85a250262
 # ╟─772d2b3f-8728-4225-adc1-2ee49b64a9b0
 # ╟─2d3d2121-d8d4-466d-9d03-ca14059fd46d
-# ╟─3b6e69c4-e659-4b98-8ffc-6d4f0cf2dbb9
-# ╟─c6223040-9cdb-4b7e-b102-ff78beae1edd
 # ╠═4c8a4ee6-58b8-4c89-9154-7493904976e0
-# ╟─40daf3e0-5bb2-493e-a94e-3c39e9e92d28
 # ╠═734ba824-78dd-4375-90a0-556f0895e2bc
-# ╟─5797274a-6512-462a-b96b-ce130452fe3a
+# ╟─fd4315ff-670f-48ef-829d-612619a4c677
 # ╠═be9182f2-8f43-4a4b-a91e-97d7bf23ef1b
+# ╟─8bd261d0-8c75-4412-a445-39dbf03daf49
 # ╠═637ca1ca-e71e-41d2-b326-1cb0a46994f6
-# ╟─430607f6-91e9-4661-90fc-6e6ac868c7c3
+# ╟─f39d2fa6-8e7c-4ac3-872d-c643f28452bf
+# ╟─bc750fa0-47be-4556-83a4-81c25780884d
+# ╟─680e564f-9d82-44f0-8340-e07e2b35446e
 # ╠═25825708-7d46-475d-9086-f8a33d678b0d
-# ╠═b1c4b72a-0e08-45eb-941d-337afcab3b09
-# ╠═bfeea570-7500-4380-b321-8f746e0fdf8e
 # ╟─272de940-e16e-4cf4-9f3a-1d1536ba99e7
 # ╠═fc87b16e-882a-4bda-9723-488345e03044
 # ╠═bcefa0ac-3391-499c-a762-3d15552efa2d
-# ╟─e66f86e5-002b-4d28-9ca1-480048dba9a2
+# ╠═e66f86e5-002b-4d28-9ca1-480048dba9a2
 # ╟─e73732cf-23c3-4e33-82cb-ace3929d51f8
 # ╠═bfbdbf32-a430-4fad-bd1e-8092f2a0ec9e
 # ╠═cb925d1d-e860-4f64-8926-4d17a6cda907
