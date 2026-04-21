@@ -88,41 +88,9 @@ Now that we have a handle on working with ephemerides, we turn next to applying 
 # ╔═╡ 4c8a4ee6-58b8-4c89-9154-7493904976e0
 t_obs_UTC = DateTime(2026, 02, 21, 23, 0, 0)
 
-# ╔═╡ 734ba824-78dd-4375-90a0-556f0895e2bc
-N_obs = N(t_obs_BJD, t0, P)
-
-# ╔═╡ 2d3d2121-d8d4-466d-9d03-ca14059fd46d
-md"""
-## Data
-
-!!! note "Observations"
-	Consistent observations from two our of ASP workshop participants.
-
-	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)
-	
-	_Credit: Anouchka N._
-	
-	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)
-	
-	_Credit: Ingo B._
-
-Based on the measurements made above, we see that the time of maximum brightness occurred at approximately $(t_obs_UTC) UTC, which corresponds to $(N_obs) cycles since ``t_0``.
-"""
-
 # ╔═╡ fd4315ff-670f-48ef-829d-612619a4c677
 md"""
 Taking a look at the corresponding predicted time in our ephemeris, we hit a problem:
-"""
-
-# ╔═╡ be9182f2-8f43-4a4b-a91e-97d7bf23ef1b
-t_expected_UTC = ephem(N_obs, t0, P)
-
-# ╔═╡ 637ca1ca-e71e-41d2-b326-1cb0a46994f6
-t_obs_diff = (t_obs_UTC - t_expected_UTC); canonicalize(t_obs_diff)
-
-# ╔═╡ 8bd261d0-8c75-4412-a445-39dbf03daf49
-md"""
-While this matches the time reported by AAVSO, this differs from our observed time by almost $(round(t_obs_diff, Minute))!
 """
 
 # ╔═╡ f39d2fa6-8e7c-4ac3-872d-c643f28452bf
@@ -146,11 +114,8 @@ _[KMath203](https://www.mathpages.com/home/kmath203/kmath203.htm)_
 
 # ╔═╡ 680e564f-9d82-44f0-8340-e07e2b35446e
 md"""
-Converting to HJD, we get the following:
-"""
+Converting to HJD, we get the following (time displayed in UTC for convenience):
 
-# ╔═╡ 272de940-e16e-4cf4-9f3a-1d1536ba99e7
-md"""
 !!! note "📜 Historical note"
 	HJD was actually deprecated by the IAU in favor of BJD back in 1991. AAVSO just uses HJD for historical and pragmatic reasons: easier to calculate, precise enough (within ~ 8 seconds) for most variable star needs.
 
@@ -158,7 +123,7 @@ md"""
 """
 
 # ╔═╡ fc87b16e-882a-4bda-9723-488345e03044
-t_aavso_HJD = julian2datetime(2461093.454)
+t_aavso_HJD = to_utc(DateTime, TDBEpoch(2461093.454 * days; origin = :julian))
 
 # ╔═╡ e66f86e5-002b-4d28-9ca1-480048dba9a2
 # Convert UTC --> BJD (TDB) or HJD (TDB)
@@ -191,8 +156,52 @@ end
 # ╔═╡ 25825708-7d46-475d-9086-f8a33d678b0d
 t_obs_HJD = ltt_corrected(t_obs_UTC, 122.39896, 44.47156)
 
+# ╔═╡ 734ba824-78dd-4375-90a0-556f0895e2bc
+N_obs = N(t_obs_HJD, t0, P)
+
+# ╔═╡ 2d3d2121-d8d4-466d-9d03-ca14059fd46d
+md"""
+## Data
+
+!!! note "Observations"
+	Consistent observations from two our of ASP workshop participants.
+
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_an.png)
+	
+	_Credit: Anouchka N._
+	
+	![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/lc_ib.png)
+	
+	_Credit: Ingo B._
+
+Based on the measurements made above, we see that the time of maximum brightness occurred at approximately $(t_obs_UTC) UTC, which corresponds to $(N_obs) cycles since ``t_0``.
+"""
+
+# ╔═╡ be9182f2-8f43-4a4b-a91e-97d7bf23ef1b
+t_expected_UTC = ephem(N_obs, t0, P)
+
+# ╔═╡ 637ca1ca-e71e-41d2-b326-1cb0a46994f6
+t_obs_diff = (t_obs_UTC - t_expected_UTC); canonicalize(t_obs_diff)
+
+# ╔═╡ 8bd261d0-8c75-4412-a445-39dbf03daf49
+md"""
+While this matches the time reported by AAVSO, this differs from our observed time by almost $(round(t_obs_diff, Minute))!
+"""
+
 # ╔═╡ bcefa0ac-3391-499c-a762-3d15552efa2d
-(t_obs_HJD - t_aavso_HJD) |> canonicalize
+t_obs_diff_HJD = (t_obs_HJD - t_aavso_HJD); t_obs_diff_HJD |> canonicalize
+
+# ╔═╡ 40bd2218-1cb4-4991-a645-9740e0026989
+md"""
+This corresponds to a discrepancy of over $(round(t_obs_diff_HJD, Minute)). Clearly something else is up.
+"""
+
+# ╔═╡ 4dd01935-6aa6-407d-9433-28253e9cb7cc
+md"""
+## A silent companion
+
+After accounting for the different timescales at play, we seem no closer to our goal.
+"""
 
 # ╔═╡ e73732cf-23c3-4e33-82cb-ace3929d51f8
 md"""
@@ -788,10 +797,11 @@ version = "17.7.0+0"
 # ╟─bc750fa0-47be-4556-83a4-81c25780884d
 # ╟─680e564f-9d82-44f0-8340-e07e2b35446e
 # ╠═25825708-7d46-475d-9086-f8a33d678b0d
-# ╟─272de940-e16e-4cf4-9f3a-1d1536ba99e7
 # ╠═fc87b16e-882a-4bda-9723-488345e03044
+# ╟─40bd2218-1cb4-4991-a645-9740e0026989
 # ╠═bcefa0ac-3391-499c-a762-3d15552efa2d
 # ╠═e66f86e5-002b-4d28-9ca1-480048dba9a2
+# ╠═4dd01935-6aa6-407d-9433-28253e9cb7cc
 # ╟─e73732cf-23c3-4e33-82cb-ace3929d51f8
 # ╠═bfbdbf32-a430-4fad-bd1e-8092f2a0ec9e
 # ╠═cb925d1d-e860-4f64-8926-4d17a6cda907
