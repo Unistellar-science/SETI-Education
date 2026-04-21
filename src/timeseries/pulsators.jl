@@ -200,12 +200,14 @@ This corresponds to a discrepancy of over $(round(t_obs_diff_HJD, Minute)). Clea
 md"""
 ## A silent companion
 
-After accounting for the different timescales at play, we seem no closer to our goal.
-"""
+After accounting for the different timescales at play, we seem no closer to our goal. Going back through the AAVSO target page, we see the following note left behind:
 
-# ╔═╡ e73732cf-23c3-4e33-82cb-ace3929d51f8
-md"""
-From the GCVS Team
+![](https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/pulsators/aavso_note.png)
+
+**Porb**.
+
+This note indicates that our pulsating star is part of a binary! And not only that, the [General Catalog of Variable Stars](https://heasarc.gsfc.nasa.gov/w3browse/all/gcvs.html) Team were nice enough to leave a correction term that we can apply to AAVSO's reported ephemeris, copied below:
+
 ```
 There is a periodical term in the elements: -0.00573d cos 2pi (EP0/P1 + 0.007); P0 = 0.120534920d, P1 = 1150d.
 ```
@@ -218,20 +220,34 @@ ephem_correction_HJD = let
     -0.00573 * cos(2π * (N_obs * P0/P1 + 0.007)) * u"d"
 end
 
+# ╔═╡ 629ea555-8904-48af-a9a9-dbb08dcbac75
+md"""
+This corresponds to an additional correction of $(ephem_correction_HJD) to our initial linear ephemeris estimate.
+"""
+
+# ╔═╡ 7e6b3241-0e88-4bc3-bf58-d6dde172c82e
+ephem_correction_HJD
+
 # ╔═╡ cb925d1d-e860-4f64-8926-4d17a6cda907
 t_expected_corrected = t_aavso_HJD + ephem_correction_HJD
 
 # ╔═╡ 47cc5bdc-952f-4b57-bece-5eecc3eca49b
 t_obs_UTC - t_expected_corrected |> canonicalize
 
+# ╔═╡ fe48f3ec-c9d7-4aad-9dd2-4577e151c738
+t_obs_HJD - t_expected_corrected |> canonicalize
+
+# ╔═╡ c9abaafa-9155-414a-95ca-b80c14c311d8
+to_utc(DateTime, TDBEpoch((2461093.454 + 0.004126166965614164) * days; origin = :julian)) - t_expected_corrected
+
 # ╔═╡ 1db3770d-f3fd-418c-9d8e-2d0cb9922304
 md"""
-Not bad!
+Not bad at all!
 """
 
 # ╔═╡ 193adfcc-3ab9-11f1-b7d0-5b93798eec02
 md"""
-!!! tip "Future projects"
+!!! tip "Extension projects"
 	1. Reproduce the GCVS Team note. This appears to be an empirical approximation that they use. We could always do better by considering the elliptical motion of Sz Lyn about its barycenter based on updated orbital elements from, e.g., Table 3 Gazeas+ 2004
 
 	1. There also appears to be a slight slowing in the pulsation period over time for this target (discussed there as well, much smaller contribution than we can readily measure), but this is plenty precise enough as-is.
@@ -801,11 +817,14 @@ version = "17.7.0+0"
 # ╟─40bd2218-1cb4-4991-a645-9740e0026989
 # ╠═bcefa0ac-3391-499c-a762-3d15552efa2d
 # ╠═e66f86e5-002b-4d28-9ca1-480048dba9a2
-# ╠═4dd01935-6aa6-407d-9433-28253e9cb7cc
-# ╟─e73732cf-23c3-4e33-82cb-ace3929d51f8
+# ╟─4dd01935-6aa6-407d-9433-28253e9cb7cc
+# ╟─629ea555-8904-48af-a9a9-dbb08dcbac75
 # ╠═bfbdbf32-a430-4fad-bd1e-8092f2a0ec9e
+# ╠═7e6b3241-0e88-4bc3-bf58-d6dde172c82e
 # ╠═cb925d1d-e860-4f64-8926-4d17a6cda907
 # ╠═47cc5bdc-952f-4b57-bece-5eecc3eca49b
+# ╠═fe48f3ec-c9d7-4aad-9dd2-4577e151c738
+# ╠═c9abaafa-9155-414a-95ca-b80c14c311d8
 # ╟─1db3770d-f3fd-418c-9d8e-2d0cb9922304
 # ╟─193adfcc-3ab9-11f1-b7d0-5b93798eec02
 # ╠═790a8ef6-01c0-44ae-b394-6fa2db413db7
