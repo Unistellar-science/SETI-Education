@@ -37,6 +37,9 @@ end;
 
 # ╔═╡ 8616ef80-e4f2-4121-8463-f83e3594ac91
 md"""
+!!! warning "Heads up"
+	This lab is currently under construction 🏗️.
+
 # 🔵🟡🔴 Color Magnitude Diagram Lab
 
 In this lab, we will explore how astronomers take photometric measurements to estimate different properties of star (e.g., age, distance, and temperature) via so called [color magnitude diagrams](https://apod.nasa.gov/apod/ap010223.html) (CMD)s. Here is an example of one below:
