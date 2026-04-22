@@ -70,7 +70,7 @@ end;
 
 # ╔═╡ ac2acb87-8515-41cf-a762-ca48d8cd269a
 md"""
-# Eclipse Binaries Lab
+# Eclipsing Binaries Lab
 
 Using the photometric analysis tools developed in the previous notebook, we will now turn to the technique of generalizing this for images taken at multiple times to build a time series science product, aka a light curve. We will use sample eVscope data of an eclipsing binary system as a real life test case, and show how we can find additional targets to study from the American Association of Variable Star Observers ([AAVSO](https://www.aavso.org/)).
 """
@@ -1024,7 +1024,7 @@ md"""
 # ╟─1f3610da-f81e-4cdb-bad6-b2475497dc5f
 # ╟─06d26240-81b6-401b-8eda-eab3a9a0fb20
 # ╟─dbe812e2-a795-4caa-842d-07da5eabcade
-# ╟─74197e45-3b80-44ad-b940-f2544f2f9b54
+# ╠═74197e45-3b80-44ad-b940-f2544f2f9b54
 # ╠═2b8c75f6-c148-4c70-be6a-c1a4b95d5849
 # ╟─a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
 # ╟─7d7cd508-be27-4f52-bc13-91c702450167
