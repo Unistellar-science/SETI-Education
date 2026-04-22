@@ -144,7 +144,7 @@ Here is a summary of the header information for each science frame taken:
 """
 
 # ╔═╡ 74197e45-3b80-44ad-b940-f2544f2f9b54
-Resource("https://github.com/Unistellar-science/SETI-Education/blob/main/src/ucan/eclipsing_binary/assets/finder_WUMa.jpg?raw=true")
+Resource("https://raw.githubusercontent.com/Unistellar-science/SETI-Education/refs/heads/main/data/timeseries/ebs/finder_WUMa.jpg")
 
 # ╔═╡ a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
 md"""
@@ -1024,7 +1024,7 @@ md"""
 # ╟─1f3610da-f81e-4cdb-bad6-b2475497dc5f
 # ╟─06d26240-81b6-401b-8eda-eab3a9a0fb20
 # ╟─dbe812e2-a795-4caa-842d-07da5eabcade
-# ╠═74197e45-3b80-44ad-b940-f2544f2f9b54
+# ╟─74197e45-3b80-44ad-b940-f2544f2f9b54
 # ╠═2b8c75f6-c148-4c70-be6a-c1a4b95d5849
 # ╟─a6de852c-01e6-49a2-bc78-8d1b6eb51c0c
 # ╟─7d7cd508-be27-4f52-bc13-91c702450167
@@ -1034,7 +1034,7 @@ md"""
 # ╟─8f0e6529-bd67-47aa-9ddf-4032a5483a98
 # ╟─7d54fd96-b268-4964-929c-d62c7d89b4b2
 # ╟─1d14c32a-c0b5-4b3e-8a70-c50f539f6e69
-# ╠═e94b7436-462b-4d34-b721-990c8682ee6e
+# ╟─e94b7436-462b-4d34-b721-990c8682ee6e
 # ╟─1df329a0-629a-4527-8e5d-1dbac9ed8497
 # ╠═1fe59945-8bce-44f3-b548-9646c2ce6bda
 # ╟─bdfc0804-b83a-470f-a6e0-1e030eac63d8
