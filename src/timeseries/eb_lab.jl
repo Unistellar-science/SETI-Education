@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.24
+# v0.20.28
 
 #> [frontmatter]
 #> title = "Eclipsing Binaries Lab"
@@ -31,7 +31,6 @@ begin
 	
 	Pkg.add([		 
 	Pkg.PackageSpec(; rev = "main", url = "https://github.com/JuliaAstro/Astroalign.jl"),
-	Pkg.PackageSpec(; rev = "main", url = "https://github.com/JuliaAstro/ConsensusFitting.jl")
 	])
 	
 	# Notebook UI
@@ -292,6 +291,17 @@ imgs_sci = map(eachrow(df_sci)) do f
 	mapwindow!(median!, similar(img), img, (3, 3)) # Good for catching hot pixels
 end;
 
+# ╔═╡ 1fe59945-8bce-44f3-b548-9646c2ce6bda
+arrs_aligned = align_frames(imgs_sci; box_size = (3, 3));
+
+# ╔═╡ 81f6a02b-e6c6-4e38-a18c-4aa368fcd0aa
+imgs_sci_aligned = let
+    imgs_aligned = map(imgs_sci, arrs_aligned) do img0, img
+        shareheader(img0, img)
+    end
+    [imgs_sci[1], imgs_aligned...]
+end;
+
 # ╔═╡ 06d26240-81b6-401b-8eda-eab3a9a0fb20
 let
 	obs_start, obs_end = df_sci[:, "DATE-OBS"] |> extrema .|> string
@@ -354,6 +364,71 @@ ap_comp1 = CircularAperture(coords.x_comp, coords.y_comp, coords.r_comp);
 
 # ╔═╡ 381d0147-264b-46f6-82ab-8c840c50c7d1
 aps = [ap_target, ap_comp1];
+
+# ╔═╡ 79c924a7-f915-483d-aee6-94e749d3b004
+aperture_sums = map(imgs_sci_aligned) do img
+	# Returns (x_center, y_center, aperture_sum)
+	# for each aperture
+	p = photometry(aps, img)
+	
+	# Just store the aperture sum for each frame
+	p.aperture_sum
+end;
+
+# ╔═╡ 96dc5bbe-3284-43a0-8c04-c1bb51ad618b
+df_phot = let
+	# `stack` converts to a Matrix
+	# `:auto` names the columns for us
+	# `copycols` sets whether we want a view or copy of the source matrix 
+	data = stack(aperture_sums; dims=1)
+	data ./ median(data; dims=1)
+	
+	df = DataFrame(data, :auto; copycols=false)
+
+	@transform! df begin
+		:x1 = :x1 / median(:x1)
+		:x2 = :x2 / median(:x2)
+	end
+	
+	# Place the observation time in the first column
+	insertcols!(df, 1, :t => df_sci.:"DATE-OBS")
+end
+
+# ╔═╡ 6470b357-4dc6-4b2b-9760-93d64bab13e9
+let
+	# Switch to long "tidy" format to use convenient plotting syntax
+	p = plot(stack(df_phot);
+		x = :t,
+		y = :value,
+		color = :variable,
+		mode = :markers,
+	)
+
+	layout = Layout(
+		xaxis = attr(title="Date (UTC)"),
+		yaxis = attr(title="Relative aperture sum"),
+		title = "Raw light curves",
+		legend_title_text = "Source",
+	)
+	
+	relayout!(p, layout)
+
+	p
+end
+
+# ╔═╡ 59392770-f59e-4188-a675-89c2f2fc67d9
+let
+	sc = scatter(x=df_phot.t, y=df_phot.x1 ./ df_phot.x2, mode = :markers,)
+
+	layout = Layout(
+		xaxis = attr(title="Date (UTC)"),
+		yaxis = attr(title="Relative aperture sum"),
+		title = string("Divided light curve<br>", h["PURPOSE"], " observation: ",  h["DATE-OBS"]),
+		legend_title_text = "Source",
+	)
+	
+	plot(sc, layout)
+end
 
 # ╔═╡ e34ceb7c-1584-41ce-a5b5-3532fac3c03d
 md"""
@@ -538,84 +613,6 @@ const baseline = (
 md"""
 ## Helper functions
 """
-
-# ╔═╡ bdc24b15-d14a-422c-a7aa-5335547fa53c
-function align_frames(imgs; kwargs...)
-	fixed = first(imgs)
-	frames_aligned = map(imgs[begin+1:end]) do img
-		img_aligned, _ = align_frame(img, fixed; kwargs...)
-		shareheader(img, img_aligned)
-	end
-	return [fixed, frames_aligned...]
-end
-
-# ╔═╡ 1fe59945-8bce-44f3-b548-9646c2ce6bda
-imgs_sci_aligned = align_frames(imgs_sci);
-
-# ╔═╡ 79c924a7-f915-483d-aee6-94e749d3b004
-aperture_sums = map(imgs_sci_aligned) do img
-	# Returns (x_center, y_center, aperture_sum)
-	# for each aperture
-	p = photometry(aps, img)
-	
-	# Just store the aperture sum for each frame
-	p.aperture_sum
-end;
-
-# ╔═╡ 96dc5bbe-3284-43a0-8c04-c1bb51ad618b
-df_phot = let
-	# `stack` converts to a Matrix
-	# `:auto` names the columns for us
-	# `copycols` sets whether we want a view or copy of the source matrix 
-	data = stack(aperture_sums; dims=1)
-	data ./ median(data; dims=1)
-	
-	df = DataFrame(data, :auto; copycols=false)
-
-	@transform! df begin
-		:x1 = :x1 / median(:x1)
-		:x2 = :x2 / median(:x2)
-	end
-	
-	# Place the observation time in the first column
-	insertcols!(df, 1, :t => df_sci.:"DATE-OBS")
-end
-
-# ╔═╡ 6470b357-4dc6-4b2b-9760-93d64bab13e9
-let
-	# Switch to long "tidy" format to use convenient plotting syntax
-	p = plot(stack(df_phot);
-		x = :t,
-		y = :value,
-		color = :variable,
-		mode = :markers,
-	)
-
-	layout = Layout(
-		xaxis = attr(title="Date (UTC)"),
-		yaxis = attr(title="Relative aperture sum"),
-		title = "Raw light curves",
-		legend_title_text = "Source",
-	)
-	
-	relayout!(p, layout)
-
-	p
-end
-
-# ╔═╡ 59392770-f59e-4188-a675-89c2f2fc67d9
-let
-	sc = scatter(x=df_phot.t, y=df_phot.x1 ./ df_phot.x2, mode = :markers,)
-
-	layout = Layout(
-		xaxis = attr(title="Date (UTC)"),
-		yaxis = attr(title="Relative aperture sum"),
-		title = string("Divided light curve<br>", h["PURPOSE"], " observation: ",  h["DATE-OBS"]),
-		legend_title_text = "Source",
-	)
-	
-	plot(sc, layout)
-end
 
 # ╔═╡ 46e6bba9-0c83-47b7-be17-f41301efa18e
 function to_hms(ra_deci)
@@ -1037,6 +1034,7 @@ md"""
 # ╟─e94b7436-462b-4d34-b721-990c8682ee6e
 # ╟─1df329a0-629a-4527-8e5d-1dbac9ed8497
 # ╠═1fe59945-8bce-44f3-b548-9646c2ce6bda
+# ╠═81f6a02b-e6c6-4e38-a18c-4aa368fcd0aa
 # ╟─bdfc0804-b83a-470f-a6e0-1e030eac63d8
 # ╟─e7ad4e24-5dc9-4713-836a-be001304e45c
 # ╠═5b34ed05-4181-4fca-a80e-161fa99bc26e
@@ -1082,7 +1080,6 @@ md"""
 # ╠═a984c96d-273e-4d6d-bab8-896f14a79103
 # ╟─f290d98e-5a8a-44f2-bee5-b93738abe9af
 # ╟─e7f88515-305b-4899-8fa0-326e9e2097b5
-# ╟─bdc24b15-d14a-422c-a7aa-5335547fa53c
 # ╟─46e6bba9-0c83-47b7-be17-f41301efa18e
 # ╟─77544f9e-6053-4ed6-aa9a-4e7a54ca41d9
 # ╟─3242f19a-83f7-4db6-b2ea-6ca3403e1039

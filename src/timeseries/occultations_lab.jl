@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.24
+# v0.20.28
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/h3ejkrf3/image_0.png"
@@ -32,7 +32,6 @@ begin
 	
 	Pkg.add([		 
 	Pkg.PackageSpec(; rev = "main", url = "https://github.com/JuliaAstro/Astroalign.jl"),
-	Pkg.PackageSpec(; rev = "main", url = "https://github.com/JuliaAstro/ConsensusFitting.jl")
 	])
 	
 	# Notebook UI
@@ -70,63 +69,7 @@ md"""
 # 🪨 Asteroid Occultations Lab
 
 In this lab we will observe an asteroid passing in front of a star in real time and explore how to produce and analyze its resulting light curve. For more on taking these types of observations, see our [Unistellar Science page here](https://science.unistellar.com/asteroid-occultations/).
-
-Having some familiarity in high-level programming languages like Julia or Python will be useful, but not necessary, for following along with the topics covered. At the end of this notebook, you will hopefully have the tools to build your own analysis pipelines for processing astronomical data, as well as understand the principles behind other astronomical software at a broader level.
-
-!!! note "Coffee? ☕"
-	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
 """
-
-# ╔═╡ 0439db40-1572-4dac-af7e-d09d28631a37
-md"""
-With this requisite information out of the way, let's get started!
-"""
-
-# ╔═╡ ff0343b6-eb00-48f3-8c76-8d76dfcdc3b0
-msg_adding_colors = md"""
-##### Adding colors in Julia 🎨
-This makes magenta!
-
-```julia
-using AstroImages: RGB
-
-RGB(1, 0, 0) + RGB(0, 0, 1)
-```
-
-$(AstroImages.RGB(1, 0, 0) + AstroImages.RGB(0, 0, 1))
-"""; md"---"
-
-# ╔═╡ 922e2770-d5c8-4a1b-8d1b-1eb20b1652b0
-details("Using this notebook 🌱", md"""
-!!! note "First time running"
-	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
-	
-	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
-
-!!! tip "Advanced: bring your own editor"
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occultations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
-
-	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
-
-	```julia-repl
-	julia> using Pluto
-	
-	julia> Pluto.run(auto_reload_from_file=true)
-	
-	# This will be on by default in an upcoming release =]
-	```
-
-	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
-
-
-!!! warning "Diving deeper"
-	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
-
-$(details("Details", msg_adding_colors))
-
-!!! warning " "
-	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
-""")
 
 # ╔═╡ 68d3d6ae-a0bd-468d-9b78-a2679b1c0be9
 md"""
@@ -218,10 +161,24 @@ md"""
 To accomplish this, we will just align on asterisms instead. We will use [Astroalign.jl](https://juliaastro.org/Astroalign/stable/) to accomplish this:
 """
 
+# ╔═╡ c1520903-9d12-471b-be03-ac8009a79431
+arrs_aligned = align_frames(imgs_sci; box_size = (3, 3));
+
+# ╔═╡ 3a4c38b4-0aaa-45ea-855d-acbc8bc5a265
+imgs_sci_aligned = let
+    imgs_aligned = map(imgs_sci, arrs_aligned) do img0, img
+        shareheader(img0, img)
+    end
+    [imgs_sci[begin], imgs_aligned...]
+end;
+
 # ╔═╡ 60e9ac2c-728b-41ba-8863-8042daac4a16
 md"""
-With these aligned images, we can now pop some static apertures onto our frames to perform our photomoetry more reliably. The target is in the green aperture near the center of the frame, and for fun a sample comparison star is in the orange aperture. We went for a fairly tight aperture size to boost the signal-to-noise ratio of our final light curve.
+With these aligned images, we can now pop some static apertures onto our frames to perform our photometry more reliably. The target is in the green aperture near the center of the frame, and for fun a sample comparison star is in the orange aperture. We went for a fairly tight aperture size to boost the signal-to-noise ratio of our final light curve.
 """
+
+# ╔═╡ 0bbb5bca-4fab-41f1-89ee-369f3dafff60
+@bind frame_i_aligned Slider(1:length(imgs_sci_aligned); show_value=true)
 
 # ╔═╡ fc8c9cd5-166a-42f5-ac2c-7bcd259a772a
 df_sci
@@ -250,6 +207,19 @@ md"""
 We defined our apertures with the [Photometry.jl](http://juliaastro.org/dev/modules/Photometry/) package, e.g., `ap_target`, for analysis in Julia, and their corresponding plot object, e.g., `circ(ap_target)`, for visualization in plotly. Now, we just call the [`photometry`](http://juliaastro.org/dev/modules/Photometry/apertures/#Photometry.Aperture.photometry) function from Photometry.jl and store our results in a table:
 """
 
+# ╔═╡ d36ff8f2-8c11-4cec-a467-d97e19725268
+df_phot = let
+	# Run photometry
+	phot = map(imgs_sci_aligned) do img
+		photometry([ap_target, ap_comp1], img).aperture_sum
+	end
+
+	# Create table
+	df = DataFrame(stack(phot; dims=1), :auto)
+	insertcols!(df, 1, :t => df_sci."DATE-OBS")
+	@transform! df :xdiv = :x1 ./ :x2
+end
+
 # ╔═╡ 93517d36-21b1-4fd8-bde9-c504681a6644
 md"""
 !!! note
@@ -260,6 +230,17 @@ md"""
 md"""
 Below is the resulting light curve for our target. The occultation signal is quite striking:
 """
+
+# ╔═╡ ca358bdb-83fd-4a7e-91b8-4e1a5d1d27ad
+let
+	sc = scatter(df_phot; x=:t, y=:xdiv, mode=:markers)
+	l = Layout(;
+		xaxis = attr(title="Time (UTC)"),
+		yaxis = attr(title="Counts"),
+		title = "Divided light curve",
+	)
+	plot(sc, l)
+end
 
 # ╔═╡ 041fd375-92a5-4204-bfdc-5409a04ba141
 md"""
@@ -384,46 +365,6 @@ md"""
 	```
 """ |> msg
 
-# ╔═╡ f400e7e5-d4c2-44c2-a697-dea33a51b083
-function align_frames(imgs; kwargs...)
-	fixed = first(imgs)
-	frames_aligned = map(imgs[begin+1:end]) do img
-		img_aligned, _ = align_frame(img, fixed; kwargs...)
-		shareheader(img, img_aligned)
-	end
-	return [fixed, frames_aligned...]
-end
-
-# ╔═╡ 37da7f88-82e1-452b-bef3-2bfc6afd3f95
-imgs_sci_aligned = align_frames(imgs_sci; box_size = (3, 3));
-
-# ╔═╡ 0bbb5bca-4fab-41f1-89ee-369f3dafff60
-@bind frame_i_aligned Slider(1:length(imgs_sci_aligned); show_value=true)
-
-# ╔═╡ d36ff8f2-8c11-4cec-a467-d97e19725268
-df_phot = let
-	# Run photometry
-	phot = map(imgs_sci_aligned) do img
-		photometry([ap_target, ap_comp1], img).aperture_sum
-	end
-
-	# Create table
-	df = DataFrame(stack(phot; dims=1), :auto)
-	insertcols!(df, 1, :t => df_sci."DATE-OBS")
-	@transform! df :xdiv = :x1 ./ :x2
-end
-
-# ╔═╡ ca358bdb-83fd-4a7e-91b8-4e1a5d1d27ad
-let
-	sc = scatter(df_phot; x=:t, y=:xdiv, mode=:markers)
-	l = Layout(;
-		xaxis = attr(title="Time (UTC)"),
-		yaxis = attr(title="Counts"),
-		title = "Divided light curve",
-	)
-	plot(sc, l)
-end
-
 # ╔═╡ 1246d6fb-4d4f-46cb-a2e2-f2ceadf966a6
 # Helpful for preventing ginormous plot objects
 r2(img) = (restrict ∘ restrict)(img)
@@ -437,6 +378,7 @@ function htrace(img;
 	restrict = true,
 )
 	# Reduce image, creates an offset array with different axis limits
+	img = AstroImage(img)
 	if restrict
 		img_small = r2(img)
 	else
@@ -606,9 +548,6 @@ md"""
 
 # ╔═╡ Cell order:
 # ╟─d7f0393d-e2fa-44ea-a812-8f85820e661e
-# ╟─922e2770-d5c8-4a1b-8d1b-1eb20b1652b0
-# ╟─0439db40-1572-4dac-af7e-d09d28631a37
-# ╟─ff0343b6-eb00-48f3-8c76-8d76dfcdc3b0
 # ╟─68d3d6ae-a0bd-468d-9b78-a2679b1c0be9
 # ╟─d9431fb9-2713-4982-b342-988e01445fed
 # ╠═0773bdbd-ecd1-49c9-9516-f58e3096e7b7
@@ -627,7 +566,8 @@ md"""
 # ╟─c7c9966e-d1f7-4a29-a53c-662794d06d74
 # ╟─41b95ea0-0564-465f-a7b2-ba9bb3cda8cc
 # ╟─67125878-7c40-4599-9555-969d05908cd7
-# ╠═37da7f88-82e1-452b-bef3-2bfc6afd3f95
+# ╠═c1520903-9d12-471b-be03-ac8009a79431
+# ╠═3a4c38b4-0aaa-45ea-855d-acbc8bc5a265
 # ╟─60e9ac2c-728b-41ba-8863-8042daac4a16
 # ╟─0bbb5bca-4fab-41f1-89ee-369f3dafff60
 # ╠═3f243bc0-c223-475b-a05c-b89d431628d2
@@ -659,9 +599,8 @@ md"""
 # ╠═1831c578-5ff8-4094-8f57-67c39aff80c8
 # ╟─70ec6ef2-836b-4d9a-86a4-4956d8dc28f3
 # ╟─fc17ef61-5747-4a35-8ae7-2d7c3ba6b075
-# ╟─f400e7e5-d4c2-44c2-a697-dea33a51b083
 # ╟─1246d6fb-4d4f-46cb-a2e2-f2ceadf966a6
-# ╟─7289692b-1a85-4a84-b7cc-fea1e46c9f31
+# ╠═7289692b-1a85-4a84-b7cc-fea1e46c9f31
 # ╟─2ba90b91-5de2-44a2-954f-a73b1561e762
 # ╟─84745bd9-c2b1-45c3-8376-7f18d600e7eb
 # ╟─649ebb55-5952-457a-97c4-128893d66b73

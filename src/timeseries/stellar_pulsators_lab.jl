@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.24
+# v0.20.28
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/h3ejkrf3/image_0.png"
@@ -17,9 +17,6 @@ using Astrometry, PlutoUI, Unitful, Dates, AstroTime, LinearAlgebra
 
 # ╔═╡ 1c24444a-4274-485a-91fa-9584be38a891
 md"""
-!!! warning "Heads up"
-	This lab is currently under construction 🏗️.
-
 # Stellar Pulsators Lab
 
 While out observing a pulsating star, we notice something odd. The time of maximum brightness that we measure from our telescope is several minutes behind the expected time reported by the AAVSO ephemeris. After carefully accounting for potential sources of error, we find that this discrepancy is real, and that it has a physically meaningful interpretation.
@@ -240,6 +237,11 @@ md"""
 	1. There also appears to be a slight slowing in the pulsation period over time for this target (discussed there as well, much smaller contribution than we can likely readily measure).
 
 	1. Visualize the 3D orientation of the Earth, Sun, and variable star system to help visualize the impact of light travel time. [EphemerisSources.jl](https://juliaastro.org/EphemerisSources.jl/docs/stable/) may be useful for this.
+"""
+
+# ╔═╡ f33e84de-ad9f-42f6-843c-ba4f0a4ca4cc
+md"""
+# Notebook setup 🔧
 """
 
 # ╔═╡ 790a8ef6-01c0-44ae-b394-6fa2db413db7
@@ -836,6 +838,7 @@ version = "17.7.0+0"
 # ╠═51b65a18-c431-4395-9769-e89ca636c0c1
 # ╟─1db3770d-f3fd-418c-9d8e-2d0cb9922304
 # ╟─193adfcc-3ab9-11f1-b7d0-5b93798eec02
+# ╟─f33e84de-ad9f-42f6-843c-ba4f0a4ca4cc
 # ╠═790a8ef6-01c0-44ae-b394-6fa2db413db7
 # ╠═9d020761-d37c-4e0e-a8eb-9ed6ba2d9bc5
 # ╠═92a929e2-ed4d-41cd-a95e-4e64a7c27367
