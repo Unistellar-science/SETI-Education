@@ -25,14 +25,14 @@ end
 
 # ╔═╡ 760e3f79-d623-4544-af77-5250d61f4854
 begin
-	# Notebook widgets
-	using PlutoUI, CommonMark
+    # Notebook widgets
+    using PlutoUI, CommonMark
 
-	# Analysis tools
-	using AstroImages, ColorTypes, Photometry, DataFramesMeta, CSV, PlutoPlotly, FlexiJoins, SkyCoords, VirtualObservatory, Unitful, UnitfulAstro
-	
-	# Colormap default settings
-	AstroImages.set_cmap!(nothing)
+    # Analysis tools
+    using AstroImages, ColorTypes, Photometry, DataFramesMeta, CSV, PlutoPlotly, FlexiJoins, SkyCoords, VirtualObservatory, Unitful, UnitfulAstro
+
+    # Colormap default settings
+    AstroImages.set_cmap!(nothing)
 end;
 
 # ╔═╡ 8616ef80-e4f2-4121-8463-f83e3594ac91
@@ -62,13 +62,13 @@ Observe M67 either in Science Mode or Enhanced vision mode and load the correspo
 
 # ╔═╡ 0a38efe9-c833-49b3-885d-d406d47cdf3b
 begin
-reset_M67
-md"""
-!!! note "Load your own data"
-	Select "Browse" below you would like to visualize your own data before moving on with the rest of this notebook:
-	
-	$(@bind img_M67_local FilePicker([MIME("image/fits")]))
-"""
+    reset_M67
+    md"""
+    !!! note "Load your own data"
+    	Select "Browse" below you would like to visualize your own data before moving on with the rest of this notebook:
+    	
+    	$(@bind img_M67_local FilePicker([MIME("image/fits")]))
+    """
 end
 
 # ╔═╡ c7b42a87-c84c-4c88-aa8f-c8f4d688c23a
@@ -102,13 +102,13 @@ This FITS file is a table of photometric measurements made by Astrometry.net, in
 
 # ╔═╡ 35be24e5-8d6c-418f-8144-eb8c0db2b19a
 begin
-reset_M67_phot_local
-md"""
-!!! note "Load your own data"
-	Select "Browse" below you would like to visualize your own data before moving on with the rest of this notebook:
-	
-	$(@bind img_M67_phot_local FilePicker([MIME("image/fits")]))
-"""
+    reset_M67_phot_local
+    md"""
+    !!! note "Load your own data"
+    	Select "Browse" below you would like to visualize your own data before moving on with the rest of this notebook:
+    	
+    	$(@bind img_M67_phot_local FilePicker([MIME("image/fits")]))
+    """
 end
 
 # ╔═╡ 93de8b0b-416f-440d-842a-811e488ed2a7
@@ -126,39 +126,43 @@ md"""
 
 # ╔═╡ 9781946b-259b-4d75-8aee-47537ce2c569
 coords_simbad(name) = let
-    coords = execute(TAPService(:simbad), """
-	SELECT basic.ra, basic.dec
-	FROM ident JOIN basic ON ident.oidref = basic.oid
-	WHERE id = '$(name)';
-	""")
-	return first.((coords.ra, coords.dec))
+    coords = execute(
+        TAPService(:simbad), """
+        SELECT basic.ra, basic.dec
+        FROM ident JOIN basic ON ident.oidref = basic.oid
+        WHERE id = '$(name)';
+        """
+    )
+    return first.((coords.ra, coords.dec))
 end
 
 # ╔═╡ fe74d128-cb80-4a0f-8af2-b3e60d21ef51
 query_gaia(name) = let
-	ra, dec = coords_simbad(name)
-	df = execute(TAPService(:gaia), """
-	    SELECT TOP 2500
-	        gs.source_id,
-	        gs.ra,
-	        gs.dec,
-	        gs.phot_g_mean_mag,
-	        gs.bp_rp,
-	        gs.parallax,
-	        gs.pmra,
-	        gs.pmdec,
-	        gs.ruwe,
-	        DISTANCE(POINT(gs.ra, gs.dec), POINT($(ra), $(dec))) * 60 AS sep_arcmin
-	    FROM
-	        gaiadr3.gaia_source AS gs
-	    WHERE
-	        CONTAINS(
-	            POINT(gs.ra, gs.dec),
-	            CIRCLE($(ra), $(dec), 0.5)
-	        ) = 1
-	""") |> DataFrame
+    ra, dec = coords_simbad(name)
+    df = execute(
+        TAPService(:gaia), """
+            SELECT TOP 2500
+                gs.source_id,
+                gs.ra,
+                gs.dec,
+                gs.phot_g_mean_mag,
+                gs.bp_rp,
+                gs.parallax,
+                gs.pmra,
+                gs.pmdec,
+                gs.ruwe,
+                DISTANCE(POINT(gs.ra, gs.dec), POINT($(ra), $(dec))) * 60 AS sep_arcmin
+            FROM
+                gaiadr3.gaia_source AS gs
+            WHERE
+                CONTAINS(
+                    POINT(gs.ra, gs.dec),
+                    CIRCLE($(ra), $(dec), 0.5)
+                ) = 1
+        """
+    ) |> DataFrame
 
-	@rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
+    @rtransform! df :coords = ICRSCoords(deg2rad(:ra), deg2rad(:dec))
 end
 
 # df_gaia = let
@@ -193,15 +197,15 @@ Use the sliders below to explore how different cut-offs for the parallax and pro
 
 # ╔═╡ ecec680f-5536-4798-861f-6f0945e6c175
 begin
-reset_cmd
+    reset_cmd
 
-@bind cmd_cuts PlutoUI.combine() do Child
-	cm"""
-	| Parallax <br> (mas) | RA proper motion <br> (mas/yr) | Dec proper motion <br> (mas/yr) |
-	| :-: | :-: | :-: |
-	| $(Child("plx", RangeSlider(-5:10))) | $(Child("pmra", RangeSlider(-36:24))) | $(Child("pmdec", RangeSlider(-60:12))) |
-	"""
-	end
+    @bind cmd_cuts PlutoUI.combine() do Child
+        cm"""
+        | Parallax <br> (mas) | RA proper motion <br> (mas/yr) | Dec proper motion <br> (mas/yr) |
+        | :-: | :-: | :-: |
+        | $(Child("plx", RangeSlider(-5:10))) | $(Child("pmra", RangeSlider(-36:24))) | $(Child("pmdec", RangeSlider(-60:12))) |
+        """
+    end
 end
 
 # ╔═╡ 73335835-def4-4a1c-a6fa-61158f445dcb
@@ -236,9 +240,9 @@ load_img(data::Nothing) = (load ∘ download)("https://github.com/Unistellar-sci
 
 # ╔═╡ db733129-28e0-49e0-811f-f38f670fda38
 function load_img(data)
-	path = tempname() * data["name"]
-	write(path, data["data"])
-	load(path)
+    path = tempname() * data["name"]
+    write(path, data["data"])
+    return load(path)
 end
 
 # ╔═╡ e15a8d41-41b8-4f55-b364-9586dc729bc3
@@ -247,20 +251,21 @@ img_M67 = load_img(img_M67_local);
 # ╔═╡ fa0d3f2f-3ce2-4e19-bb8e-874bdd7028bc
 # Default from FilePicker
 function load_phot(data::Nothing)
-	df = load(
-		download(
-			"https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/data/photometry/M67/image-radec_stacked.fits"
-		),
-	2) |> DataFrame
-	@transform! df :coords = ICRSCoords.(deg2rad.(:ra), deg2rad.(:dec))
+    df = load(
+        download(
+            "https://github.com/Unistellar-science/SETI-Education/raw/refs/heads/main/data/photometry/M67/image-radec_stacked.fits"
+        ),
+        2
+    ) |> DataFrame
+    return @transform! df :coords = ICRSCoords.(deg2rad.(:ra), deg2rad.(:dec))
 end
 
 # ╔═╡ a877a885-d771-407d-9a29-d13f384c4ae5
 function load_phot(data)
-	path = tempname() * data["name"]
-	write(path, data["data"])
-	df = load(path, 2) |> DataFrame
-	@transform! df :coords = ICRSCoords.(deg2rad.(:ra), deg2rad.(:dec))
+    path = tempname() * data["name"]
+    write(path, data["data"])
+    df = load(path, 2) |> DataFrame
+    return @transform! df :coords = ICRSCoords.(deg2rad.(:ra), deg2rad.(:dec))
 end
 
 # ╔═╡ 2a2e0c2e-7397-4255-98c1-267b93ed4e55
@@ -271,12 +276,14 @@ df_phot
 
 # ╔═╡ b1c2555a-39aa-4ba1-8203-da85b6221c96
 df_matched = let
-	df = innerjoin((df_phot, df_gaia), by_distance(
-		:coords,
-		SkyCoords.separation,
-		≤(2u"arcsecond"))
-	)
-	dropmissing!(df, [:parallax, :pmra, :pmdec, :ruwe])
+    df = innerjoin(
+        (df_phot, df_gaia), by_distance(
+            :coords,
+            SkyCoords.separation,
+            ≤(2u"arcsecond")
+        )
+    )
+    dropmissing!(df, [:parallax, :pmra, :pmdec, :ruwe])
 end
 
 # df_matched = let
@@ -290,49 +297,49 @@ end
 
 # ╔═╡ 1ad86cd6-415e-432a-adec-366cb9a54bba
 df_cluster = @chain df_matched begin
-	@rsubset begin
-		first(cmd_cuts.plx) ≤ :parallax
-		:parallax ≤ last(cmd_cuts.plx)
-		
-		first(cmd_cuts.pmra) ≤ :pmra
-		:pmra ≤ last(cmd_cuts.pmra)
-		
-		first(cmd_cuts.pmdec) ≤ :pmdec
-		:pmdec ≤ last(cmd_cuts.pmdec)
-	
-		:ruwe ≤ 1.4 # Hard-coded quality indicator
-	end
+    @rsubset begin
+        first(cmd_cuts.plx) ≤ :parallax
+        :parallax ≤ last(cmd_cuts.plx)
+
+        first(cmd_cuts.pmra) ≤ :pmra
+        :pmra ≤ last(cmd_cuts.pmra)
+
+        first(cmd_cuts.pmdec) ≤ :pmdec
+        :pmdec ≤ last(cmd_cuts.pmdec)
+
+        :ruwe ≤ 1.4 # Hard-coded quality indicator
+    end
 end;
 
 # ╔═╡ f37c9963-ed1b-4784-a0df-3745bcadd1b1
 plot(
-	scatter(; x = df_cluster.bp_rp, y = log10.(df_cluster.flux), mode = :markers),
-	Layout(;
-		xaxis_title = "G<sub>BP</sub> - G<sub>RP</sub> (Gaia DR3)",
-		xaxis_range = [0, 2],
-		xaxis_autorange = false,
-		yaxis_title = "log F (Unistellar)",
-		yaxis_range = [2.5, 5],
-		yaxis_autorange = false,
-		title = "M67 Color Magnitude Diagram -- N: $(nrow(df_cluster))",
-		uirevision = 1,
-	),
+    scatter(; x = df_cluster.bp_rp, y = log10.(df_cluster.flux), mode = :markers),
+    Layout(;
+        xaxis_title = "G<sub>BP</sub> - G<sub>RP</sub> (Gaia DR3)",
+        xaxis_range = [0, 2],
+        xaxis_autorange = false,
+        yaxis_title = "log F (Unistellar)",
+        yaxis_range = [2.5, 5],
+        yaxis_autorange = false,
+        title = "M67 Color Magnitude Diagram -- N: $(nrow(df_cluster))",
+        uirevision = 1,
+    ),
 )
 
 # ╔═╡ f3d465f2-1b09-4c24-985a-9696d13699b2
 df_ans = @chain df_matched begin
-	@rsubset begin
-		0.5 ≤ :parallax
-		:parallax ≤ 1.7
-		
-		-12 ≤ :pmra
-		:pmra ≤ -10
-		
-		-4 ≤ :pmdec
-		:pmdec ≤ -2
-	
-		:ruwe ≤ 1.4 # Hard-coded quality indicator
-	end
+    @rsubset begin
+        0.5 ≤ :parallax
+        :parallax ≤ 1.7
+
+        -12 ≤ :pmra
+        :pmra ≤ -10
+
+        -4 ≤ :pmdec
+        :pmdec ≤ -2
+
+        :ruwe ≤ 1.4 # Hard-coded quality indicator
+    end
 end;
 
 # ╔═╡ 17de112e-91a8-4b55-93da-cecd0d9ca89f
@@ -367,71 +374,72 @@ md"""
 
 # ╔═╡ 2b52be49-eb95-4d11-adc4-c0b64a818872
 function tiny(img)
-	imgv = copy(img)
-	
-	while length(eachindex(imgv)) > 10^6
-		imgv = AstroImages.restrict(imgv)
-	end
+    imgv = copy(img)
 
-	return imgv
+    while length(eachindex(imgv)) > 10^6
+        imgv = AstroImages.restrict(imgv)
+    end
+
+    return imgv
 end
 
 # ╔═╡ 1d81674b-67f5-4c9c-a351-b2fda419aba3
 # Julia photometry aperture object --> plotly shape object
-function circ(ap, r=ap.r; line_color=:lightgreen)
-	circle(
-		ap.x - r, # x_min
-		ap.x + r, # x_max
-		ap.y - r, # y_min
-		ap.y + r; # y_max
-		line_color,
-	)
+function circ(ap, r = ap.r; line_color = :lightgreen)
+    return circle(
+        ap.x - r, # x_min
+        ap.x + r, # x_max
+        ap.y - r, # y_min
+        ap.y + r; # y_max
+        line_color,
+    )
 end
 
 # ╔═╡ 4a2e1f66-d637-476f-8f80-e5c46798e4bd
 # Plotly heatmap trace of img
-function htrace(img;
-	zlims,
-	title = "ADU",
-	restrict = true,
-)
-		
-	# Account for plotly orientation convention
-	img = permutedims(img)
-	
-	# dims is used here to convert back from an offset array
-	# to a simple array that JS can ingest
-	zmin, zmax = zlims
-	
-	heatmap(;
-		x = dims(img, X).val,
-		y = dims(img, Y).val,
-		z = Matrix{Float32}(img.data),
-		zmin,
-		zmax,
-		colorbar = attr(; title),
-		colorscale = "Cividis",
-	)
+function htrace(
+        img;
+        zlims,
+        title = "ADU",
+        restrict = true,
+    )
+
+    # Account for plotly orientation convention
+    img = permutedims(img)
+
+    # dims is used here to convert back from an offset array
+    # to a simple array that JS can ingest
+    zmin, zmax = zlims
+
+    return heatmap(;
+        x = dims(img, X).val,
+        y = dims(img, Y).val,
+        z = Matrix{Float32}(img.data),
+        zmin,
+        zmax,
+        colorbar = attr(; title),
+        colorscale = "Cividis",
+    )
 end
 
 # ╔═╡ f70883db-74cb-485e-a426-f334dce178b2
 # Combines plotly trace and layout into a plot object
 function plot_img(img; zlims = Percent(99.5)(img), restrict = true)
-	imgv = (tiny ∘ AstroImage)(img)
-	# imgv = img
-	
-	hm = htrace(imgv; zlims, restrict)
-	
-	l = Layout(;
-		# width,
-		# height,
-		# title = timestamp(img),
-		xaxis = attr(title = "X", constrain = "domain"),
-		yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
-		uirevision = 1,
-	)
+    imgv = (tiny ∘ AstroImage)(img)
+    # imgv = img
 
-	plot(hm, l)
+    hm = htrace(imgv; zlims, restrict)
+
+    l = Layout(;
+        # width,
+        # height,
+        # title = timestamp(img),
+        xaxis = attr(title = "X", constrain = "domain"),
+        yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
+        uirevision = 1,
+    )
+
+    return plot(hm, l)
 end
 
 # ╔═╡ ea3dd7a0-7ecc-4063-8a3e-0e46a470f80c
@@ -439,15 +447,15 @@ plot_img(img_M67)
 
 # ╔═╡ edb99047-cdea-4149-ab67-640ddbd7aec5
 let
-	p = plot_img(img_M67)
+    p = plot_img(img_M67)
 
-	aps = CircularAperture.(df_cluster.x, df_cluster.y, 20)
-	
-	shapes = [circ(ap) for ap in aps]
-	
-	relayout!(p; shapes, title = "Sources selected")
+    aps = CircularAperture.(df_cluster.x, df_cluster.y, 20)
 
-	p
+    shapes = [circ(ap) for ap in aps]
+
+    relayout!(p; shapes, title = "Sources selected")
+
+    p
 end
 
 # ╔═╡ b2a5ce6c-34fd-4d50-92d0-5d35df4447af

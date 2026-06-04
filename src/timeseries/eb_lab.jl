@@ -25,38 +25,38 @@ end
 
 # ╔═╡ 6bc5d30d-2051-4249-9f2a-c4354aa49198
 begin
-	# Notebook UI
-	using PlutoUI, CommonMark
-	
-	# Data wrangling
-	using CCDReduction, DataDeps, DataFramesMeta
+    # Notebook UI
+    using PlutoUI, CommonMark
 
-	# Web
-	using HTTP, JSONTables, TableScraper
-	
-	# Visualization and analysis
-	using AstroImages, PlutoPlotly, AstroAngles, Photometry
-	using AstroImages: restrict
-	using Astroalign
-	using Dates, Unitful, Statistics 
-	using ImageFiltering
+    # Data wrangling
+    using CCDReduction, DataDeps, DataFramesMeta
 
-	AstroImages.set_cmap!(:cividis)
+    # Web
+    using HTTP, JSONTables, TableScraper
 
-	# Use DataDeps.jl for dataset management
-	# Auto-download data to current directory by default
-	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
-	ENV["DATADEPS_LOAD_PATH"] = @__DIR__
-	DataDep(
-		"sample_data",
-		"""
-		UCAN Data Files
-		Website: https://www.seti.org/education/ucan/unistellar-education-materials/
-		""",
-		["https://www.dropbox.com/scl/fo/om02nzsex9ql00gcnp0r4/AA11_SrUS2GUwvuMUQm85x8?rlkey=np5upxstx4z6lhcch6tje1b0j&st=st2wzmyp&dl=1"],
-		["f5692a2382a035b892600e962ac950d70176c7137ae5e2d716816fc9c43aab7c"],
-		post_fetch_method = unpack,
-	) |> register
+    # Visualization and analysis
+    using AstroImages, PlutoPlotly, AstroAngles, Photometry
+    using AstroImages: restrict
+    using Astroalign
+    using Dates, Unitful, Statistics
+    using ImageFiltering
+
+    AstroImages.set_cmap!(:cividis)
+
+    # Use DataDeps.jl for dataset management
+    # Auto-download data to current directory by default
+    ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
+    ENV["DATADEPS_LOAD_PATH"] = @__DIR__
+    DataDep(
+        "sample_data",
+        """
+        UCAN Data Files
+        Website: https://www.seti.org/education/ucan/unistellar-education-materials/
+        """,
+        ["https://www.dropbox.com/scl/fo/om02nzsex9ql00gcnp0r4/AA11_SrUS2GUwvuMUQm85x8?rlkey=np5upxstx4z6lhcch6tje1b0j&st=st2wzmyp&dl=1"],
+        ["f5692a2382a035b892600e962ac950d70176c7137ae5e2d716816fc9c43aab7c"],
+        post_fetch_method = unpack,
+    ) |> register
 end;
 
 # ╔═╡ ac2acb87-8515-41cf-a762-ca48d8cd269a
@@ -218,31 +218,31 @@ To try this analysis on you own data:
 
 # ╔═╡ 1b71497f-636a-45c8-8f51-728bee091696
 begin
-	reset
-	@bind DATA_DIR_local confirm(TextField(); label = "Enter")
+    reset
+    @bind DATA_DIR_local confirm(TextField(); label = "Enter")
 end
 
 # ╔═╡ 7c078085-ff30-400d-a0ab-2680f468c415
 DATA_DIR = if isempty(DATA_DIR_local)
-	datadep"sample_data"
+    datadep"sample_data"
 else
-	joinpath(@__DIR__, DATA_DIR_local)
+    joinpath(@__DIR__, DATA_DIR_local)
 end;
 
 # ╔═╡ 1356c02f-9ff2-491f-b55d-666ee76e6fae
 df_sci_all = let
-	df = fitscollection(DATA_DIR; abspath=false)
-	@transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
+    df = fitscollection(DATA_DIR; abspath = false)
+    @transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
 end
 
 # ╔═╡ 5321f774-67fc-4355-9411-2e624a00e724
 begin
-	N_max = 200
-	N_sci_all = nrow(df_sci_all)
-md"""
-!!! note
-	This can be a pretty large number of data files depending on the observation, so for simplicity we will just use a subset for our lab, which we can specify.
-"""
+    N_max = 200
+    N_sci_all = nrow(df_sci_all)
+    md"""
+    !!! note
+    	This can be a pretty large number of data files depending on the observation, so for simplicity we will just use a subset for our lab, which we can specify.
+    """
 end
 
 # ╔═╡ 1f3610da-f81e-4cdb-bad6-b2475497dc5f
@@ -265,14 +265,14 @@ cm"""
 
 # ╔═╡ 777dcd30-70ba-4091-9075-4f1be4e309c0
 df_sci = let
-	rows_to_use = round.(Int, range(1, N_sci_all; length = nrows_max))
-	df_sci_all[rows_to_use, :]
+    rows_to_use = round.(Int, range(1, N_sci_all; length = nrows_max))
+    df_sci_all[rows_to_use, :]
 end
 
 # ╔═╡ 035fcecb-f998-4644-9650-6aeaced3e41f
 imgs_sci = map(eachrow(df_sci)) do f
-	img = load(f.path)
-	mapwindow!(median!, similar(img), img, (3, 3)) # Good for catching hot pixels
+    img = load(f.path)
+    mapwindow!(median!, similar(img), img, (3, 3)) # Good for catching hot pixels
 end;
 
 # ╔═╡ 1fe59945-8bce-44f3-b548-9646c2ce6bda
@@ -288,10 +288,10 @@ end;
 
 # ╔═╡ 06d26240-81b6-401b-8eda-eab3a9a0fb20
 let
-	obs_start, obs_end = df_sci[:, "DATE-OBS"] |> extrema .|> string
-md"""
-We see that we have $(nrow(df_sci)) fits files taken from $(obs_start) -- $(obs_end) UTC. Here's what that first image looks like compared to its [finder chart](https://astro.swarthmore.edu/transits/finding_charts.cgi):
-"""
+    obs_start, obs_end = df_sci[:, "DATE-OBS"] |> extrema .|> string
+    md"""
+    We see that we have $(nrow(df_sci)) fits files taken from $(obs_start) -- $(obs_end) UTC. Here's what that first image looks like compared to its [finder chart](https://astro.swarthmore.edu/transits/finding_charts.cgi):
+    """
 end
 
 # ╔═╡ 2b8c75f6-c148-4c70-be6a-c1a4b95d5849
@@ -307,20 +307,20 @@ It looks like this image is $(first(img_size)) x $(last(img_size)) pixels, with 
 
 # ╔═╡ 8f0e6529-bd67-47aa-9ddf-4032a5483a98
 begin
-	X_max, Y_max = img_size
-	X_mid, Y_mid = img_size .÷ 2
-	@bind coords PlutoUI.combine() do Child
-		md"""
-		| | X (pixels) | Y (pixels) | radius (pixels)
-		| :-: | :-: | :-: | :-: |
-		| target |$(Child("x", NumberField(1:X_max; default = 1029))) | $(Child("y", NumberField(1:Y_max; default = 779))) | $(Child("r", NumberField(1:1000; default = 50))) | ----
-		| comparison |$(Child("x_comp", NumberField(1:X_max; default = 1153))) | $(Child("y_comp", NumberField(1:Y_max; default = 711))) | $(Child("r_comp", NumberField(1:1000; default = 50)))
+    X_max, Y_max = img_size
+    X_mid, Y_mid = img_size .÷ 2
+    @bind coords PlutoUI.combine() do Child
+        md"""
+        | | X (pixels) | Y (pixels) | radius (pixels)
+        | :-: | :-: | :-: | :-: |
+        | target |$(Child("x", NumberField(1:X_max; default = 1029))) | $(Child("y", NumberField(1:Y_max; default = 779))) | $(Child("r", NumberField(1:1000; default = 50))) | ----
+        | comparison |$(Child("x_comp", NumberField(1:X_max; default = 1153))) | $(Child("y_comp", NumberField(1:Y_max; default = 711))) | $(Child("r_comp", NumberField(1:1000; default = 50)))
 
-		!!! note "Apertures and comparison stars"
+        !!! note "Apertures and comparison stars"
 
-			To better show the frame to frame differences, we also added some sample target and comparison star aperturess (in green and orange, respectively) centered on the first frame in our image series. We use comparison stars to divide out common systematics like atmospheric turbulence and other changes in seeing conditions so that ideally only the target signal will be left.
-		"""
-	end
+        	To better show the frame to frame differences, we also added some sample target and comparison star aperturess (in green and orange, respectively) centered on the first frame in our image series. We use comparison stars to divide out common systematics like atmospheric turbulence and other changes in seeing conditions so that ideally only the target signal will be left.
+        """
+    end
 end
 
 # ╔═╡ dbe812e2-a795-4caa-842d-07da5eabcade
@@ -351,67 +351,68 @@ aps = [ap_target, ap_comp1];
 
 # ╔═╡ 79c924a7-f915-483d-aee6-94e749d3b004
 aperture_sums = map(imgs_sci_aligned) do img
-	# Returns (x_center, y_center, aperture_sum)
-	# for each aperture
-	p = photometry(aps, img)
-	
-	# Just store the aperture sum for each frame
-	p.aperture_sum
+    # Returns (x_center, y_center, aperture_sum)
+    # for each aperture
+    p = photometry(aps, img)
+
+    # Just store the aperture sum for each frame
+    p.aperture_sum
 end;
 
 # ╔═╡ 96dc5bbe-3284-43a0-8c04-c1bb51ad618b
 df_phot = let
-	# `stack` converts to a Matrix
-	# `:auto` names the columns for us
-	# `copycols` sets whether we want a view or copy of the source matrix 
-	data = stack(aperture_sums; dims=1)
-	data ./ median(data; dims=1)
-	
-	df = DataFrame(data, :auto; copycols=false)
+    # `stack` converts to a Matrix
+    # `:auto` names the columns for us
+    # `copycols` sets whether we want a view or copy of the source matrix
+    data = stack(aperture_sums; dims = 1)
+    data ./ median(data; dims = 1)
 
-	@transform! df begin
-		:x1 = :x1 / median(:x1)
-		:x2 = :x2 / median(:x2)
-	end
-	
-	# Place the observation time in the first column
-	insertcols!(df, 1, :t => df_sci.:"DATE-OBS")
+    df = DataFrame(data, :auto; copycols = false)
+
+    @transform! df begin
+        :x1 = :x1 / median(:x1)
+        :x2 = :x2 / median(:x2)
+    end
+
+    # Place the observation time in the first column
+    insertcols!(df, 1, :t => df_sci.:"DATE-OBS")
 end
 
 # ╔═╡ 6470b357-4dc6-4b2b-9760-93d64bab13e9
 let
-	# Switch to long "tidy" format to use convenient plotting syntax
-	p = plot(stack(df_phot);
-		x = :t,
-		y = :value,
-		color = :variable,
-		mode = :markers,
-	)
+    # Switch to long "tidy" format to use convenient plotting syntax
+    p = plot(
+        stack(df_phot);
+        x = :t,
+        y = :value,
+        color = :variable,
+        mode = :markers,
+    )
 
-	layout = Layout(
-		xaxis = attr(title="Date (UTC)"),
-		yaxis = attr(title="Relative aperture sum"),
-		title = "Raw light curves",
-		legend_title_text = "Source",
-	)
-	
-	relayout!(p, layout)
+    layout = Layout(
+        xaxis = attr(title = "Date (UTC)"),
+        yaxis = attr(title = "Relative aperture sum"),
+        title = "Raw light curves",
+        legend_title_text = "Source",
+    )
 
-	p
+    relayout!(p, layout)
+
+    p
 end
 
 # ╔═╡ 59392770-f59e-4188-a675-89c2f2fc67d9
 let
-	sc = scatter(x=df_phot.t, y=df_phot.x1 ./ df_phot.x2, mode = :markers,)
+    sc = scatter(x = df_phot.t, y = df_phot.x1 ./ df_phot.x2, mode = :markers)
 
-	layout = Layout(
-		xaxis = attr(title="Date (UTC)"),
-		yaxis = attr(title="Relative aperture sum"),
-		title = string("Divided light curve<br>", h["PURPOSE"], " observation: ",  h["DATE-OBS"]),
-		legend_title_text = "Source",
-	)
-	
-	plot(sc, layout)
+    layout = Layout(
+        xaxis = attr(title = "Date (UTC)"),
+        yaxis = attr(title = "Relative aperture sum"),
+        title = string("Divided light curve<br>", h["PURPOSE"], " observation: ", h["DATE-OBS"]),
+        legend_title_text = "Source",
+    )
+
+    plot(sc, layout)
 end
 
 # ╔═╡ e34ceb7c-1584-41ce-a5b5-3532fac3c03d
@@ -452,14 +453,14 @@ We start by [creating an account](https://targettool.aavso.org/init/default/user
 
 # ╔═╡ 14998fe7-8e22-4cd4-87c6-9a5334d218ed
 begin
-	submit_query
-	username = if isfile(".aavso_key")
-		@debug "API key found"
-		readline(".aavso_key")
-	else
-		@debug "Please load your API key using the instructions above."
-		""
-	end
+    submit_query
+    username = if isfile(".aavso_key")
+        @debug "API key found"
+        readline(".aavso_key")
+    else
+        @debug "Please load your API key using the instructions above."
+        ""
+    end
 end;
 
 # ╔═╡ 4a779bd1-bcf3-41e1-af23-ed00d29db46f
@@ -521,22 +522,22 @@ Feel free to uncomment the lat/long fields below to override the default locatio
 
 # ╔═╡ 399f53c5-b654-4330-9ead-4d795917b03b
 df_all = if isempty(username)
-		DataFrame()
-	else
-		api = "targettool.aavso.org/TargetTool/api/v1/targets"
-		url = "https://$(username):api_token@$(api)"
-		query = (
-			# :latitude => 37.76329102360394,
-			# :longitude => -122.41190624779506,
-			:obs_section => "eb",
-			# :observable => true,
-			:orderby => "period",
-		)
-		r = HTTP.get(url; query)
-		
-		# The table under the `target` field of the JSONTable does not
-		# seem to convert nulls to missings, so using the raw string directly instead
-		DataFrame(jsontable(chop(String(r.body); head=12)))
+    DataFrame()
+else
+    api = "targettool.aavso.org/TargetTool/api/v1/targets"
+    url = "https://$(username):api_token@$(api)"
+    query = (
+        # :latitude => 37.76329102360394,
+        # :longitude => -122.41190624779506,
+        :obs_section => "eb",
+        # :observable => true,
+        :orderby => "period",
+    )
+    r = HTTP.get(url; query)
+
+    # The table under the `target` field of the JSONTable does not
+    # seem to convert nulls to missings, so using the raw string directly instead
+    DataFrame(jsontable(chop(String(r.body); head = 12)))
 end
 
 # ╔═╡ a00cbbfc-56ce-413a-a7b8-13de8541fa6f
@@ -562,15 +563,15 @@ Once a target has been found, here's how we might estimate an observing setup fo
 
 # ╔═╡ 9c482134-6336-4e72-9d30-87080ebae671
 @bind target PlutoUI.combine() do Child
-	cm"""
-	!!! tip "Observation inputs"
-		Enter your target's visual magnitude and desired exposure time (in milliseconds) below:
-	
-		
-		|``V_\mathrm{mag}``|``t_\mathrm{exp}``|
-		|------------------|------------------|
-		|$(Child(:v_mag, NumberField(1:0.1:20; default=11.7)))|$(Child(:t_exp, NumberField(100:100:4_000; default=3_200))) (ms)
-	"""
+    cm"""
+    !!! tip "Observation inputs"
+    	Enter your target's visual magnitude and desired exposure time (in milliseconds) below:
+
+    	
+    	|``V_\mathrm{mag}``|``t_\mathrm{exp}``|
+    	|------------------|------------------|
+    	|$(Child(:v_mag, NumberField(1:0.1:20; default=11.7)))|$(Child(:t_exp, NumberField(100:100:4_000; default=3_200))) (ms)
+    """
 end
 
 # ╔═╡ f2c89a20-09d5-47f4-8f83-e59477723d95
@@ -582,15 +583,15 @@ md"""
 """
 
 # ╔═╡ a984c96d-273e-4d6d-bab8-896f14a79103
-TableOfContents(; depth=4)
+TableOfContents(; depth = 4)
 
 # ╔═╡ f290d98e-5a8a-44f2-bee5-b93738abe9af
 # Keep these values untouched
 const baseline = (
-	v_mag = 11.7, # V (mag)
-	t_exp = 3200.0, # Exptime (ms)
-	gain = 25.0, # Gain (dB)
-	peak_px = 3000, # Peak Pixel ADU
+    v_mag = 11.7, # V (mag)
+    t_exp = 3200.0, # Exptime (ms)
+    gain = 25.0, # Gain (dB)
+    peak_px = 3000, # Peak Pixel ADU
 )
 
 # ╔═╡ e7f88515-305b-4899-8fa0-326e9e2097b5
@@ -600,84 +601,88 @@ md"""
 
 # ╔═╡ 46e6bba9-0c83-47b7-be17-f41301efa18e
 function to_hms(ra_deci)
-	hms = round.(deg2hms(ra_deci); digits=2)
-	format_angle(hms; delim=["h ", "m ", "s"])
+    hms = round.(deg2hms(ra_deci); digits = 2)
+    return format_angle(hms; delim = ["h ", "m ", "s"])
 end
 
 # ╔═╡ 77544f9e-6053-4ed6-aa9a-4e7a54ca41d9
 function to_dms(ra_deci)
-	dms = round.(deg2dms(ra_deci); digits=2)
-	format_angle(dms; delim=["° ", "' ", "\""])
+    dms = round.(deg2dms(ra_deci); digits = 2)
+    return format_angle(dms; delim = ["° ", "' ", "\""])
 end
 
 # ╔═╡ 3242f19a-83f7-4db6-b2ea-6ca3403e1039
 function get_url(s)
-	url = @chain s begin
-		split("Ephemeris info ")
-		last
-		split("]]")
-		first
-	end
+    return url = @chain s begin
+        split("Ephemeris info ")
+        last
+        split("]]")
+        first
+    end
 end
 
 # ╔═╡ 1e5596fb-7dca-408b-afbd-6ca2e2487d75
-get_shapes(aps; line_color=:lightgreen) = [
-	circle(ap.x - ap.r/2, ap.x + ap.r/2, ap.y - ap.r/2, ap.y + ap.r/2;
-		line_color,
-	)
-	for ap in aps
+get_shapes(aps; line_color = :lightgreen) = [
+    circle(
+            ap.x - ap.r / 2, ap.x + ap.r / 2, ap.y - ap.r / 2, ap.y + ap.r / 2;
+            line_color,
+        )
+        for ap in aps
 ]
 
 # ╔═╡ 2ea12676-7b5e-444e-8025-5bf9c05d0e2d
 function ephem(url)
-	st = scrape_tables(url)
-	ephem_blob = st[3].rows
-	if length(ephem_blob[2]) != 4
-		error("Expected ephemeris to have Epoch, Start, Mid, and End. Received: ", ephem_blob[2])
-	end
-	ephem_title, ephem_data... = filter(x -> length(x) == 4, ephem_blob)
-	return ephem_title, ephem_data
+    st = scrape_tables(url)
+    ephem_blob = st[3].rows
+    if length(ephem_blob[2]) != 4
+        error("Expected ephemeris to have Epoch, Start, Mid, and End. Received: ", ephem_blob[2])
+    end
+    ephem_title, ephem_data... = filter(x -> length(x) == 4, ephem_blob)
+    return ephem_title, ephem_data
 end
 
 # ╔═╡ d359625e-5a95-49aa-86e4-bc65299dd92a
 function deep_link(;
-	mission = "transit",
-	ra = 0.0,
-	dec = 0.0,
-	c = 4_000,
-	et = 4_000,
-	g = 0.0,
-	d = 0.0,
-	t = 0.0,
-	scitag = "scitag",
-)
-	link = join([
-		"unistellar://science/$(mission)?ra=$(ra)",
-		"dec=$(dec)",
-		"c=$(c)",
-		"et=$(et)",
-		"g=$(g)",
-		"d=$(d)",
-		"t=$(t)",
-		"scitag=$(scitag)",
-	], '&')
+        mission = "transit",
+        ra = 0.0,
+        dec = 0.0,
+        c = 4_000,
+        et = 4_000,
+        g = 0.0,
+        d = 0.0,
+        t = 0.0,
+        scitag = "scitag",
+    )
+    link = join(
+        [
+            "unistellar://science/$(mission)?ra=$(ra)",
+            "dec=$(dec)",
+            "c=$(c)",
+            "et=$(et)",
+            "g=$(g)",
+            "d=$(d)",
+            "t=$(t)",
+            "scitag=$(scitag)",
+        ], '&'
+    )
 
-	Markdown.parse("[link]($(link))")
+    return Markdown.parse("[link]($(link))")
 end
 
 # ╔═╡ 829cde81-be03-4a9f-a853-28f84923d493
 # Make the table view a bit nicer in the browser
-pretty(df) = DataFrames.PrettyTables.pretty_table(HTML, df;
-	maximum_column_width = "max-width",
-	nosubheader = true,
-	alignment = :c,
+pretty(df) = DataFrames.PrettyTables.pretty_table(
+    HTML, df;
+    maximum_column_width = "max-width",
+    nosubheader = true,
+    alignment = :c,
 )
 
 # ╔═╡ 3c601844-3bb9-422c-ab1e-b40f7e7cb0df
 function flux_factor(target, baseline)
-	f_mag = (target.v_mag - baseline.v_mag) / -2.5 |> exp10
-	f_exp = target.t_exp / baseline.t_exp
-	return f_mag * f_exp 
+    f_mag = (target.v_mag - baseline.v_mag) / -2.5 |> exp10
+    f_exp = target.t_exp / baseline.t_exp
+    return f_mag * f_exp
 end
 
 # ╔═╡ f26f890b-5924-497c-85a3-eff924d0470b
@@ -690,63 +695,63 @@ rec_gain(g) = Int(round(g, RoundDown) - 1.0)
 
 # ╔═╡ 6cec1700-f2de-4e80-b26d-b23b5f7f1823
 df_candidates = if isempty(username)
-		DataFrame(star_name = "Sol")
-	else
-		@chain df_all begin
-		dropmissing
-		@rsubset begin
-			:min_mag > 9.0 &&
-			:min_mag - :max_mag ≥ 0.5 &&
-			:min_mag_band == "V" && :max_mag_band == "V" &&
-			:period ≤ 3.0 &&
-			startswith(:other_info, "[[Ephemeris")
-		end
-		
-		@rtransform :ephem_url = get_url(:other_info)
-		
-		@rtransform begin
-			:star_name
-			:period = round(Minute, :period * u"d") |> canonicalize
-			:ra = to_hms(:ra)
-			:ra_deci = :ra
-			:dec = to_dms(:dec)
-			:dec_deci = :dec
-			:min_mag
-			# :min_mag_band
-			:max_mag
-			:V_mag = (:min_mag + :max_mag) / 2.0
-			# :max_mag_band
-			# :var_type
-			# :min_mag
-			# :max_mag
-			:ephem_link = Markdown.parse("[link]($(:ephem_url))")
-			:ephem_url
-			# :unix_timestamp = (last ∘ first)(:observability_times)
-		end
-		@rtransform begin
-			:gain = let
-				target = (v_mag=:V_mag, t_exp=4_000) # Default to max exp
-				f_factor = flux_factor(target, baseline) 
-				gain_max = max_gain(baseline, f_factor)
-				rec_gain(gain_max)
-			end
-		end
-	
-		sort(:period)
-	
-		@select begin
-			:star_name
-			:period
-			:ra
-			:ra_deci
-			:dec
-			:dec_deci
-			:V_mag
-			:gain
-			:ephem_link
-			:ephem_url
-		end
-	end
+    DataFrame(star_name = "Sol")
+else
+    @chain df_all begin
+        dropmissing
+        @rsubset begin
+            :min_mag > 9.0 &&
+                :min_mag - :max_mag ≥ 0.5 &&
+                :min_mag_band == "V" && :max_mag_band == "V" &&
+                :period ≤ 3.0 &&
+                startswith(:other_info, "[[Ephemeris")
+        end
+
+        @rtransform :ephem_url = get_url(:other_info)
+
+        @rtransform begin
+            :star_name
+            :period = round(Minute, :period * u"d") |> canonicalize
+            :ra = to_hms(:ra)
+            :ra_deci = :ra
+            :dec = to_dms(:dec)
+            :dec_deci = :dec
+            :min_mag
+            # :min_mag_band
+            :max_mag
+            :V_mag = (:min_mag + :max_mag) / 2.0
+            # :max_mag_band
+            # :var_type
+            # :min_mag
+            # :max_mag
+            :ephem_link = Markdown.parse("[link]($(:ephem_url))")
+            :ephem_url
+            # :unix_timestamp = (last ∘ first)(:observability_times)
+        end
+        @rtransform begin
+            :gain = let
+                target = (v_mag = :V_mag, t_exp = 4_000) # Default to max exp
+                f_factor = flux_factor(target, baseline)
+                gain_max = max_gain(baseline, f_factor)
+                rec_gain(gain_max)
+            end
+        end
+
+        sort(:period)
+
+        @select begin
+            :star_name
+            :period
+            :ra
+            :ra_deci
+            :dec
+            :dec_deci
+            :V_mag
+            :gain
+            :ephem_link
+            :ephem_url
+        end
+    end
 end
 
 # ╔═╡ 95f9803a-86df-4517-adc8-0bcbb0ff6fbc
@@ -765,65 +770,67 @@ df_selected = @rsubset df_candidates :star_name == star_name
 
 # ╔═╡ 8a39fbbb-6b5b-4744-a875-469c289242fb
 df_ephem = if isempty(username)
-		DataFrame()
-	else
-		ephem_title, ephem_data = ephem(only(df_selected.ephem_url))
-		df = DataFrame(
-			stack(ephem_data; dims=1),
-			ephem_title,
-		)
-	
-		fmt = dateformat"dd u YYYY HH:MM"
-		@chain df begin
-			@rtransform begin
-				# :Epoch = parse(Float64, :Epoch)
-				:star_name = only(df_selected.star_name)
-				:Start = DateTime(:Start, fmt)
-				:Mid = DateTime(:Mid, fmt)
-				:End = DateTime(:End, fmt)
-				
-			end
-			
-			@rtransform begin
-				:Duration = canonicalize(:End - :Start)
-				:Duration_s = Second(:End - :Start).value
-				:unix_timestamp_ms = 1_000 * datetime2unix(:Mid)
-			end
-		end
+    DataFrame()
+else
+    ephem_title, ephem_data = ephem(only(df_selected.ephem_url))
+    df = DataFrame(
+        stack(ephem_data; dims = 1),
+        ephem_title,
+    )
+
+    fmt = dateformat"dd u YYYY HH:MM"
+    @chain df begin
+        @rtransform begin
+            # :Epoch = parse(Float64, :Epoch)
+            :star_name = only(df_selected.star_name)
+            :Start = DateTime(:Start, fmt)
+            :Mid = DateTime(:Mid, fmt)
+            :End = DateTime(:End, fmt)
+
+        end
+
+        @rtransform begin
+            :Duration = canonicalize(:End - :Start)
+            :Duration_s = Second(:End - :Start).value
+            :unix_timestamp_ms = 1_000 * datetime2unix(:Mid)
+        end
+    end
 end
 
 # ╔═╡ 31c23e2b-1a2d-41aa-81c1-22868e241f7e
 df_obs = if isempty(username)
-		DataFrame()
-	else 
-		@rselect leftjoin(df_selected, df_ephem; on=:star_name) begin
-			:star_name
-			:Start
-			:Mid
-			:End
-			:Duration
-			:deep_link = deep_link(;
-				ra = :ra_deci,
-				dec = :dec_deci,
-				g = :gain,
-				d = round(Int, 1.5 * :Duration_s),
-				t = round(Int, :unix_timestamp_ms),
-				scitag = join([
-					"e",
-					Dates.format(:Mid, dateformat"yymmdd"),
-					replace(:star_name, " " => ""),
-				]),
-			)
-		end
+    DataFrame()
+else
+    @rselect leftjoin(df_selected, df_ephem; on = :star_name) begin
+        :star_name
+        :Start
+        :Mid
+        :End
+        :Duration
+        :deep_link = deep_link(;
+            ra = :ra_deci,
+            dec = :dec_deci,
+            g = :gain,
+            d = round(Int, 1.5 * :Duration_s),
+            t = round(Int, :unix_timestamp_ms),
+            scitag = join(
+                [
+                    "e",
+                    Dates.format(:Mid, dateformat"yymmdd"),
+                    replace(:star_name, " " => ""),
+                ]
+            ),
+        )
+    end
 end
 
 # ╔═╡ 90b6ef16-7853-46e1-bbd6-cd1a904c442a
 let
-	f_factor = flux_factor(target, baseline)
-	gain_max = max_gain(baseline, f_factor)
-	gain_recommended = rec_gain(gain_max)
+    f_factor = flux_factor(target, baseline)
+    gain_max = max_gain(baseline, f_factor)
+    gain_recommended = rec_gain(gain_max)
 
-	@debug "Observing params" gain_max gain_recommended
+    @debug "Observing params" gain_max gain_recommended
 end
 
 # ╔═╡ 21e828e5-00e4-40ce-bff5-60a17439bf44
@@ -831,67 +838,68 @@ end
 r2(img) = (restrict ∘ restrict)(img)
 
 # ╔═╡ e35d4be7-366d-4ca5-a89a-5de24e4c6677
-function htrace(img;
-	zmin = 2_400,
-	zmax = 3_200,
-	title = "ADU",
-	restrict = true,
-)
-	if restrict
-		img_small = r2(img)
-	else
-		img_small = img
-	end
+function htrace(
+        img;
+        zmin = 2_400,
+        zmax = 3_200,
+        title = "ADU",
+        restrict = true,
+    )
+    if restrict
+        img_small = r2(img)
+    else
+        img_small = img
+    end
 
-	img_small = permutedims(img_small)
-		
-	heatmap(;
-		x = img_small.dims[1].val,
-		y = img_small.dims[2].val,
-		z = img_small.data,
-		zmin,
-		zmax,
-		colorbar = attr(; title),
-		colorscale = :Cividis,
-	)
+    img_small = permutedims(img_small)
+
+    return heatmap(;
+        x = img_small.dims[1].val,
+        y = img_small.dims[2].val,
+        z = img_small.data,
+        zmin,
+        zmax,
+        colorbar = attr(; title),
+        colorscale = :Cividis,
+    )
 end
 
 # ╔═╡ a3bcad72-0e6c-43f8-a08d-777a154190d8
-function circ(ap; line_color=:lightgreen)
-	circle(
-		ap.x - ap.r, # x_min
-		ap.x + ap.r, # x_max
-		ap.y - ap.r, # y_min
-		ap.y + ap.r; # y_max
-		line_color,
-	)
+function circ(ap; line_color = :lightgreen)
+    return circle(
+        ap.x - ap.r, # x_min
+        ap.x + ap.r, # x_max
+        ap.y - ap.r, # y_min
+        ap.y + ap.r; # y_max
+        line_color,
+    )
 end
 
 # ╔═╡ 2e59cc0d-e477-4826-b8b6-d2d68c8592a9
 # Convert to plotly objects for plotting
 shapes = [
-	circ(ap_target),
-	circ(ap_comp1; line_color=:orange),
-	# circ(ap_comp2; line_color=:orange),
+    circ(ap_target),
+    circ(ap_comp1; line_color = :orange),
+    # circ(ap_comp2; line_color=:orange),
 ];
 
 # ╔═╡ 8da80446-84d7-44bb-8122-874b4c9514f4
 timestamp(img) = header(img)["DATE-OBS"]
 
 # ╔═╡ 24256769-2274-4b78-8445-88ec4536c407
-function plot_img(i, img; zmin=2400, zmax=3200, restrict=true)
-	hm = htrace(img; zmin, zmax, restrict)
-	
-	l = Layout(;
-		#width,
-		#height,
-		title = string("Frame $(i): ", timestamp(img)),
-		xaxis = attr(title="X", constrain=:domain),
-		yaxis = attr(title="Y", scaleanchor=:x, constrain=:domain),
-		uirevision = 1,
-	)
+function plot_img(i, img; zmin = 2400, zmax = 3200, restrict = true)
+    hm = htrace(img; zmin, zmax, restrict)
 
-	plot(hm, l)
+    l = Layout(;
+        #width,
+        #height,
+        title = string("Frame $(i): ", timestamp(img)),
+        xaxis = attr(title = "X", constrain = :domain),
+        yaxis = attr(title = "Y", scaleanchor = :x, constrain = :domain),
+        uirevision = 1,
+    )
+
+    return plot(hm, l)
 end
 
 # ╔═╡ f41df561-85ff-484b-8188-883c1fea21c9
@@ -900,81 +908,82 @@ function plot_anim(imgs)
     zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs))
 
     frames = map(1:N) do i
-		p = plot_img(i, imgs[i]; zmin, zmax)
-		
-		frame(;
-			data = collect(p.data),
-			name = "frame_$(i)",
-			layout = attr(title_text = p.layout.title),
-			traces = [0],
-		)
-	end
+        p = plot_img(i, imgs[i]; zmin, zmax)
+
+        frame(;
+            data = collect(p.data),
+            name = "frame_$(i)",
+            layout = attr(title_text = p.layout.title),
+            traces = [0],
+        )
+    end
 
     layout = Layout(;
-		title = first(frames).layout.title,
-		shapes,
+        title = first(frames).layout.title,
+        shapes,
         width = 500,
-		height = 500,
-		margin_b = 90,
+        height = 500,
+        margin_b = 90,
         updatemenus = [
-			attr(
-            	type = "buttons",
-				direction = "left",
-				x = 0.5,
-				y = 0,
-				xanchor = "center",
-				yanchor = "top",
-            	pad_t = 90,
-	            buttons = [
-	                attr(
-						label = "▶ Play",
-						method = "animate",
-	                    args = [
-							nothing,
-							attr(
-								fromcurrent = true,
-								transition_duration = 0,
-								frame = attr(duration = 200, redraw = true)
-							),
-						],
-					),
-	                attr(
-						label = "⏸ Pause",
-						method = "animate",
-	                    args = [
-							[nothing],
-							attr(
-								mode = "immediate",
-	                         	frame = attr(duration = 0, redraw = true)
-							),
-						],
-					),
-	            ],
-        	),
-		],
+            attr(
+                type = "buttons",
+                direction = "left",
+                x = 0.5,
+                y = 0,
+                xanchor = "center",
+                yanchor = "top",
+                pad_t = 90,
+                buttons = [
+                    attr(
+                        label = "▶ Play",
+                        method = "animate",
+                        args = [
+                            nothing,
+                            attr(
+                                fromcurrent = true,
+                                transition_duration = 0,
+                                frame = attr(duration = 200, redraw = true)
+                            ),
+                        ],
+                    ),
+                    attr(
+                        label = "⏸ Pause",
+                        method = "animate",
+                        args = [
+                            [nothing],
+                            attr(
+                                mode = "immediate",
+                                frame = attr(duration = 0, redraw = true)
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
         sliders = [
-			attr(
-				active = 0,
-				pad_t = 10,
-	            steps = [
-	                attr(
-						method = "animate",
-						label = "$(i)",
-	                    args = [
-							["frame_$(i)"],
-							attr(
-								mode = "immediate",
-								transition_duration = 0,
-								frame = attr(duration = 5, redraw = true))
-						],
-					)
-	                for i in 1:N
-	            ],
-        	),
-		],
+            attr(
+                active = 0,
+                pad_t = 10,
+                steps = [
+                    attr(
+                            method = "animate",
+                            label = "$(i)",
+                            args = [
+                                ["frame_$(i)"],
+                                attr(
+                                    mode = "immediate",
+                                    transition_duration = 0,
+                                    frame = attr(duration = 5, redraw = true)
+                                ),
+                            ],
+                        )
+                        for i in 1:N
+                ],
+            ),
+        ],
     )
 
-    plot(first(frames).data, layout, frames)
+    return plot(first(frames).data, layout, frames)
 end
 
 # ╔═╡ 86e53a41-ab0d-4d9f-8a80-855949847ba2

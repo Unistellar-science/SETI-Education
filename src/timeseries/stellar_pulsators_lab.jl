@@ -142,16 +142,18 @@ function ltt_corrected(t, ra, dec; kind = :heliocentric)
     gcra, gcdec = SOFA.atciq(deg2rad(ra), deg2rad(dec), 0.0, 0.0, 0.0, 0.0, astrom)
 
     # Light travel time delay
-	r⃗ = if kind == :heliocentric
-		astrom.em * astrom.eh # Earth -- Sun vec, AU
-	elseif kind == :barycentric
-		astrom.eb # Earth -- SS barycenter vec, AU
-	else
-		throw(ArgumentError(
-			"kind must be :heliocentric or :barycentric, got :$(kind)"
-		))
-	end
-	n̂ = SOFA.s2c(gcra, gcdec) # Earth -- source unit vec
+    r⃗ = if kind == :heliocentric
+        astrom.em * astrom.eh # Earth -- Sun vec, AU
+    elseif kind == :barycentric
+        astrom.eb # Earth -- SS barycenter vec, AU
+    else
+        throw(
+            ArgumentError(
+                "kind must be :heliocentric or :barycentric, got :$(kind)"
+            )
+        )
+    end
+    n̂ = SOFA.s2c(gcra, gcdec) # Earth -- source unit vec
     c = SOFA.LIGHTSPEED / SOFA.AU * SOFA.SECPERDAY # AU/day
     Δt = r⃗ ⋅ n̂ / c
 
@@ -204,9 +206,9 @@ There is a periodical term in the elements: -0.00573d cos 2pi (EP0/P1 + 0.007); 
 
 # ╔═╡ bfbdbf32-a430-4fad-bd1e-8092f2a0ec9e
 ephem_correction = let
-	P0 = 0.120534920 # Pulsation period [days]
-	P1 = 1150 # Binary period [days]
-    -0.00573 * cos(2π * (N_obs * P0/P1 + 0.007)) * days
+    P0 = 0.12053492 # Pulsation period [days]
+    P1 = 1150 # Binary period [days]
+    -0.00573 * cos(2π * (N_obs * P0 / P1 + 0.007)) * days
 end
 
 # ╔═╡ 629ea555-8904-48af-a9a9-dbb08dcbac75
@@ -250,8 +252,8 @@ TableOfContents()
 # ╔═╡ 9d020761-d37c-4e0e-a8eb-9ed6ba2d9bc5
 # Maybe upstream this
 function Dates.canonicalize(dt::AstroTime.AstroPeriod)
-	ms = (value ∘ seconds)(dt) * 1_000
-	round(Int, ms) |> Millisecond |> canonicalize
+    ms = (value ∘ seconds)(dt) * 1_000
+    return round(Int, ms) |> Millisecond |> canonicalize
 end
 
 # ╔═╡ 637ca1ca-e71e-41d2-b326-1cb0a46994f6

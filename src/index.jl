@@ -65,25 +65,25 @@ md"""
 
 # ╔═╡ 56a4ef63-9e22-47e0-b6b1-3ac0f8dd426e
 let
-	msg_adding_colors = md"""
-	##### Adding colors in Julia 🎨
-	This makes magenta!
-	
-	```julia
-	using Colors
-	
-	RGB(1, 0, 0) + RGB(0, 0, 1)
-	```
-	
-	$(RGB(1, 0, 0) + RGB(0, 0, 1))
-	"""
-	
-md"""
-!!! tip "Diving deeper"
-	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
+    msg_adding_colors = md"""
+    ##### Adding colors in Julia 🎨
+    This makes magenta!
 
-	$(details("Details", msg_adding_colors))
-"""
+    ```julia
+    using Colors
+
+    RGB(1, 0, 0) + RGB(0, 0, 1)
+    ```
+
+    $(RGB(1, 0, 0) + RGB(0, 0, 1))
+    """
+
+    md"""
+    !!! tip "Diving deeper"
+    	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
+
+    	$(details("Details", msg_adding_colors))
+    """
 end
 
 # ╔═╡ ba35b210-eb78-44c7-bb3c-c27beb382f5d
