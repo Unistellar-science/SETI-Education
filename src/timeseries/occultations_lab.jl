@@ -26,34 +26,34 @@ end
 
 # ╔═╡ 40272038-3af6-11ef-148a-8be0002c4bda
 begin
-	# Notebook UI
-	using PlutoUI, CommonMark
-	
-	# Data wrangling
-	using CCDReduction, DataDeps, DataFramesMeta
+    # Notebook UI
+    using PlutoUI, CommonMark
 
-	# Visualization and analysis
-	using AstroImages, PlutoPlotly, Photometry, ImageCore, ImageFiltering, Statistics
-	using AstroImages: restrict
-	using Astroalign
-	using Dates, Unitful, UnitfulAstro, Measurements
+    # Data wrangling
+    using CCDReduction, DataDeps, DataFramesMeta
 
-	AstroImages.set_cmap!(:cividis)
+    # Visualization and analysis
+    using AstroImages, PlutoPlotly, Photometry, ImageCore, ImageFiltering, Statistics
+    using AstroImages: restrict
+    using Astroalign
+    using Dates, Unitful, UnitfulAstro, Measurements
 
-	# Use DataDeps.jl for dataset management
-	# Auto-download data to current directory by default
-	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
-	ENV["DATADEPS_LOAD_PATH"] = @__DIR__
-	DataDep(
-		"data",
-		"""
-		UCAN Data Files
-		Website: https://www.seti.org/education/ucan/unistellar-education-materials/
-		""",
-		["https://www.dropbox.com/scl/fo/go5ensqkpuumkhimuzy2p/ANQJTr6oGTsyz1y0hLbPHIc?rlkey=bqcvalmv9mxptpp5duirj1auv&st=u59r839k&dl=1"],
-		["9ad9e40401024482672a79dcb59da2a11d4ec4ebd4d185b35abb79eb9adef334"],
-		post_fetch_method = unpack,
-	) |> register
+    AstroImages.set_cmap!(:cividis)
+
+    # Use DataDeps.jl for dataset management
+    # Auto-download data to current directory by default
+    ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
+    ENV["DATADEPS_LOAD_PATH"] = @__DIR__
+    DataDep(
+        "data",
+        """
+        UCAN Data Files
+        Website: https://www.seti.org/education/ucan/unistellar-education-materials/
+        """,
+        ["https://www.dropbox.com/scl/fo/go5ensqkpuumkhimuzy2p/ANQJTr6oGTsyz1y0hLbPHIc?rlkey=bqcvalmv9mxptpp5duirj1auv&st=u59r839k&dl=1"],
+        ["9ad9e40401024482672a79dcb59da2a11d4ec4ebd4d185b35abb79eb9adef334"],
+        post_fetch_method = unpack,
+    ) |> register
 end;
 
 # ╔═╡ d7f0393d-e2fa-44ea-a812-8f85820e661e
@@ -90,8 +90,8 @@ const DATA_DIR = datadep"data";
 
 # ╔═╡ a1bd9062-65e3-494e-b3b9-aff1f4a0a1f2
 df_sci = let
-	df = fitscollection("data/"; abspath=false)
-	@transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
+    df = fitscollection("data/"; abspath = false)
+    @transform! df :"DATE-OBS" = DateTime.(:"DATE-OBS")
 end; # Semicolon hides automatic output
 
 # ╔═╡ ac3a9384-1b18-47ee-b6f3-e7fb4b7a0594
@@ -124,12 +124,12 @@ That's pretty quick! Let's see how each image frame looks (note that in the onli
 
 # ╔═╡ 6daddc3d-9e14-4e90-9515-00f25f56e3c9
 imgs_sci = map(eachrow(df_sci)) do f
-	img = load(f.path)
-	# mapwindow!(median!, similar(img), img, (3, 3)) # Good for catching hot pixels
+    img = load(f.path)
+    # mapwindow!(median!, similar(img), img, (3, 3)) # Good for catching hot pixels
 end;
 
 # ╔═╡ 355eb355-7db5-4df0-a5ee-9cbc599e1d6b
-@bind frame_i Slider(1:length(imgs_sci); show_value=true)
+@bind frame_i Slider(1:length(imgs_sci); show_value = true)
 
 # ╔═╡ c7c9966e-d1f7-4a29-a53c-662794d06d74
 md"""
@@ -170,7 +170,7 @@ With these aligned images, we can now pop some static apertures onto our frames 
 """
 
 # ╔═╡ 0bbb5bca-4fab-41f1-89ee-369f3dafff60
-@bind frame_i_aligned Slider(1:length(imgs_sci_aligned); show_value=true)
+@bind frame_i_aligned Slider(1:length(imgs_sci_aligned); show_value = true)
 
 # ╔═╡ fc8c9cd5-166a-42f5-ac2c-7bcd259a772a
 df_sci
@@ -201,15 +201,15 @@ We defined our apertures with the [Photometry.jl](http://juliaastro.org/dev/modu
 
 # ╔═╡ d36ff8f2-8c11-4cec-a467-d97e19725268
 df_phot = let
-	# Run photometry
-	phot = map(imgs_sci_aligned) do img
-		photometry([ap_target, ap_comp1], img).aperture_sum
-	end
+    # Run photometry
+    phot = map(imgs_sci_aligned) do img
+        photometry([ap_target, ap_comp1], img).aperture_sum
+    end
 
-	# Create table
-	df = DataFrame(stack(phot; dims=1), :auto)
-	insertcols!(df, 1, :t => df_sci."DATE-OBS")
-	@transform! df :xdiv = :x1 ./ :x2
+    # Create table
+    df = DataFrame(stack(phot; dims = 1), :auto)
+    insertcols!(df, 1, :t => df_sci."DATE-OBS")
+    @transform! df :xdiv = :x1 ./ :x2
 end
 
 # ╔═╡ 93517d36-21b1-4fd8-bde9-c504681a6644
@@ -225,13 +225,13 @@ Below is the resulting light curve for our target. The occultation signal is qui
 
 # ╔═╡ ca358bdb-83fd-4a7e-91b8-4e1a5d1d27ad
 let
-	sc = scatter(df_phot; x=:t, y=:xdiv, mode=:markers)
-	l = Layout(;
-		xaxis = attr(title="Time (UTC)"),
-		yaxis = attr(title="Counts"),
-		title = "Divided light curve",
-	)
-	plot(sc, l)
+    sc = scatter(df_phot; x = :t, y = :xdiv, mode = :markers)
+    l = Layout(;
+        xaxis = attr(title = "Time (UTC)"),
+        yaxis = attr(title = "Counts"),
+        title = "Divided light curve",
+    )
+    plot(sc, l)
 end
 
 # ╔═╡ 041fd375-92a5-4204-bfdc-5409a04ba141
@@ -266,7 +266,7 @@ d_\mathrm{asteroid} &= v_\mathrm{asteroid}\Delta t \\
 
 # ╔═╡ afbe8ecd-6e20-478c-96c7-603db59959c7
 # Estimated from graph
-Δt = (5 ± 0.5)u"s" 
+Δt = (5 ± 0.5)u"s"
 
 # ╔═╡ 66bb240c-65a3-486f-8435-2841d2b9cc6a
 v = √(GMsun / r) |> u"km/s"
@@ -333,7 +333,7 @@ const zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs_sci))
 timestamp(img) = header(img)["DATE-OBS"]
 
 # ╔═╡ fc17ef61-5747-4a35-8ae7-2d7c3ba6b075
-msg(x; title="Details") = details(title, x)
+msg(x; title = "Details") = details(title, x)
 
 # ╔═╡ 7654e284-65ac-4a12-afdb-ca318aa9fda9
 md"""
@@ -363,86 +363,87 @@ r2(img) = (restrict ∘ restrict)(img)
 
 # ╔═╡ 7289692b-1a85-4a84-b7cc-fea1e46c9f31
 # Plotly heatmap trace of img
-function htrace(img;
-	zmin = zmin,
-	zmax = zmax,
-	title = "ADU",
-	restrict = true,
-)
-	# Reduce image, creates an offset array with different axis limits
-	img = AstroImage(img)
-	if restrict
-		img_small = r2(img)
-	else
-		img_small = img
-	end
-		
-	# Account for plotly orientation convention
-	img_small = permutedims(img_small)
-	
-	# dims is used here to convert back from an offset array
-	# to a simple array that JS can ingest
-	heatmap(;
-		x = img_small.dims[1].val,
-		y = img_small.dims[2].val,
-		z = Matrix{Float32}(img_small.data),
-		zmin,
-		zmax,
-		colorbar = attr(; title),
-		colorscale = :Cividis,
-	)
+function htrace(
+        img;
+        zmin = zmin,
+        zmax = zmax,
+        title = "ADU",
+        restrict = true,
+    )
+    # Reduce image, creates an offset array with different axis limits
+    img = AstroImage(img)
+    if restrict
+        img_small = r2(img)
+    else
+        img_small = img
+    end
+
+    # Account for plotly orientation convention
+    img_small = permutedims(img_small)
+
+    # dims is used here to convert back from an offset array
+    # to a simple array that JS can ingest
+    return heatmap(;
+        x = img_small.dims[1].val,
+        y = img_small.dims[2].val,
+        z = Matrix{Float32}(img_small.data),
+        zmin,
+        zmax,
+        colorbar = attr(; title),
+        colorscale = :Cividis,
+    )
 end
 
 # ╔═╡ 2ba90b91-5de2-44a2-954f-a73b1561e762
 # Combines plotly trace and layout into a plot object
-function plot_img(i, img; restrict=true)
-	hm = htrace(img; restrict)
-	
-	width, height = size(img)
+function plot_img(i, img; restrict = true)
+    hm = htrace(img; restrict)
 
-	if restrict
-		width /= 2
-		height /= 2
-	else
-		width *= 2
-		height *= 2
-	end
-	
-	l = Layout(;
-		width,
-		height,
-		title = string("Frame $(i): ", timestamp(img)),
-		xaxis = attr(title="X", constrain=:domain),
-		yaxis = attr(title="Y", scaleanchor=:x, constrain=:domain),
-		uirevision = 1,
-	)
+    width, height = size(img)
 
-	plot(hm, l)
+    if restrict
+        width /= 2
+        height /= 2
+    else
+        width *= 2
+        height *= 2
+    end
+
+    l = Layout(;
+        width,
+        height,
+        title = string("Frame $(i): ", timestamp(img)),
+        xaxis = attr(title = "X", constrain = :domain),
+        yaxis = attr(title = "Y", scaleanchor = :x, constrain = :domain),
+        uirevision = 1,
+    )
+
+    return plot(hm, l)
 end
 
 # ╔═╡ b49df71d-c470-466e-b845-8a004a3c6cd3
 let
-	p = plot_img(frame_i, imgs_sci[frame_i])
+    p = plot_img(frame_i, imgs_sci[frame_i])
 end
 
 # ╔═╡ 84745bd9-c2b1-45c3-8376-7f18d600e7eb
 # Julia photometry aperture object --> plotly shape object
-function circ(ap; line_color=:lightgreen)
-	circle(
-		ap.x - ap.r, # x_min
-		ap.x + ap.r, # x_max
-		ap.y - ap.r, # y_min
-		ap.y + ap.r; # y_max
-		line_color,
-	)
+function circ(ap; line_color = :lightgreen)
+    return circle(
+        ap.x - ap.r, # x_min
+        ap.x + ap.r, # x_max
+        ap.y - ap.r, # y_min
+        ap.y + ap.r; # y_max
+        line_color,
+    )
 end
 
 # ╔═╡ 3f243bc0-c223-475b-a05c-b89d431628d2
 let
-	p = plot_img(frame_i_aligned, imgs_sci_aligned[frame_i_aligned])
-	shapes = [circ(ap_target), circ(ap_comp1; line_color=:orange)]
-	relayout!(p; shapes)
-	p
+    p = plot_img(frame_i_aligned, imgs_sci_aligned[frame_i_aligned])
+    shapes = [circ(ap_target), circ(ap_comp1; line_color = :orange)]
+    relayout!(p; shapes)
+    p
 end
 
 # ╔═╡ 649ebb55-5952-457a-97c4-128893d66b73
@@ -451,81 +452,82 @@ function plot_anim(imgs)
     zmin, zmax = AstroImages.PlotUtils.zscale(first(imgs))
 
     frames = map(1:N) do i
-		p = plot_img(i, imgs[i]; zmin, zmax)
-		
-		frame(;
-			data = collect(p.data),
-			name = "frame_$(i)",
-			layout = attr(title_text = p.layout.title),
-			traces = [0],
-		)
-	end
+        p = plot_img(i, imgs[i]; zmin, zmax)
+
+        frame(;
+            data = collect(p.data),
+            name = "frame_$(i)",
+            layout = attr(title_text = p.layout.title),
+            traces = [0],
+        )
+    end
 
     layout = Layout(;
-		title = first(frames).layout.title,
-		shapes,
+        title = first(frames).layout.title,
+        shapes,
         width = 500,
-		height = 500,
-		margin_b = 90,
+        height = 500,
+        margin_b = 90,
         updatemenus = [
-			attr(
-            	type = "buttons",
-				direction = "left",
-				x = 0.5,
-				y = 0,
-				xanchor = "center",
-				yanchor = "top",
-            	pad_t = 90,
-	            buttons = [
-	                attr(
-						label = "▶ Play",
-						method = "animate",
-	                    args = [
-							nothing,
-							attr(
-								fromcurrent = true,
-								transition_duration = 0,
-								frame = attr(duration = 200, redraw = true)
-							),
-						],
-					),
-	                attr(
-						label = "⏸ Pause",
-						method = "animate",
-	                    args = [
-							[nothing],
-							attr(
-								mode = "immediate",
-	                         	frame = attr(duration = 0, redraw = true)
-							),
-						],
-					),
-	            ],
-        	),
-		],
+            attr(
+                type = "buttons",
+                direction = "left",
+                x = 0.5,
+                y = 0,
+                xanchor = "center",
+                yanchor = "top",
+                pad_t = 90,
+                buttons = [
+                    attr(
+                        label = "▶ Play",
+                        method = "animate",
+                        args = [
+                            nothing,
+                            attr(
+                                fromcurrent = true,
+                                transition_duration = 0,
+                                frame = attr(duration = 200, redraw = true)
+                            ),
+                        ],
+                    ),
+                    attr(
+                        label = "⏸ Pause",
+                        method = "animate",
+                        args = [
+                            [nothing],
+                            attr(
+                                mode = "immediate",
+                                frame = attr(duration = 0, redraw = true)
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
         sliders = [
-			attr(
-				active = 0,
-				pad_t = 10,
-	            steps = [
-	                attr(
-						method = "animate",
-						label = "$(i)",
-	                    args = [
-							["frame_$(i)"],
-							attr(
-								mode = "immediate",
-								transition_duration = 0,
-								frame = attr(duration = 5, redraw = true))
-						],
-					)
-	                for i in 1:N
-	            ],
-        	),
-		],
+            attr(
+                active = 0,
+                pad_t = 10,
+                steps = [
+                    attr(
+                            method = "animate",
+                            label = "$(i)",
+                            args = [
+                                ["frame_$(i)"],
+                                attr(
+                                    mode = "immediate",
+                                    transition_duration = 0,
+                                    frame = attr(duration = 5, redraw = true)
+                                ),
+                            ],
+                        )
+                        for i in 1:N
+                ],
+            ),
+        ],
     )
 
-    plot(first(frames).data, layout, frames)
+    return plot(first(frames).data, layout, frames)
 end
 
 # ╔═╡ 5997416a-266e-48d8-87ca-80fec3fe0e0a

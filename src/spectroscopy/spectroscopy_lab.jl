@@ -26,12 +26,12 @@ end
 
 # ╔═╡ e46b678e-0448-4e31-a465-0a82c7380ab8
 begin
-# Web
-using JSON, PlutoUI
-using Downloads: download
+    # Web
+    using JSON, PlutoUI
+    using Downloads: download
 
-# Visualization
-using Images, AstroImages, PlutoPlotly
+    # Visualization
+    using Images, AstroImages, PlutoPlotly
 end
 
 # ╔═╡ bdf98bfb-ad09-4c02-9ef5-c02552b70ad5
@@ -70,36 +70,38 @@ $(AstroImages.RGB(1, 0, 0) + AstroImages.RGB(0, 0, 1))
 """; md"---"
 
 # ╔═╡ 7e3421b2-1c61-45bb-99d8-222d48036900
-details("Using this notebook 🌱", md"""
-!!! note "First time running"
-	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
-	
-	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
+details(
+    "Using this notebook 🌱", md"""
+    !!! note "First time running"
+    	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
+    	
+    	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
 
-!!! tip "Advanced: bring your own editor"
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
+    !!! tip "Advanced: bring your own editor"
+    	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
 
-	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
+    	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
 
-	```julia-repl
-	julia> using Pluto
-	
-	julia> Pluto.run(auto_reload_from_file=true)
-	
-	# This will be on by default in an upcoming release =]
-	```
+    	```julia-repl
+    	julia> using Pluto
+    	
+    	julia> Pluto.run(auto_reload_from_file=true)
+    	
+    	# This will be on by default in an upcoming release =]
+    	```
 
-	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
+    	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
 
 
-!!! warning "Diving deeper"
-	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
+    !!! warning "Diving deeper"
+    	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
 
-$(details("Details", msg_adding_colors))
+    $(details("Details", msg_adding_colors))
 
-!!! warning " "
-	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
-""")
+    !!! warning " "
+    	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
+    """
+)
 
 # ╔═╡ 127ca8df-46c7-4d02-8f9b-e27983978441
 md"""
@@ -400,10 +402,10 @@ TableOfContents()
 
 # ╔═╡ 4c6a8538-2124-44f0-9891-4a3e1472ea4e
 function img_info(img)
-	nrows, ncols = size(img)
-	eltype_img = eltype(img)
-	@debug "Image info" nrows ncols eltype_img
-	return nrows, ncols, eltype_img
+    nrows, ncols = size(img)
+    eltype_img = eltype(img)
+    @debug "Image info" nrows ncols eltype_img
+    return nrows, ncols, eltype_img
 end
 
 # ╔═╡ e1ae334d-548b-4259-af7c-e13b773f7b3e
@@ -519,22 +521,22 @@ md"""
 
 # ╔═╡ 75108863-4a62-4751-aeee-246250fbf8b8
 function get_lims(arr, limits)
-	# Guard against @bind run non-interactively (e.g., html export)
-	ismissing(limits) && return (1:size(arr, 2), 1:size(arr, 1))
-	ymax, xmax = size(arr)
-	xlims = limits["xaxis"] .|> (x -> round(Int, x))
-	xlo, xhi = xlims
-	xlo = max(1, xlo)
-	xhi = min(xhi, xmax)
-	
-	ylims = limits["yaxis"] .|> (x -> round(Int, x))
-	yhi, ylo = ylims # Assuming heatmap y-axis reversed
-	ylo = max(1, ylo)
-	yhi = min(yhi, ymax)
+    # Guard against @bind run non-interactively (e.g., html export)
+    ismissing(limits) && return (1:size(arr, 2), 1:size(arr, 1))
+    ymax, xmax = size(arr)
+    xlims = limits["xaxis"] .|> (x -> round(Int, x))
+    xlo, xhi = xlims
+    xlo = max(1, xlo)
+    xhi = min(xhi, xmax)
 
-	# @debug :vals xlo xhi ylo yhi
+    ylims = limits["yaxis"] .|> (x -> round(Int, x))
+    yhi, ylo = ylims # Assuming heatmap y-axis reversed
+    ylo = max(1, ylo)
+    yhi = min(yhi, ymax)
 
-	return xlo:xhi, ylo:yhi
+    # @debug :vals xlo xhi ylo yhi
+
+    return xlo:xhi, ylo:yhi
 end
 
 # ╔═╡ b4f43581-09e8-45f8-bdc1-766dd88bdfc3
@@ -544,9 +546,9 @@ end
 Given a rectangular region specified by `region_lims` inside a 2D image array `arr`, return its 1D spectrum computed along the horizontal axis. Also return the horizontal range of the region for convenience when plotting the 1D spectrum with its corresponding image array.
 """
 function compute_spec1D(arr, region_lims)
-	xrange, yrange = get_lims(arr, region_lims)
-	region = @view arr[yrange, xrange]
-	return vec(sum(region; dims=1)), xrange
+    xrange, yrange = get_lims(arr, region_lims)
+    region = @view arr[yrange, xrange]
+    return vec(sum(region; dims = 1)), xrange
 end
 
 # ╔═╡ 7d1caf58-d1db-4fcb-a62b-5c2a16b56732
@@ -554,15 +556,15 @@ stake! = String ∘ take!
 
 # ╔═╡ 0b7dff7d-26d2-4c00-8d39-dceabb7433b6
 begin
-	run_again
-	
-	img_dog = let
-		url = "https://dog.ceo/api/breeds/image/random"
-		# Dogs like stake
-		payload = download(url, IOBuffer()) |> stake!
-		url = JSON.parse(payload)["message"]
-		load(download(url))
-	end
+    run_again
+
+    img_dog = let
+        url = "https://dog.ceo/api/breeds/image/random"
+        # Dogs like stake
+        payload = download(url, IOBuffer()) |> stake!
+        url = JSON.parse(payload)["message"]
+        load(download(url))
+    end
 end
 
 # ╔═╡ f102cbeb-edde-4814-94cb-0f8a8b73f836
@@ -578,9 +580,9 @@ We see here that our image is $(nrows_dog) rows by $(ncols_dog) columns wide, an
 
 # ╔═╡ 0d260f11-abcd-404d-885a-ba02f2692e36
 begin
-	N_sampled_pixels = 5
-	resample
-	sample_px_dog = rand(img_dog, N_sampled_pixels)
+    N_sampled_pixels = 5
+    resample
+    sample_px_dog = rand(img_dog, N_sampled_pixels)
 end
 
 # ╔═╡ cd2e384e-6f30-40b9-86f9-9a285a956b94
@@ -589,17 +591,17 @@ We have $(N_sampled_pixels) pixels above sampled from our image. Based on how co
 """
 
 # ╔═╡ 9193e583-fe34-4a62-8142-5981e2335276
-@bind px_dog Slider(sample_px_dog; show_value=true)
+@bind px_dog Slider(sample_px_dog; show_value = true)
 
 # ╔═╡ 5dc94909-7181-42be-a252-4fcfb6a84ff0
 let
-	r, g, b = px_dog .|> (red, green, blue)
-	
-	md"""
-	**Selected pixel:** $(px_dog)
-	
-	``\Longrightarrow`` R $(RGB(r, 0, 0)), G $(RGB(0, g, 0)), B $(RGB(0, 0, b))
-	"""
+    r, g, b = px_dog .|> (red, green, blue)
+
+    md"""
+    **Selected pixel:** $(px_dog)
+
+    ``\Longrightarrow`` R $(RGB(r, 0, 0)), G $(RGB(0, g, 0)), B $(RGB(0, 0, b))
+    """
 end
 
 # ╔═╡ 9edd83bf-bcae-4f39-940d-4265bdcd2c34
@@ -619,9 +621,9 @@ md"""
 
 # ╔═╡ bb008a9b-8538-418d-9e70-50d9983c2074
 let
-	tmp = copy(gray_dog)
-	tmp[row_range_dog, col_range_dog] .= RGB(0, 0, 0)
-	tmp
+    tmp = copy(gray_dog)
+    tmp[row_range_dog, col_range_dog] .= RGB(0, 0, 0)
+    tmp
 end
 
 # ╔═╡ fcc96529-3b20-4a59-9d2d-48612f4c16f3
@@ -643,7 +645,7 @@ array_slice = original_array[row_range, column_range]
 window_dog_vals = gray.(window_dog)
 
 # ╔═╡ d0203d68-6a55-46ec-ab8f-8fdfc5b1356d
-prof_1D_dog_vals = sum(window_dog_vals; dims=1) |> vec
+prof_1D_dog_vals = sum(window_dog_vals; dims = 1) |> vec
 
 # ╔═╡ d4ca722f-ebc8-411d-a2f1-48fb83373e54
 """
@@ -654,26 +656,29 @@ prof_1D_dog_vals = sum(window_dog_vals; dims=1) |> vec
 
 # ╔═╡ d3b6afc1-c29b-476a-90ed-721796af130f
 let
-	p = make_subplots(;
-		rows = 2,
-		shared_xaxes = true,
-		vertical_spacing = 0.02,
-		x_title = "pixel column",
-	)
-	add_trace!(p, scatter(; x=col_range_dog, y=prof_1D_dog_vals); row=1)
-	add_trace!(p, heatmap(
-		x = col_range_dog,
-		y = reverse(row_range_dog),
-		z = window_dog_vals,
-		colorscale = :Greys,
-		showscale = false,
-	) ; row=2)
-	update!(p;
-		layout = Layout(
-			yaxis = attr(title="intensity"),
-			yaxis2 = attr(scaleanchor=:x, title="pixel row")
-		)
-	)
+    p = make_subplots(;
+        rows = 2,
+        shared_xaxes = true,
+        vertical_spacing = 0.02,
+        x_title = "pixel column",
+    )
+    add_trace!(p, scatter(; x = col_range_dog, y = prof_1D_dog_vals); row = 1)
+    add_trace!(
+        p, heatmap(
+            x = col_range_dog,
+            y = reverse(row_range_dog),
+            z = window_dog_vals,
+            colorscale = :Greys,
+            showscale = false,
+        ); row = 2
+    )
+    update!(
+        p;
+        layout = Layout(
+            yaxis = attr(title = "intensity"),
+            yaxis2 = attr(scaleanchor = :x, title = "pixel row")
+        )
+    )
 end
 
 # ╔═╡ baa00c8f-9fd4-44b7-bc79-669d17908c2d
@@ -697,41 +702,44 @@ arr_ev_live = ev_live .|> Gray |> channelview;
 
 # ╔═╡ 4406e5d7-9a75-480b-8a97-b92e6a064338
 @bind limits_ev_live let
-	p = plot(
-		heatmap(;
-			z = arr_ev_live,
-			showscale = false
-		),
-		Layout(
-			xaxis = attr(title="column"),
-			yaxis = attr(
-				title = "row",
-				autorange = "reversed",
-				# scaleanchor = :x,
-			),
-			margin = attr(t=0, r=10,),
-		)
-	)
+    p = plot(
+        heatmap(;
+            z = arr_ev_live,
+            showscale = false
+        ),
+        Layout(
+            xaxis = attr(title = "column"),
+            yaxis = attr(
+                title = "row",
+                autorange = "reversed",
+                # scaleanchor = :x,
+            ),
+            margin = attr(t = 0, r = 10),
+        )
+    )
 
-	add_plotly_listener!(p, "plotly_relayout", "
+    add_plotly_listener!(
+        p, "plotly_relayout", "
 		e => {
 		let layout = PLOT.layout
 		PLOT.value = {xaxis: layout.xaxis.range, yaxis:layout.yaxis.range}
 		PLOT.dispatchEvent(new CustomEvent('input'))
 		}
 		"
-	)
+    )
 end
 
 # ╔═╡ 1898e267-84e5-4d76-adc3-086b1bfef3cd
 prof_1D_ev_live, xrange_ev_live = compute_spec1D(arr_ev_live, limits_ev_live);
 
 # ╔═╡ 352ddf83-7ef4-487e-912e-c3e2b8ad055c
-p_spec1D_ev_live = plot(xrange_ev_live, prof_1D_ev_live, Layout(
-	xaxis = attr(title="column"),
-	yaxis = attr(title="intensity"),
-	margin = attr(t=10, r=10,),
-))
+p_spec1D_ev_live = plot(
+    xrange_ev_live, prof_1D_ev_live, Layout(
+        xaxis = attr(title = "column"),
+        yaxis = attr(title = "intensity"),
+        margin = attr(t = 10, r = 10),
+    )
+)
 
 # ╔═╡ c6617828-9ab4-4a60-bac2-78ec9b5f8fac
 p_spec1D_ev_live
@@ -759,38 +767,43 @@ arr_fits = img_fits.data |> permutedims;
 
 # ╔═╡ 60367274-b695-43f1-b16a-7c63fc9ef21a
 @bind limits_ev_fits let
-	p = plot(heatmap(; z=arr_fits, showscale=false), Layout(
-		xaxis = attr(title="column"),
-		yaxis = attr(title="row", autorange="reversed"),
-	))
+    p = plot(
+        heatmap(; z = arr_fits, showscale = false), Layout(
+            xaxis = attr(title = "column"),
+            yaxis = attr(title = "row", autorange = "reversed"),
+        )
+    )
 
-	add_plotly_listener!(p, "plotly_relayout", "
+    add_plotly_listener!(
+        p, "plotly_relayout", "
 		e => {
 		let layout = PLOT.layout
 		PLOT.value = {xaxis: layout.xaxis.range, yaxis:layout.yaxis.range}
 		PLOT.dispatchEvent(new CustomEvent('input'))
 		}
 		"
-	)
+    )
 end
 
 # ╔═╡ c47acd38-7c27-4d02-9f95-f9a7df93a4cd
 prof_1D_fits, xrange_ev_fits = compute_spec1D(arr_fits, limits_ev_fits);
 
 # ╔═╡ f9868858-6982-4906-8b52-38e058e98279
-plot(xrange_ev_fits, prof_1D_fits, Layout(
-	xaxis = attr(title="column"),
-	yaxis = attr(title="intensity"),
-))
+plot(
+    xrange_ev_fits, prof_1D_fits, Layout(
+        xaxis = attr(title = "column"),
+        yaxis = attr(title = "intensity"),
+    )
+)
 
 # ╔═╡ 229088f2-922f-4b93-b6c1-63f683a4ae0f
 const ref_wavs = Dict(
-		:h_alpha => 6562.8,
-		:h_beta => 4861.4,
-		:h_gamma => 4340.5,
-		:h_delta => 4102.7,
-		:h_epsilon => 3970.1,
-	)
+    :h_alpha => 6562.8,
+    :h_beta => 4861.4,
+    :h_gamma => 4340.5,
+    :h_delta => 4102.7,
+    :h_epsilon => 3970.1,
+)
 
 # ╔═╡ 0b681466-bd74-4a4f-8c0f-6cb9186a3af8
 λ_line = ref_wavs[:h_beta];
@@ -803,39 +816,41 @@ d = λ_line / (px_line - px_0);
 
 # ╔═╡ 3527ba04-3ea7-42ed-910e-ec72939a4c96
 if 8.4 ≤ d ≤ 8.79
-	md"""
-	!!! tip "Success 🎉"
-		Congratulations, you have successfully calibrated your 1D spectrum!
-	
-		We hope that this brief introduction to analyzing spectra has provided you with some general tools for tackling your own datasets, and inspiration to explore further interesting topics in this field. Below are a few potential items that may be of interest for extending the techniques developed here.
-	
-		!!! note "Extension ideas"
-			* Pixel binning
-			* Image stacking
-			* Background subtraction
-			* Non-linear wavelength calibration
-	
-	"""
+    md"""
+    !!! tip "Success 🎉"
+    	Congratulations, you have successfully calibrated your 1D spectrum!
+
+    	We hope that this brief introduction to analyzing spectra has provided you with some general tools for tackling your own datasets, and inspiration to explore further interesting topics in this field. Below are a few potential items that may be of interest for extending the techniques developed here.
+
+    	!!! note "Extension ideas"
+    		* Pixel binning
+    		* Image stacking
+    		* Background subtraction
+    		* Non-linear wavelength calibration
+
+    """
 else
-	md"""
-	!!! warning "Not quite"
-		Try double checking which line is the H-β feature. A reference calibration sheet like [this one](https://www.aavso.org/sites/default/files/Calibration_Cheat_Sheet.png) may be helpful.
-	"""
+    md"""
+    !!! warning "Not quite"
+    	Try double checking which line is the H-β feature. A reference calibration sheet like [this one](https://www.aavso.org/sites/default/files/Calibration_Cheat_Sheet.png) may be helpful.
+    """
 end
 
 # ╔═╡ 272654a7-665f-48ee-beb5-13944c803e7e
 let
-	p = plot(λ_ev_live, prof_1D_ev_live, Layout(
-		xaxis = attr(title="wavelength (Å)"),
-		yaxis = attr(title="intensity"),
-		title = "Dispersion: $(round(d; digits=2)) Å/pixel",
-	))
+    p = plot(
+        λ_ev_live, prof_1D_ev_live, Layout(
+            xaxis = attr(title = "wavelength (Å)"),
+            yaxis = attr(title = "intensity"),
+            title = "Dispersion: $(round(d; digits = 2)) Å/pixel",
+        )
+    )
 
-	# Overlay reference lines
-	show_lines && for (name, wav) ∈ ref_wavs
-		add_vline!(p, wav; line_color=:darkgrey, line_width=1)
-	end
-	p
+    # Overlay reference lines
+    show_lines && for (name, wav) in ref_wavs
+        add_vline!(p, wav; line_color = :darkgrey, line_width = 1)
+    end
+    p
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001

@@ -25,14 +25,14 @@ end
 
 # ╔═╡ 926ae0c8-5dd2-11f0-3c63-e540d51a756c
 begin
-	# Notebook widgets
-	using PlutoUI
+    # Notebook widgets
+    using PlutoUI
 
-	# Analysis tools
-	using AstroImages, Colors
-	
-	# Colormap default settings
-	AstroImages.set_cmap!(nothing)
+    # Analysis tools
+    using AstroImages, Colors
+
+    # Colormap default settings
+    AstroImages.set_cmap!(nothing)
 end;
 
 # ╔═╡ 8e324690-373d-4139-8350-add89a86c9b0
@@ -135,10 +135,12 @@ This is [already implemented for us](https://juliaimages.org/latest/examples/col
 """
 
 # ╔═╡ 4c0dd0c1-b446-46c2-a190-10eac40d1cc4
-details("Details", md"""
-!!! note " "
-	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
-""")
+details(
+    "Details", md"""
+    !!! note " "
+    	Julia has a delightful way of applying a function element-wise to its inputs, known as [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized).
+    """
+)
 
 # ╔═╡ 807485a1-aae1-4e4f-9787-14254fb8a005
 md"""
@@ -163,19 +165,19 @@ This "box of numbers" format is how image data is represented in FITS files.
 
 # ╔═╡ 3805d078-f4d0-485a-897d-82b3ea3da4ee
 begin
-	reset
-	@bind img_local FilePicker([MIME("image/png")])
+    reset
+    @bind img_local FilePicker([MIME("image/png")])
 end
 
 # ╔═╡ 563781c1-5046-413b-8846-6514cba58d77
 img = if isnothing(img_local)
-	load(download("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png"))
+    load(download("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png"))
 else
-	let
-		path = tempname() * img_local["name"]
-		write(path, img_local["data"])
-		load(path)
-	end
+    let
+        path = tempname() * img_local["name"]
+        write(path, img_local["data"])
+        load(path)
+    end
 end
 
 # ╔═╡ 8eb994d7-c74d-481a-9e75-9c834d23bd18
@@ -203,9 +205,9 @@ To summarize, our image is just a matrix of pixels, where each pixel value is re
 
 # ╔═╡ c7cbf787-a8a5-4e57-b4d2-4dc0a592d821
 begin
-	N_sampled_px = 5
-	resample
-	sample_px = rand(img, N_sampled_px)
+    N_sampled_px = 5
+    resample
+    sample_px = rand(img, N_sampled_px)
 end
 
 # ╔═╡ 9cac3e33-c68a-4f6b-8021-003ba876b4e9
@@ -216,17 +218,17 @@ Below, we sample $(N_sampled_px) random pixels from `img`. Based on how colorful
 """
 
 # ╔═╡ 1f95d2e2-33f4-4016-84a6-b983ede688b2
-@bind px_img Slider(sample_px; show_value=true)
+@bind px_img Slider(sample_px; show_value = true)
 
 # ╔═╡ f73c7298-cd97-4539-b85f-25cf69508466
 begin
-	r, g, b = px_img .|> (red, green, blue)
-	
-	md"""
-	Pixel | R | G | B
-	:-:|:-:|:-:|:-:
-	$(px_img) | $(RGB(r, 0, 0)) | $(RGB(0, g, 0)) | $(RGB(0, 0, b))
-	"""
+    r, g, b = px_img .|> (red, green, blue)
+
+    md"""
+    Pixel | R | G | B
+    :-:|:-:|:-:|:-:
+    $(px_img) | $(RGB(r, 0, 0)) | $(RGB(0, g, 0)) | $(RGB(0, 0, b))
+    """
 end
 
 # ╔═╡ 74f5cfda-1513-474a-b23d-7c561db34660

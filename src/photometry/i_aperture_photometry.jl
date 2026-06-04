@@ -25,14 +25,14 @@ end
 
 # ╔═╡ a084aedc-31c3-49b0-aa7a-fc5088deaca8
 begin
-	# Notebook widgets
-	using PlutoUI, CommonMark
+    # Notebook widgets
+    using PlutoUI, CommonMark
 
-	# Analysis tools
-	using AstroImages, ColorTypes, Photometry, DataFramesMeta, CSV, PlutoPlotly, FlexiJoins, SkyCoords, VirtualObservatory, Unitful, UnitfulAstro
-	
-	# Colormap default settings
-	AstroImages.set_cmap!(nothing)
+    # Analysis tools
+    using AstroImages, ColorTypes, Photometry, DataFramesMeta, CSV, PlutoPlotly, FlexiJoins, SkyCoords, VirtualObservatory, Unitful, UnitfulAstro
+
+    # Colormap default settings
+    AstroImages.set_cmap!(nothing)
 end;
 
 # ╔═╡ 59f8b374-4db2-416c-bedc-652f5de7ca7e
@@ -56,8 +56,8 @@ What are some things that you notice? Try doing the same analysis on one of your
 
 # ╔═╡ b4e9e785-892f-4065-89eb-c353967396d1
 begin
-	reset
-	@bind img_local FilePicker([MIME("image/fits")])
+    reset
+    @bind img_local FilePicker([MIME("image/fits")])
 end
 
 # ╔═╡ 4595493a-fcb8-4ea5-abc4-b1deb1b0db5f
@@ -117,87 +117,88 @@ md"""
 
 # ╔═╡ 6d2c1121-2547-4125-8709-cd4d11480726
 function tiny(img)
-	imgv = copy(img)
-	
-	while length(eachindex(imgv)) > 10^6
-		imgv = AstroImages.restrict(imgv)
-	end
+    imgv = copy(img)
 
-	return imgv
+    while length(eachindex(imgv)) > 10^6
+        imgv = AstroImages.restrict(imgv)
+    end
+
+    return imgv
 end
 
 # ╔═╡ d388fd60-3884-4944-b30b-61cc8edf544d
 # Julia photometry aperture object --> plotly shape object
-function circ(ap, r=ap.r; line_color=:lightgreen)
-	circle(
-		ap.x - r, # x_min
-		ap.x + r, # x_max
-		ap.y - r, # y_min
-		ap.y + r; # y_max
-		line_color,
-	)
+function circ(ap, r = ap.r; line_color = :lightgreen)
+    return circle(
+        ap.x - r, # x_min
+        ap.x + r, # x_max
+        ap.y - r, # y_min
+        ap.y + r; # y_max
+        line_color,
+    )
 end
 
 # ╔═╡ 829636f7-3d2b-4a30-8c92-523427335fc9
 # Plotly heatmap trace of img
-function htrace(img;
-	zlims,
-	title = "ADU",
-	restrict = true,
-)
-		
-	# Account for plotly orientation convention
-	img = permutedims(img)
-	
-	# dims is used here to convert back from an offset array
-	# to a simple array that JS can ingest
-	zmin, zmax = zlims
-	
-	heatmap(;
-		x = dims(img, X).val,
-		y = dims(img, Y).val,
-		z = Matrix{Float32}(img.data),
-		zmin,
-		zmax,
-		colorbar = attr(; title),
-		colorscale = "Cividis",
-	)
+function htrace(
+        img;
+        zlims,
+        title = "ADU",
+        restrict = true,
+    )
+
+    # Account for plotly orientation convention
+    img = permutedims(img)
+
+    # dims is used here to convert back from an offset array
+    # to a simple array that JS can ingest
+    zmin, zmax = zlims
+
+    return heatmap(;
+        x = dims(img, X).val,
+        y = dims(img, Y).val,
+        z = Matrix{Float32}(img.data),
+        zmin,
+        zmax,
+        colorbar = attr(; title),
+        colorscale = "Cividis",
+    )
 end
 
 # ╔═╡ 10e72b6f-8261-4093-af4c-c3bd698db7d2
 # Combines plotly trace and layout into a plot object
 function plot_img(img; zlims = Percent(99.5)(img), restrict = true)
-	imgv = (tiny ∘ AstroImage)(img)
-	# imgv = img
-	
-	hm = htrace(imgv; zlims, restrict)
-	
-	l = Layout(;
-		width = 500,
-		height = 500,
-		title = "Photometry example",
-		xaxis = attr(title = "X", constrain = "domain"),
-		yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
-		uirevision = 1,
-	)
+    imgv = (tiny ∘ AstroImage)(img)
+    # imgv = img
 
-	plot(hm, l)
+    hm = htrace(imgv; zlims, restrict)
+
+    l = Layout(;
+        width = 500,
+        height = 500,
+        title = "Photometry example",
+        xaxis = attr(title = "X", constrain = "domain"),
+        yaxis = attr(title = "Y", scaleanchor = "x", constrain = "domain"),
+        uirevision = 1,
+    )
+
+    return plot(hm, l)
 end
 
 # ╔═╡ 5a49d878-bba3-4232-8a62-59848f1c77cb
 # Default from FilePicker
 function load_img(data::Nothing)
-	img = (load ∘ download)("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png")
-	img_data = img .|> Gray .|> gray
-	img_data_corner = img_data[1:500, 1:500]
-	AstroImage(img_data_corner)
+    img = (load ∘ download)("https://stsci-opo.org/STScI-01GA6KNV1S3TP2JBPCDT8G826T.png")
+    img_data = img .|> Gray .|> gray
+    img_data_corner = img_data[1:500, 1:500]
+    return AstroImage(img_data_corner)
 end
 
 # ╔═╡ 5aee58df-40b4-4ec3-a947-4039c2dddad0
 function load_img(data)
-	path = tempname() * data["name"]
-	write(path, data["data"])
-	load(path)
+    path = tempname() * data["name"]
+    write(path, data["data"])
+    return load(path)
 end
 
 # ╔═╡ da18d71f-06af-40f1-b006-d9adad909012
@@ -205,20 +206,20 @@ img_sci = load_img(img_local);
 
 # ╔═╡ 01f950ec-fb20-4b6f-837c-a8cfaeada5de
 begin
-	img_size = size(img_sci)
-	X_max, Y_max = img_size
-	X_mid, Y_mid = img_size .÷ 2
-	@bind coords PlutoUI.combine() do Child
-		md"""
-		!!! tip ""
-			Try changing the values below to choose where our circular aperture and circular annulus aperture should be placed. The resulting aperture sums displayed below will update automatically.
-		
-		| | X (pixels) | Y (pixels) | radius -- inner (pixels) | radius -- outer (pixels)
-		| :-: | :-: | :-: | :-: | :-:
-		| target |$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:1000; default = X_mid ÷ 4))) | ----
-		| background |$(Child("x_bg", NumberField(1:X_max; default = X_mid))) | $(Child("y_bg", NumberField(1:Y_max; default = Y_mid))) | $(Child("r_in", NumberField(1:1000; default = 1.4 * (X_mid ÷ 4)))) | $(Child("r_out", NumberField(1:1000; default = 1.7 * (X_mid ÷ 4))))
-		"""
-	end
+    img_size = size(img_sci)
+    X_max, Y_max = img_size
+    X_mid, Y_mid = img_size .÷ 2
+    @bind coords PlutoUI.combine() do Child
+        md"""
+        !!! tip ""
+        	Try changing the values below to choose where our circular aperture and circular annulus aperture should be placed. The resulting aperture sums displayed below will update automatically.
+
+        | | X (pixels) | Y (pixels) | radius -- inner (pixels) | radius -- outer (pixels)
+        | :-: | :-: | :-: | :-: | :-:
+        | target |$(Child("x", NumberField(1:X_max; default = X_mid))) | $(Child("y", NumberField(1:Y_max; default = Y_mid))) | $(Child("r", NumberField(1:1000; default = X_mid ÷ 4))) | ----
+        | background |$(Child("x_bg", NumberField(1:X_max; default = X_mid))) | $(Child("y_bg", NumberField(1:Y_max; default = Y_mid))) | $(Child("r_in", NumberField(1:1000; default = 1.4 * (X_mid ÷ 4)))) | $(Child("r_out", NumberField(1:1000; default = 1.7 * (X_mid ÷ 4))))
+        """
+    end
 end
 
 # ╔═╡ 4583909c-7171-49c2-aff6-71d45860072d
@@ -231,25 +232,25 @@ area = sum(ap) # Could also do π * ap.r^2
 
 # ╔═╡ 63187c16-c3b8-47a5-9086-02c1aad6b812
 ap_bg = CircularAnnulus(
-	coords.x_bg,
-	coords.y_bg,
-	coords.r_in,
-	coords.r_out,
+    coords.x_bg,
+    coords.y_bg,
+    coords.r_in,
+    coords.r_out,
 );
 
 # ╔═╡ 01de070f-9672-47e1-b4c0-cfefe711decb
 let
-	p = plot_img(img_sci)
+    p = plot_img(img_sci)
 
-	shapes = [
-		circ(ap; line_color = :darkorange),
-		circ(ap_bg, ap_bg.r_in; line_color = :cyan),
-		circ(ap_bg, ap_bg.r_out; line_color = :cyan),
-	]
-	
-	relayout!(p; shapes)
+    shapes = [
+        circ(ap; line_color = :darkorange),
+        circ(ap_bg, ap_bg.r_in; line_color = :cyan),
+        circ(ap_bg, ap_bg.r_out; line_color = :cyan),
+    ]
 
-	p
+    relayout!(p; shapes)
+
+    p
 end
 
 # ╔═╡ e92ec2b0-ec60-4088-896b-95817b865f46
@@ -270,7 +271,7 @@ flux_total_bg = phot_bg.aperture_sum
 
 # ╔═╡ 8017131c-6168-499a-899a-e6d2c1d0479b
 # Average flux per pixel in background annulus
-flux_avg_bg = flux_total_bg  / area_bg
+flux_avg_bg = flux_total_bg / area_bg
 
 # ╔═╡ 7b893abf-4c4a-4a8f-902c-109af1c6158f
 # Background flux contribution in target aperture
