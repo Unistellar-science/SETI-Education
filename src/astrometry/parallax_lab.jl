@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.28
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/mrlmn0lr/image_2-parallax.png"
@@ -32,30 +32,30 @@ using EphemerisSources, DataFramesMeta
 
 # ╔═╡ db72ee5e-070b-4dff-b3b6-8b9915ed7b3e
 begin
-	# Notebook
-	using PlutoUI
-	
-	# Viz
-	using AstroImages, PlutoPlotly
-	AstroImages.set_cmap!(:cividis)
-	
-	# Analysis
-	using CoordinateTransformations, DataDeps, ImageTransformations
+    # Notebook
+    using PlutoUI
 
-	# Use DataDeps.jl for dataset management
-	# Auto-download data to current directory by default
-	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
-	ENV["DATADEPS_LOAD_PATH"] = @__DIR__
-	DataDep(
-		"data",
-		"""
-		UCAN Data Files
-		Website: https://www.seti.org/education/ucan/unistellar-education-materials/
-		""",
-		["https://www.dropbox.com/scl/fo/k57vx9xnqyc1honkn2avc/APka1AAqVQ2sWnnZvZQw1CU?rlkey=1l5thuixednvx7adc8dyy5ayu&st=d5db4neq&dl=1"],
-		["4af6928e26ebb41dd79a6ba15a7727ed9d319b526aa927a5757380d69948a531"],
-		post_fetch_method = unpack,
-	) |> register
+    # Viz
+    using AstroImages, PlutoPlotly
+    AstroImages.set_cmap!(:cividis)
+
+    # Analysis
+    using CoordinateTransformations, DataDeps, ImageTransformations
+
+    # Use DataDeps.jl for dataset management
+    # Auto-download data to current directory by default
+    ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
+    ENV["DATADEPS_LOAD_PATH"] = @__DIR__
+    DataDep(
+        "data",
+        """
+        UCAN Data Files
+        Website: https://www.seti.org/education/ucan/unistellar-education-materials/
+        """,
+        ["https://www.dropbox.com/scl/fo/k57vx9xnqyc1honkn2avc/APka1AAqVQ2sWnnZvZQw1CU?rlkey=1l5thuixednvx7adc8dyy5ayu&st=d5db4neq&dl=1"],
+        ["4af6928e26ebb41dd79a6ba15a7727ed9d319b526aa927a5757380d69948a531"],
+        post_fetch_method = unpack,
+    ) |> register
 end
 
 # ╔═╡ 75d03ef4-d8b2-11ef-076a-058846f3b6ba
@@ -65,61 +65,7 @@ md"""
 In this lab we will estimate the distance to a near-Earth object (NEO) based on its measured parallax. For more on taking these types of science observations, see our [Unistellar Planetary Defense page](https://science.unistellar.com/planetary-defense/).
 
 Having some familiarity in high-level programming languages like Julia or Python will be useful, but not necessary, for following along with the topics covered. At the end of this notebook, you will hopefully have the tools to build your own analysis pipelines for processing astronomical data, as well as understand the principles behind other astronomical software at a broader level.
-
-!!! note "Coffee? ☕"
-	The first time this notebook runs might take a while (~ a couple minutes on older devices) because it will download and set up everything for us. This is a good chance to take a stretch or grab a nice beverage 🫖.
 """
-
-# ╔═╡ 74472b02-f1d6-4751-8797-1d0ab4cbc097
-md"""
-With this requisite information out of the way, let's get started!
-"""
-
-# ╔═╡ 0ecd42d3-6316-4c3b-a39b-3f05fffc88ae
-msg_adding_colors = md"""
-##### Adding colors in Julia 🎨
-This makes magenta!
-
-```julia
-using AstroImages: RGB
-
-RGB(1, 0, 0) + RGB(0, 0, 1)
-```
-
-$(AstroImages.RGB(1, 0, 0) + AstroImages.RGB(0, 0, 1))
-"""; md"---"
-
-# ╔═╡ a9eff328-1082-45a6-b167-dc62e56d3871
-details("Using this notebook 🌱", md"""
-!!! note "First time running"
-	Some parts of this [Pluto notebook](https://plutojl.org/) are partially interactive online, but for full interactive control, it is recommended to download and run this notebook locally. For instructions on how to do this, click the `Edit or run this notebook` button in the top right corner of the page.
-	
-	**Note**: This notebook will download all of the analysis packages and data needed for us, so the first time it runs may take a little while (~ a few minutes depending on your internet connection and platform). Clicking on the `Status` tab in the bottom right will bring up a progress window that we can use to monitor this process, and it also includes an option at the bottom marked `Notify when done` that can be selected to give us a notification pop-up in our browser when everything is finished.
-
-!!! tip "Advanced: bring your own editor"
-	This is a fully hackable notebook, so exploring the [source code](https://github.com/Unistellar-science/SETI-Education/blob/main/labs/occulations/occultations_lab.jl) and making your own modifications is encouraged! Unlike Jupyter notebooks, Pluto notebook are just plain Julia files. Any changes you make in the notebook are automatically saved to the source file.
-
-	This works in the opposite direction too; any changes you make to the source file, say in your favorite editor, will automatically be reflected in the notebook in your browser! To enable this feature, just add this keyword to the function that was used to start Pluto:
-
-	```julia-repl
-	julia> using Pluto
-	
-	julia> Pluto.run(auto_reload_from_file=true)
-	
-	# This will be on by default in an upcoming release =]
-	```
-
-	The location of the file for this notebook is displayed in the bar at the very top of this page, and can also be modified there if you want to change where this notebook lives.
-
-
-!!! warning "Diving deeper"
-	Periodically throughout the notebook we will include collapsible sections like the one below to provide additional information about items outside the scope of this lab that may be of interest (e.g., plotting, working with javascript, creating widgets).
-
-$(details("Details", msg_adding_colors))
-
-!!! warning " "
-	In the local version of this notebook, an "eye" icon will appear at the top left of each cell on hover to reveal the underlying code behind it and a `Live Docs` button will also be available in the bottom right of the page to pull up documentation for any function that is currently selected. In both local and online versions of this notebook, user defined functions and variables are also underlined, and (ctrl) clicking on them will jump to where they are defined.
-""")
 
 # ╔═╡ 7d10737f-1691-43e5-891f-118e41cd771a
 md"""
@@ -163,9 +109,9 @@ const DATA_DIR = datadep"data";
 
 # ╔═╡ d12e83b5-8351-44ef-aa4c-b5ace3b4eb39
 OBSERVATORIES = (
-	load(joinpath(DATA_DIR, "nctq52_2022-02-25T19-58-34.991_Science_Defense_103.fits")) => "eVscope West",
-	
-	load(joinpath(DATA_DIR, "p4eaaw_2022-02-25T19-58-34.183_Science_Defense_125.fits")) => "eVscope East",
+    load(joinpath(DATA_DIR, "nctq52_2022-02-25T19-58-34.991_Science_Defense_103.fits")) => "eVscope West",
+
+    load(joinpath(DATA_DIR, "p4eaaw_2022-02-25T19-58-34.183_Science_Defense_125.fits")) => "eVscope East",
 );
 
 # ╔═╡ b4119602-990d-47b0-8ea5-7f14e17d9e9f
@@ -175,15 +121,15 @@ and store them into `img1` and `img2` for convenience:
 
 # ╔═╡ 5523bfd6-4d1c-472f-a028-266b9a891df8
 begin
-img1, img2 = (obs.first for obs in OBSERVATORIES)
+    img1, img2 = (obs.first for obs in OBSERVATORIES)
 
-# Place images on a common color scale
-const ZMIN, ZMAX = let
-	lims = Zscale(contrast=0.4).((img1, img2))
-	minimum(first, lims), maximum(last, lims)
-end
+    # Place images on a common color scale
+    const ZMIN, ZMAX = let
+        lims = Zscale(contrast = 0.4).((img1, img2))
+        minimum(first, lims), maximum(last, lims)
+    end
 
-AstroImages.set_clims!((ZMIN, ZMAX))
+    AstroImages.set_clims!((ZMIN, ZMAX))
 end;
 
 # ╔═╡ 31d603f7-4628-4d1b-a97b-6c05379c6e73
@@ -234,13 +180,13 @@ Using the comparison plot in the previous section, identify the ``(X, Y)`` pixel
 # ╔═╡ 6fc4ec56-0591-4f61-bdce-43ef796ab3a5
 # img_2 points => img_1 points
 point_map = (
-	[1891, 1341] => [1219, 845],
-	[1779, 1177] => [1077, 709],
-	[1525, 1039] => [799, 625],
+    [1891, 1341] => [1219, 845],
+    [1779, 1177] => [1077, 709],
+    [1525, 1039] => [799, 625],
 );
 
 # ╔═╡ cf81d974-2bf7-4da0-a781-3519953554ff
-tfm = kabsch(last.(point_map) => first.(point_map); scale=true);
+tfm = kabsch(last.(point_map) => first.(point_map); scale = true);
 
 # ╔═╡ 6193211b-8ec0-4f88-87df-35247c01353a
 md"""
@@ -262,12 +208,13 @@ We now apply this transformation and stack our images together using the [`warp`
 img2w = shareheader(img2, warp(img2, tfm, axes(img1)));
 
 # ╔═╡ 4ed0072f-6159-4893-b21b-e035e51a6689
-details(md"What is `shareheader` and `axes`?",
-md"""
-We are using [AstroImages.jl](https://juliaastro.org/dev/modules/AstroImages/) to view and process our images. This allows for fits files to be displayed directly in the notebook, and for interactions with the larger [JuliaImages](https://juliaimages.org/latest/) and [DimensionalData.jl](https://rafaqz.github.io/DimensionalData.jl/stable/) ecosystems.
+details(
+    md"What is `shareheader` and `axes`?",
+    md"""
+    We are using [AstroImages.jl](https://juliaastro.org/dev/modules/AstroImages/) to view and process our images. This allows for fits files to be displayed directly in the notebook, and for interactions with the larger [JuliaImages](https://juliaimages.org/latest/) and [DimensionalData.jl](https://rafaqz.github.io/DimensionalData.jl/stable/) ecosystems.
 
-`AstroImages.shareheader` syncs the header stored in our original image with our `JuliaImages.ImageTransformations.warp`ed image, and `axes` makes sure that the coordinates of our transformed image are shown relative to our `destination` image reference frame of the underlying `DimensionalData`. For more information on this, see [this section of the AstroImages.jl documentation](https://juliaastro.org/dev/modules/AstroImages/manual/dimensions-and-world-coordinates/).
-"""
+    `AstroImages.shareheader` syncs the header stored in our original image with our `JuliaImages.ImageTransformations.warp`ed image, and `axes` makes sure that the coordinates of our transformed image are shown relative to our `destination` image reference frame of the underlying `DimensionalData`. For more information on this, see [this section of the AstroImages.jl documentation](https://juliaastro.org/dev/modules/AstroImages/manual/dimensions-and-world-coordinates/).
+    """
 )
 
 # ╔═╡ 5a0b3e26-7271-4b08-aa67-68c3af1421c0
@@ -328,12 +275,12 @@ Thanks to our image stacking routine, the correpsonding objects in each image sh
 
 # ╔═╡ 117751ce-7c9e-461f-9ef9-6310ff0ecfac
 @bindname asteroid_px PlutoUI.combine() do Child
-	md"""
-	|image|X|Y
-	|------------------|------------------|---|
-	|left (destination)|$(Child("dest_x", NumberField(1:size(img1, 1); default=1017)))|$(Child("dest_y", NumberField(1:size(img1, 2); default=747)))
-	|right (source)|$(Child("src_x", NumberField(1:size(img2, 1); default=1023)))|$(Child("src_y", NumberField(1:size(img2, 2); default=747)))
-	"""
+    md"""
+    |image|X|Y
+    |------------------|------------------|---|
+    |left (destination)|$(Child("dest_x", NumberField(1:size(img1, 1); default=1017)))|$(Child("dest_y", NumberField(1:size(img1, 2); default=747)))
+    |right (source)|$(Child("src_x", NumberField(1:size(img2, 1); default=1023)))|$(Child("src_y", NumberField(1:size(img2, 2); default=747)))
+    """
 end
 
 # ╔═╡ 527c1ad3-02d1-4ea5-98b2-d0054f6b5a91
@@ -341,9 +288,9 @@ plate_scale = 1.326 # eVscope 2 pixel scale (''/px)
 
 # ╔═╡ aabbcb9d-4310-437f-b7da-03b385916400
 θ = let
-	ΔX = asteroid_px.dest_x - asteroid_px.src_x
-	ΔY = asteroid_px.dest_y - asteroid_px.src_y
-	hypot(ΔX, ΔY) * plate_scale
+    ΔX = asteroid_px.dest_x - asteroid_px.src_x
+    ΔY = asteroid_px.dest_y - asteroid_px.src_y
+    hypot(ΔX, ΔY) * plate_scale
 end
 
 # ╔═╡ 43a16d76-7de9-4f19-b1e4-a03457fd1e11
@@ -407,9 +354,10 @@ md"""
 
 # ╔═╡ 53512b8f-3120-4f9a-bb5f-ff8aefc96408
 # Query 1 minute before and after the parallax observation
-df_ephem = ephemeris("153591", "2022-02-25T19:57", "2022-02-25T19:59", "1 minute";
-	wrt = "earth",
-	units = "AU-D"
+df_ephem = ephemeris(
+    "153591", "2022-02-25T19:57", "2022-02-25T19:59", "1 minute";
+    wrt = "earth",
+    units = "AU-D"
 ) |> DataFrame
 
 # ╔═╡ 7869c86f-52c3-4b3b-be59-b4f7626faf12
@@ -464,52 +412,53 @@ TableOfContents()
 const MAXPIXELS = 10^6
 
 # ╔═╡ 64cf11a7-09ef-459a-98b5-3e5f8a8cd1b5
-function trace_hm(img; colorbar_x=0)
-	imgv = copy(img)
-	# Restriction prescription from AstroImages.jl/Images.jl
-	# so plotting doesn't blow up for large images
-	while length(eachindex(imgv)) > MAXPIXELS
-		imgv = restrict(imgv)
-	end
-	imgv = permutedims(imgv)
-	
-	return heatmap(x=dims(imgv, X).val, y=dims(imgv, Y).val, z=imgv.data;
-		zmin=ZMIN,
-		zmax=ZMAX,
-		colorscale = :Cividis,
-		colorbar=attr(x=colorbar_x, thickness=10, title="Counts"),
-	)
+function trace_hm(img; colorbar_x = 0)
+    imgv = copy(img)
+    # Restriction prescription from AstroImages.jl/Images.jl
+    # so plotting doesn't blow up for large images
+    while length(eachindex(imgv)) > MAXPIXELS
+        imgv = restrict(imgv)
+    end
+    imgv = permutedims(imgv)
+
+    return heatmap(
+        x = dims(imgv, X).val, y = dims(imgv, Y).val, z = imgv.data;
+        zmin = ZMIN,
+        zmax = ZMAX,
+        colorscale = :Cividis,
+        colorbar = attr(x = colorbar_x, thickness = 10, title = "Counts"),
+    )
 end
 
 # ╔═╡ fdd7bfe6-d4f7-434e-bac3-dc8994a17a6e
 function plot_pair(observatories)
-	img1, img2 = (obs.first for obs in observatories)
-	loc1, loc2 = (obs.second for obs in observatories)
-	# Set up some subplots
-	fig = make_subplots(;
-		rows = 1,	
-		cols = 2,
-		shared_xaxes = true,
-		shared_yaxes = true,
-		column_titles = [loc1, loc2],
-	)
-	
-	# Make the subplot titles a smidgen bit smaller
-	update_annotations!(fig, font_size=14)
-	
-	# Manually place the colorbars so they don't clash
-	add_trace!(fig, trace_hm(img1; colorbar_x=0.45), col=1)
-	add_trace!(fig, trace_hm(img2; colorbar_x=1), col=2)
+    img1, img2 = (obs.first for obs in observatories)
+    loc1, loc2 = (obs.second for obs in observatories)
+    # Set up some subplots
+    fig = make_subplots(;
+        rows = 1,
+        cols = 2,
+        shared_xaxes = true,
+        shared_yaxes = true,
+        column_titles = [loc1, loc2],
+    )
 
-	# Keep the images true to size
-	update_xaxes!(fig, matches="x", scaleanchor=:y, title="X (pixels)")
-	update_yaxes!(fig, matches="y", scaleanchor=:x)
+    # Make the subplot titles a smidgen bit smaller
+    update_annotations!(fig, font_size = 14)
 
-	# Add a shared y-label
-	relayout!(fig, Layout(yaxis_title="Y (pixels)"), font_size=10, template="plotly_white", margin=attr(t=20), uirevision=1)
+    # Manually place the colorbars so they don't clash
+    add_trace!(fig, trace_hm(img1; colorbar_x = 0.45), col = 1)
+    add_trace!(fig, trace_hm(img2; colorbar_x = 1), col = 2)
 
-	# Display
-	fig
+    # Keep the images true to size
+    update_xaxes!(fig, matches = "x", scaleanchor = :y, title = "X (pixels)")
+    update_yaxes!(fig, matches = "y", scaleanchor = :x)
+
+    # Add a shared y-label
+    relayout!(fig, Layout(yaxis_title = "Y (pixels)"), font_size = 10, template = "plotly_white", margin = attr(t = 20), uirevision = 1)
+
+    # Display
+    return fig
 end
 
 # ╔═╡ 2bbcab7e-ee23-4136-b686-5472e61cd117
@@ -547,7 +496,7 @@ PlutoUI = "~0.7.78"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.4"
+julia_version = "1.12.6"
 manifest_format = "2.0"
 project_hash = "bf2151ab1226ad2761407fe7477c97ca8cfebd41"
 
@@ -1956,9 +1905,6 @@ version = "17.7.0+0"
 
 # ╔═╡ Cell order:
 # ╟─75d03ef4-d8b2-11ef-076a-058846f3b6ba
-# ╟─a9eff328-1082-45a6-b167-dc62e56d3871
-# ╟─74472b02-f1d6-4751-8797-1d0ab4cbc097
-# ╟─0ecd42d3-6316-4c3b-a39b-3f05fffc88ae
 # ╟─7d10737f-1691-43e5-891f-118e41cd771a
 # ╟─99b35d47-8560-4efb-a35c-0d5805dfe8b6
 # ╟─65d2286a-2786-4f96-8193-d0c4fe77d57a

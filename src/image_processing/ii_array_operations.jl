@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.24
+# v0.20.28
 
 #> [frontmatter]
 #> title = "II - Array Operations"
@@ -13,14 +13,14 @@ using InteractiveUtils
 
 # ╔═╡ 48d0a70b-62dc-426e-93c4-b21aa20acbfd
 begin
-	# Notebook widgets
-	using PlutoUI
+    # Notebook widgets
+    using PlutoUI
 
-	# Analysis tools
-	using AstroImages, ColorTypes
-	
-	# Colormap default settings
-	AstroImages.set_cmap!(nothing)
+    # Analysis tools
+    using AstroImages, ColorTypes
+
+    # Colormap default settings
+    AstroImages.set_cmap!(nothing)
 end;
 
 # ╔═╡ 23132c2d-56d6-4e9a-9eef-94f0b0742a00
@@ -83,23 +83,25 @@ selects every column in the first row of `img_data` while,
 """
 
 # ╔═╡ 8bfd0688-49c9-4ed0-9616-8a526c09d638
-details(md"What does `|>` do?",
-md"""
-!!! note ""
-	Known as the [pipe operator](https://docs.julialang.org/en/v1/manual/functions/#Function-composition-and-piping), this is a convenient way to pass the output of one function as input to another. For example,
+details(
+    md"What does `|>` do?",
+    md"""
+    !!! note ""
+    	Known as the [pipe operator](https://docs.julialang.org/en/v1/manual/functions/#Function-composition-and-piping), this is a convenient way to pass the output of one function as input to another. For example,
 
-	```julia
-	sqrt(sum([1, 4, 5, 6])) # 4.0
-	```
+    	```julia
+    	sqrt(sum([1, 4, 5, 6])) # 4.0
+    	```
 
-	is equivalent to:
+    	is equivalent to:
 
-	```julia
-	[1, 4, 5, 6] |> sum |> sqrt # 4.0
-	```
+    	```julia
+    	[1, 4, 5, 6] |> sum |> sqrt # 4.0
+    	```
 
-	Note how this seamlessly composes with the dot operator in our image example above.
-""")
+    	Note how this seamlessly composes with the dot operator in our image example above.
+    """
+)
 
 # ╔═╡ 850418f5-a286-4e78-929f-01247eb34c50
 md"""
@@ -169,7 +171,7 @@ we could do the following:
 """
 
 # ╔═╡ 4d8c748a-6469-4b45-bc9b-268c35a7dc7b
-sum(img_data[1:60, :]; dims=1)
+sum(img_data[1:60, :]; dims = 1)
 
 # ╔═╡ 0a39d848-fbe9-4a61-9c5b-7df6376b5387
 md"""
@@ -211,10 +213,11 @@ To start, let's wrap our underlying image data in `img_data_corner` in an `Astro
 img_astro_gray = AstroImage(img_data_corner)
 
 # ╔═╡ ed3474d3-0a7b-4ac3-a723-5abb077200f2
-details("Why do things looks flipped?",
-md"""
-You may notice that `img_astro` looks transposed and flipped relative to `img_data`. This is to comply with the [FITS convention](https://juliaastro.org/AstroImages/stable/manual/conventions/) of placing the origin of an image in the bottom left corner, instead of the top left.
-"""
+details(
+    "Why do things looks flipped?",
+    md"""
+    You may notice that `img_astro` looks transposed and flipped relative to `img_data`. This is to comply with the [FITS convention](https://juliaastro.org/AstroImages/stable/manual/conventions/) of placing the origin of an image in the bottom left corner, instead of the top left.
+    """
 )
 
 # ╔═╡ f0809836-33ce-4ed6-a4ae-a485f0604cb5
@@ -280,13 +283,13 @@ Below are images taken in the visible portion of the spectrum in red, green, and
 """
 
 # ╔═╡ c26c62a8-b013-47b6-868d-8e06cd5cd558
-antred = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/red.fits"))[:, begin+14:end];
+antred = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/red.fits"))[:, (begin + 14):end];
 
 # ╔═╡ 79c158b8-6fd7-48bb-a6b7-7f5ff6e4d987
 antgreen = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/green.fits"));
 
 # ╔═╡ d27284e3-f118-4ffb-b2f7-48eeb4bce66b
-antblue = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/blue.fits"))[:, begin+14:end];
+antblue = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/blue.fits"))[:, (begin + 14):end];
 
 # ╔═╡ 874103b8-140e-41b3-88be-d316ed9f9d85
 img_channels = antred, antgreen, antblue
@@ -303,13 +306,14 @@ We next call the `composecolors` function from AstroImages.jl to combine these t
 """
 
 # ╔═╡ 91f63c0e-fed1-460a-8309-6bd728872a07
-img_rgb = composecolors(img_channels;
-	stretch = [
-		asinhstretch,
-		asinhstretch,
-		asinhstretch,
-	],
-	multiplier = [1, 1.7, 1],
+img_rgb = composecolors(
+    img_channels;
+    stretch = [
+        asinhstretch,
+        asinhstretch,
+        asinhstretch,
+    ],
+    multiplier = [1, 1.7, 1],
 )
 
 # ╔═╡ a7201a02-ec80-47b1-ab60-daa483cca97d
@@ -339,7 +343,7 @@ We aren't limited to just the light that we can see though. Now that we know abo
 """
 
 # ╔═╡ a676032f-9b71-4ba7-8855-85504e7e28da
-anthalph = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/hydrogen.fits"))[:, begin+14:end];
+anthalph = AstroImage(download("https://esahubble.org/static/projects/fits_liberator/datasets/antennae/hydrogen.fits"))[:, (begin + 14):end];
 
 # ╔═╡ ae89b95c-a0ea-4422-afb9-f3d4359c63d2
 img_rgbh = composecolors(
