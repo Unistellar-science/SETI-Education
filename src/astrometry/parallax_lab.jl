@@ -53,7 +53,7 @@ begin
         Website: https://www.seti.org/education/ucan/unistellar-education-materials/
         """,
         ["https://www.dropbox.com/scl/fo/k57vx9xnqyc1honkn2avc/APka1AAqVQ2sWnnZvZQw1CU?rlkey=1l5thuixednvx7adc8dyy5ayu&st=d5db4neq&dl=1"],
-        ["4af6928e26ebb41dd79a6ba15a7727ed9d319b526aa927a5757380d69948a531"],
+        Any;
         post_fetch_method = unpack,
     ) |> register
 end
@@ -504,9 +504,9 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 [compat]
 AstroImages = "~0.5.2"
 CoordinateTransformations = "~0.6.4"
-DataDeps = "~0.7.14"
+DataDeps = "~1.0.0"
 DataFramesMeta = "~0.15.6"
-DynamicQuantities = "~1.10.0"
+DynamicQuantities = "~1.13.0"
 EphemerisSources = "~1.0.0"
 ImageTransformations = "~0.10.3"
 PlutoPlotly = "~0.6.6"
@@ -519,7 +519,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "3d4f12c2003b1a254b97880d483288629b2e234d"
+project_hash = "41d0556af2fefc3f4de1910448ad0e7e3988a17e"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -745,10 +745,10 @@ uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.16.0"
 
 [[deps.DataDeps]]
-deps = ["HTTP", "Libdl", "Reexport", "SHA", "Scratch", "p7zip_jll"]
-git-tree-sha1 = "75226661988f5b66a4c52358933eaa43b9278bb2"
+deps = ["Downloads", "Libdl", "Reexport", "SHA", "Scratch", "p7zip_jll"]
+git-tree-sha1 = "bc4c8efd0ec8c627028d880b7e584090ff1830ab"
 uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-version = "0.7.14"
+version = "1.0.0"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -851,19 +851,23 @@ version = "1.7.0"
 
 [[deps.DynamicQuantities]]
 deps = ["DispatchDoctor", "PrecompileTools", "TestItems", "Tricks"]
-git-tree-sha1 = "57c48a46e27d67208ad51c564b078a90bbd0dc2c"
+git-tree-sha1 = "c38f400b3b35c545f6c09b82e95653c53129de0c"
 uuid = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
-version = "1.10.0"
+version = "1.13.0"
 
     [deps.DynamicQuantities.extensions]
     DynamicQuantitiesLinearAlgebraExt = "LinearAlgebra"
     DynamicQuantitiesMeasurementsExt = "Measurements"
+    DynamicQuantitiesRecursiveArrayToolsExt = "RecursiveArrayTools"
+    DynamicQuantitiesSciMLBaseExt = "SciMLBase"
     DynamicQuantitiesScientificTypesExt = "ScientificTypes"
     DynamicQuantitiesUnitfulExt = "Unitful"
 
     [deps.DynamicQuantities.weakdeps]
     LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
     Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+    RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
+    SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
     ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
