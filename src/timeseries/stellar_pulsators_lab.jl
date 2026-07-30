@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.28
+# v0.2.6
 
 #> [frontmatter]
 #> image = "https://www.seti.org/media/h3ejkrf3/image_0.png"

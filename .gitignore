@@ -4,3 +4,4 @@ sample_data/
 .aavso_key
 _cache
 _site
+*pluto-cache.toml
